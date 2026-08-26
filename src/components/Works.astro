@@ -1,19 +1,24 @@
 ---
 import SectionHeading from './SectionHeading.astro';
-import type { WorkItem } from '@/types/content';
+import type { WorkItem, HeroChannel } from '@/types/content';
 import { getWorkPath } from '@/content';
 
 interface Props {
   works: WorkItem[];
   defaultChannelId: string;
+  channels: HeroChannel[];
 }
 
-const { works, defaultChannelId } = Astro.props;
-const items = works.filter((item) => item.visible).sort((a, b) => {
-  if (a.channelId === b.channelId) return a.sort - b.sort;
-  return a.channelId.localeCompare(b.channelId);
-});
+const { works, defaultChannelId, channels } = Astro.props;
+
+const items = works
+  .filter((item) => item.visible)
+  .sort((a, b) => {
+    if (a.channelId === b.channelId) return a.sort - b.sort;
+    return a.channelId.localeCompare(b.channelId);
+  });
 ---
+
 <section class="content-section deferred-section" id="works">
   <SectionHeading
     title="作品展示"
@@ -23,31 +28,51 @@ const items = works.filter((item) => item.visible).sort((a, b) => {
     controlsId="worksTrack"
   />
 
-  <div class="work-gallery" data-active-work-channel={defaultChannelId}>
-    <div class="work-track" id="worksTrack" data-carousel-track>
-      {items.map((work) => (
-        <a
-          class="work-card"
-          href={getWorkPath(work)}
-          aria-label={`查看${work.title}作品详情`}
-          data-work-channel={work.channelId}
-          hidden={work.channelId !== defaultChannelId}
+  <div class="work-filters" role="tablist" aria-label="作品栏目筛选">
+    {
+      channels.map((ch) => (
+        <button
+          type="button"
+          class="work-pill"
+          role="tab"
+          data-channel-tab={ch.id}
+          aria-selected={ch.id === defaultChannelId ? 'true' : 'false'}
         >
-          <img
-            src={work.cover}
-            alt={work.alt}
-            width="900"
-            height="1200"
-            loading="lazy"
-            decoding="async"
-          />
-          <div class="work-shade" aria-hidden="true"></div>
-          <div class="work-copy">
-            <h3>{work.title}</h3>
-            <span>{work.subtitle}</span>
-          </div>
-        </a>
-      ))}
+          {ch.label}
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="work-gallery" data-default-channel={defaultChannelId}>
+    <div class="work-stage">
+      <div class="work-track" id="worksTrack">
+        {
+          items.map((work) => (
+            <a
+              class="work-card"
+              href={getWorkPath(work)}
+              aria-label={`查看${work.title}作品详情`}
+              data-work-channel={work.channelId}
+            >
+              <img
+                src={work.cover}
+                alt={work.alt}
+                width="900"
+                height="1200"
+                loading="lazy"
+                decoding="async"
+              />
+              <div class="work-shade" aria-hidden="true"></div>
+              <span class="work-tag" aria-hidden="true">{work.subtitle}</span>
+              <div class="work-copy">
+                <h3>{work.title}</h3>
+                <span class="work-cta">查看项目 →</span>
+              </div>
+            </a>
+          ))
+        }
+      </div>
     </div>
   </div>
 </section>
