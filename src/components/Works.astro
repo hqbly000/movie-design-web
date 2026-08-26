@@ -1,0 +1,53 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import type { WorkItem } from '@/types/content';
+import { getWorkPath } from '@/content';
+
+interface Props {
+  works: WorkItem[];
+  defaultChannelId: string;
+}
+
+const { works, defaultChannelId } = Astro.props;
+const items = works.filter((item) => item.visible).sort((a, b) => {
+  if (a.channelId === b.channelId) return a.sort - b.sort;
+  return a.channelId.localeCompare(b.channelId);
+});
+---
+<section class="content-section deferred-section" id="works">
+  <SectionHeading
+    title="作品展示"
+    subtitle="Exhibition of works"
+    previousLabel="查看上一件作品"
+    nextLabel="查看下一件作品"
+    controlsId="worksTrack"
+  />
+
+  <div class="work-gallery" data-active-work-channel={defaultChannelId}>
+    <div class="work-track" id="worksTrack" data-carousel-track>
+      {items.map((work) => (
+        <a
+          class="work-card"
+          href={getWorkPath(work)}
+          aria-label={`查看${work.title}作品详情`}
+          data-work-channel={work.channelId}
+          hidden={work.channelId !== defaultChannelId}
+        >
+          <img
+            src={work.cover}
+            alt={work.alt}
+            width="900"
+            height="1200"
+            loading="lazy"
+            decoding="async"
+          />
+          <div class="work-shade" aria-hidden="true"></div>
+          <div class="work-copy">
+            <h3>{work.title}</h3>
+            <span>{work.subtitle}</span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,138 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Footer from '@/components/Footer.astro';
+import Header from '@/components/Header.astro';
+import { getHomeContent, getWorkDetail, getWorkPath } from '@/content';
+import '@/styles/global.css';
+
+interface Props {
+  slug: string;
+}
+
+export async function getStaticPaths() {
+  const home = await getHomeContent();
+
+  return home.works
+    .filter((work) => work.visible)
+    .map((work) => ({
+      params: { slug: work.slug ?? work.id },
+      props: { slug: work.slug ?? work.id }
+    }));
+}
+
+const { slug } = Astro.props as Props;
+const page = await getHomeContent();
+const detail = await getWorkDetail(slug);
+
+if (!detail) {
+  throw new Error(`Work not found: ${slug}`);
+}
+
+const { work, channelLabel, channelMeta, description, meta, gallery, previous, next } = detail;
+---
+<BaseLayout title={`${work.title} · ${page.site.brandCn}`} description={description}>
+  <Header site={page.site} hrefPrefix="/" activeHref="" />
+
+  <main class="work-detail-page">
+    <section class="work-detail-hero">
+      <div class="shell">
+        <a class="work-detail-back" href="/#works">
+          <span aria-hidden="true">←</span>
+          返回作品展示
+        </a>
+
+        <div class="work-detail-intro">
+          <div class="work-detail-copy">
+            <div class="work-detail-kicker">{channelLabel} · {channelMeta}</div>
+            <h1>{work.title}</h1>
+            <p class="work-detail-subtitle">{work.subtitle}</p>
+            <p class="work-detail-description">{description}</p>
+
+            <dl class="work-detail-meta">
+              {meta.map((item) => (
+                <div>
+                  <dt>{item.label}</dt>
+                  <dd>{item.value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <a class="work-detail-jump" href="#project-gallery">
+              查看项目影像
+              <span aria-hidden="true">↓</span>
+            </a>
+          </div>
+
+          <figure class="work-detail-cover">
+            <img
+              src={work.cover}
+              alt={work.alt}
+              width="900"
+              height="1200"
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
+            />
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="work-detail-gallery" id="project-gallery">
+      <div class="shell">
+        <div class="work-detail-section-head">
+          <span>01 / PROJECT VISUALS</span>
+          <h2>项目影像</h2>
+          <p>{work.subtitle}</p>
+        </div>
+
+        <div class="work-detail-gallery-grid">
+          {gallery.map((image, index) => (
+            <figure class:list={{ 'work-detail-image': true, 'is-featured': index === 0 }}>
+              <img
+                src={image.src}
+                alt={image.alt}
+                width="1400"
+                height="1000"
+                loading={index === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+              <figcaption>{String(index + 1).padStart(2, '0')} / {work.title}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="work-detail-navigation">
+      <div class="shell">
+        <div class="work-detail-nav-grid">
+          {previous ? (
+            <a class="work-detail-nav-card" href={getWorkPath(previous)}>
+              <span>上一件作品</span>
+              <strong>← {previous.title}</strong>
+            </a>
+          ) : <div></div>}
+          {next ? (
+            <a class="work-detail-nav-card is-next" href={getWorkPath(next)}>
+              <span>下一件作品</span>
+              <strong>{next.title} →</strong>
+            </a>
+          ) : <div></div>}
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer footer={page.footer} hrefPrefix="/" />
+
+  <script>
+    const siteHeader = document.querySelector<HTMLElement>('[data-site-header]');
+    const syncHeaderState = () => {
+      siteHeader?.classList.toggle('is-scrolled', window.scrollY > 64);
+    };
+
+    syncHeaderState();
+    window.addEventListener('scroll', syncHeaderState, { passive: true });
+  </script>
+</BaseLayout>

@@ -1,0 +1,31 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import type { NewsItem } from '@/types/content';
+
+interface Props {
+  news: NewsItem[];
+}
+
+const { news } = Astro.props;
+const items = news.filter((item) => item.visible).sort((a, b) => a.sort - b.sort);
+---
+<section class="content-section deferred-section" id="news">
+  <SectionHeading title="新闻中心" subtitle="Information center" previousLabel="上一组新闻" nextLabel="下一组新闻" />
+
+  <div class="news-grid">
+    {items.map((item) => (
+      <article class="news-card">
+        {item.isNew && <span class="badge">NEW</span>}
+        <img
+          src={item.cover}
+          alt={item.alt}
+          width="900"
+          height="700"
+          loading="lazy"
+          decoding="async"
+        />
+        <div class="news-copy"><time>{item.date}</time><h3>{item.title}</h3></div>
+      </article>
+    ))}
+  </div>
+</section>

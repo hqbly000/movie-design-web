@@ -1,0 +1,40 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import type { Photographer } from '@/types/content';
+
+interface Props {
+  photographers: Photographer[];
+}
+
+const { photographers } = Astro.props;
+const items = photographers.filter((item) => item.visible).sort((a, b) => a.sort - b.sort);
+---
+<section class="content-section deferred-section" id="photographers">
+  <SectionHeading
+    title="高级摄影师"
+    subtitle="Senior photographer"
+    previousLabel="上一位摄影师"
+    nextLabel="下一位摄影师"
+  />
+
+  <div class="people-grid">
+    {items.map((person) => (
+      <article class="person-card">
+        <div class="person-photo">
+          <img
+            src={person.portrait}
+            alt={person.alt}
+            width="1100"
+            height="900"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <div class="person-name">{person.name}</div>
+        <div class="person-meta">
+          <strong>{person.role}</strong><br />{person.description}
+        </div>
+      </article>
+    ))}
+  </div>
+</section>

@@ -1,0 +1,27 @@
+---
+import type { HomeContent } from '@/types/content';
+
+interface Props {
+  cta: HomeContent['cta'];
+}
+
+const { cta } = Astro.props;
+---
+<section class="cta-wrap deferred-section" id="contact">
+  <div class="shell">
+    <div class="cta-panel">
+      <div class="cta-content">
+        <small>{cta.eyebrow}</small>
+        <h2>{cta.title}</h2>
+        <p>{cta.description}</p>
+        <button class="cta-btn" type="button">{cta.buttonLabel}</button>
+
+        <div class="stats">
+          {cta.stats.map((stat) => (
+            <div class="stat"><strong>{stat.value}</strong><span>{stat.label}</span></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

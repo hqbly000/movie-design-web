@@ -1,0 +1,20 @@
+---
+import type { HomeContent } from '@/types/content';
+
+interface Props {
+  about: HomeContent['about'];
+}
+
+const { about } = Astro.props;
+---
+<section class="content-section deferred-section" id="about">
+  <div class="section-title">
+    <h2>{about.title}</h2>
+    <p>{about.subtitle}</p>
+  </div>
+
+  <div class="about">
+    <p>{about.description}</p>
+    <div class="about-sign">{about.signature}</div>
+  </div>
+</section>

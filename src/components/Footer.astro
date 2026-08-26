@@ -1,0 +1,18 @@
+---
+import type { HomeContent } from '@/types/content';
+
+interface Props {
+  footer: HomeContent['footer'];
+  hrefPrefix?: string;
+}
+
+const { footer, hrefPrefix = '' } = Astro.props;
+---
+<footer class="deferred-section">
+  <div class="shell">
+    <div class="footer-nav">
+      {footer.links.map((item) => <a href={`${hrefPrefix}${item.href}`}>{item.label}</a>)}
+    </div>
+    <div class="copyright">{footer.copyright}</div>
+  </div>
+</footer>

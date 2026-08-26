@@ -1,0 +1,208 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Header from '@/components/Header.astro';
+import Hero from '@/components/Hero.astro';
+import Works from '@/components/Works.astro';
+import Photographers from '@/components/Photographers.astro';
+import News from '@/components/News.astro';
+import About from '@/components/About.astro';
+import ContactBanner from '@/components/ContactBanner.astro';
+import Footer from '@/components/Footer.astro';
+import VideoModal from '@/components/VideoModal.astro';
+import { getHomeContent } from '@/content';
+import '@/styles/global.css';
+
+const page = await getHomeContent();
+---
+<BaseLayout title={page.site.title}>
+  <Header site={page.site} />
+
+  <main>
+    <Hero hero={page.hero} />
+
+    <div class="shell">
+      <Works works={page.works} defaultChannelId={page.hero.defaultChannelId} />
+      <Photographers photographers={page.photographers} />
+      <News news={page.news} />
+      <About about={page.about} />
+    </div>
+
+    <ContactBanner cta={page.cta} />
+  </main>
+
+  <Footer footer={page.footer} />
+  <VideoModal />
+
+  <script>
+    const siteHeader = document.querySelector<HTMLElement>('[data-site-header]');
+
+    const syncHeaderState = () => {
+      siteHeader?.classList.toggle('is-scrolled', window.scrollY > 64);
+    };
+
+    syncHeaderState();
+    window.addEventListener('scroll', syncHeaderState, { passive: true });
+
+    const playBtn = document.querySelector('#playBtn');
+    const modal = document.querySelector('#videoModal');
+    const closeModal = document.querySelector('#closeModal');
+    const videoSlot = document.querySelector('#videoSlot');
+
+    const closeVideo = () => {
+      if (!(modal instanceof HTMLElement) || !(videoSlot instanceof HTMLElement)) return;
+      modal.classList.remove('show');
+      modal.setAttribute('aria-hidden', 'true');
+      const video = videoSlot.querySelector('video');
+      if (video) {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      }
+    };
+
+    playBtn?.addEventListener('click', () => {
+      if (!(playBtn instanceof HTMLElement) || !(modal instanceof HTMLElement) || !(videoSlot instanceof HTMLElement)) return;
+
+      const src = playBtn.dataset.videoSrc;
+      const poster = playBtn.dataset.poster;
+
+      if (src) {
+        const video = document.createElement('video');
+        video.controls = true;
+        video.autoplay = true;
+        video.preload = 'metadata';
+        video.playsInline = true;
+        if (poster) video.poster = poster;
+        video.src = src;
+        videoSlot.replaceChildren(video);
+      }
+
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden', 'false');
+    });
+
+    closeModal?.addEventListener('click', closeVideo);
+    modal?.addEventListener('click', (event) => {
+      if (event.target === modal) closeVideo();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeVideo();
+    });
+
+
+    const carouselTracks = [...document.querySelectorAll<HTMLElement>('[data-carousel-track]')];
+
+    const updateCarouselButtons = (track: HTMLElement) => {
+      const id = track.id;
+      if (!id) return;
+
+      const prev = document.querySelector<HTMLButtonElement>(`[data-carousel-prev="${id}"]`);
+      const next = document.querySelector<HTMLButtonElement>(`[data-carousel-next="${id}"]`);
+      const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+
+      if (prev) prev.disabled = track.scrollLeft <= 4;
+      if (next) next.disabled = track.scrollLeft >= maxScroll - 4;
+    };
+
+    const scrollCarousel = (id: string, direction: -1 | 1) => {
+      const track = document.getElementById(id);
+      if (!(track instanceof HTMLElement)) return;
+
+      const firstCard = track.querySelector<HTMLElement>('.work-card');
+      const step = firstCard
+        ? firstCard.getBoundingClientRect().width + 1
+        : Math.max(track.clientWidth * 0.75, 280);
+
+      track.scrollBy({ left: step * direction, behavior: 'smooth' });
+    };
+
+    document.querySelectorAll<HTMLButtonElement>('[data-carousel-prev]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const id = button.dataset.carouselPrev;
+        if (id) scrollCarousel(id, -1);
+      });
+    });
+
+    document.querySelectorAll<HTMLButtonElement>('[data-carousel-next]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const id = button.dataset.carouselNext;
+        if (id) scrollCarousel(id, 1);
+      });
+    });
+
+    carouselTracks.forEach((track) => {
+      updateCarouselButtons(track);
+      track.addEventListener('scroll', () => updateCarouselButtons(track), { passive: true });
+    });
+
+    window.addEventListener('resize', () => {
+      carouselTracks.forEach(updateCarouselButtons);
+    });
+
+    const workTrack = document.getElementById('worksTrack');
+    const channelTabs = [...document.querySelectorAll<HTMLButtonElement>('[data-channel-tab]')];
+    const featureSets = [...document.querySelectorAll<HTMLElement>('[data-channel-features]')];
+    const workCards = [...document.querySelectorAll<HTMLElement>('[data-work-channel]')];
+
+    const activateChannel = (channelId: string) => {
+      channelTabs.forEach((tab) => {
+        const selected = tab.dataset.channelTab === channelId;
+        tab.setAttribute('aria-selected', String(selected));
+      });
+
+      featureSets.forEach((set) => {
+        set.hidden = set.dataset.channelFeatures !== channelId;
+      });
+
+      workCards.forEach((card) => {
+        card.hidden = card.dataset.workChannel !== channelId;
+        card.classList.remove('active');
+      });
+
+      const firstVisibleCard = workCards.find(
+        (card) => card.dataset.workChannel === channelId && !card.hidden
+      );
+      firstVisibleCard?.classList.add('active');
+
+      if (workTrack) {
+        workTrack.scrollTo({ left: 0, behavior: 'smooth' });
+        window.requestAnimationFrame(() => updateCarouselButtons(workTrack));
+      }
+    };
+
+    channelTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const channelId = tab.dataset.channelTab;
+        if (!channelId) return;
+        activateChannel(channelId);
+      });
+    });
+
+    const navLinks = [...document.querySelectorAll<HTMLAnchorElement>('.nav a')];
+    const sectionIds = navLinks
+      .map((link) => link.getAttribute('href'))
+      .filter((href): href is string => Boolean(href?.startsWith('#')))
+      .map((href) => href.slice(1));
+
+    const sections = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((section): section is HTMLElement => section !== null);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+        if (!visible) return;
+        navLinks.forEach((link) => {
+          link.classList.toggle('active', link.getAttribute('href') === `#${visible.target.id}`);
+        });
+      },
+      { rootMargin: '-25% 0px -60% 0px', threshold: [0, 0.1, 0.3] }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+  </script>
+</BaseLayout>

@@ -1,0 +1,57 @@
+---
+interface Props {
+  title: string;
+  subtitle: string;
+  previousLabel?: string;
+  nextLabel?: string;
+  controlsId?: string;
+}
+
+const {
+  title,
+  subtitle,
+  previousLabel = '上一组',
+  nextLabel = '下一组',
+  controlsId
+} = Astro.props;
+---
+<div class="section-head">
+  {
+    controlsId ? (
+      <button
+        class="round-btn"
+        type="button"
+        aria-label={previousLabel}
+        data-carousel-prev={controlsId}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14 8.5 10.5 12 14 15.5"></path>
+        </svg>
+      </button>
+    ) : (
+      <span class="section-head-spacer" aria-hidden="true"></span>
+    )
+  }
+
+  <div class="section-title">
+    <h2>{title}</h2>
+    <p>{subtitle}</p>
+  </div>
+
+  {
+    controlsId ? (
+      <button
+        class="round-btn"
+        type="button"
+        aria-label={nextLabel}
+        data-carousel-next={controlsId}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M10 8.5 13.5 12 10 15.5"></path>
+        </svg>
+      </button>
+    ) : (
+      <span class="section-head-spacer" aria-hidden="true"></span>
+    )
+  }
+</div>

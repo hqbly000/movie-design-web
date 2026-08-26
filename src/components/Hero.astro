@@ -1,0 +1,86 @@
+---
+import type { HeroContent } from '@/types/content';
+
+interface Props {
+  hero: HeroContent;
+}
+
+const { hero } = Astro.props;
+const defaultChannel = hero.channels.find((channel) => channel.id === hero.defaultChannelId) ?? hero.channels[0];
+---
+<section class="hero" id="home" data-default-channel={defaultChannel?.id}>
+  <img
+    class="hero-media"
+    src={hero.image}
+    alt=""
+    width="1800"
+    height="1200"
+    loading="eager"
+    decoding="async"
+    fetchpriority="high"
+  />
+  <div class="hero-overlay" aria-hidden="true"></div>
+
+  <div class="shell hero-layout">
+    <div class="hero-composition">
+      <div class="hero-main">
+        <button
+          class="play"
+          id="playBtn"
+          type="button"
+          aria-label="播放概念片"
+          data-video-src={hero.videoSrc ?? ''}
+          data-poster={hero.image}
+        >
+          <span aria-hidden="true"></span>
+        </button>
+
+        <div class="eyebrow">{hero.eyebrow}</div>
+        <h1>{hero.title}</h1>
+        <div class="hero-sub">{hero.subtitle}</div>
+
+        <div class="hero-tabs" role="tablist" aria-label="内容栏目">
+          {hero.channels.map((channel) => (
+            <button
+              class="hero-tab"
+              type="button"
+              role="tab"
+              aria-selected={channel.id === defaultChannel?.id ? 'true' : 'false'}
+              aria-controls={`channel-panel-${channel.id}`}
+              data-channel-tab={channel.id}
+            >
+              <strong>{channel.label}</strong>
+              <small>{channel.meta}</small>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="feature-stage">
+        {hero.channels.map((channel) => (
+          <div
+            class="feature-set"
+            id={`channel-panel-${channel.id}`}
+            role="tabpanel"
+            data-channel-features={channel.id}
+            hidden={channel.id !== defaultChannel?.id}
+          >
+            {channel.features.map((feature, index) => (
+              <div class="feature">
+                <div class="feature-num">{String(index + 1).padStart(2, '0')}</div>
+                <div class="feature-copy">
+                  <b>{feature.title}</b>
+                  <span>{feature.subtitle}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+
+        <div class="feature-rail" aria-hidden="true">
+          <span class="feature-progress" data-channel-progress></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
