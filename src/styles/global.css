@@ -423,6 +423,8 @@ section.content-section{padding:96px 0 104px;border-bottom:1px solid var(--line)
   transform-origin:center center;
   transition:transform .55s cubic-bezier(.2,.8,.2,1),opacity .55s ease;
   will-change:transform,opacity;
+  user-select:none;
+  -webkit-user-select:none;
 }
 .work-card[hidden]{display:none}
 .work-card > img{
@@ -433,7 +435,7 @@ section.content-section{padding:96px 0 104px;border-bottom:1px solid var(--line)
   object-fit:cover;
   transition:transform .6s cubic-bezier(.2,.8,.2,1);
 }
-.work-card.is-active > img{transform:scale(1.05)}
+.work-card.is-active > img{transform:scale(1.08)}
 .work-shade{
   position:absolute;
   inset:0;
@@ -458,7 +460,11 @@ section.content-section{padding:96px 0 104px;border-bottom:1px solid var(--line)
   left:22px;
   right:22px;
   bottom:22px;
+  opacity:.32;
+  transform:translateY(10px);
+  transition:opacity .45s ease,transform .45s ease;
 }
+.work-card.is-active .work-copy{opacity:1;transform:translateY(0)}
 .work-copy h3{
   margin:0 0 8px;
   color:#fff;
@@ -474,10 +480,35 @@ section.content-section{padding:96px 0 104px;border-bottom:1px solid var(--line)
   color:var(--accent);
   letter-spacing:.04em;
   opacity:0;
-  transform:translateY(6px);
-  transition:opacity .35s ease,transform .35s ease;
+  transition:opacity .5s ease .08s;
 }
-.work-card.is-active .work-cta{opacity:1;transform:translateY(0)}
+.work-card.is-active .work-cta{opacity:1}
+
+/* 左右浮动箭头 · 贴在轮播两端 */
+.work-arrow{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:5;
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:#d8d8d8;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  padding:0;
+  transition:background .25s ease,color .25s ease,border-color .25s ease,opacity .25s ease;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.work-arrow svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.work-arrow:hover:not(:disabled){background:rgba(230,182,55,.18);border-color:rgba(230,182,55,.4);color:#fff}
+.work-arrow:disabled{opacity:.18;cursor:default}
+.work-arrow-prev{left:24px}
+.work-arrow-next{right:24px}
 
 .work-detail-page{background:var(--bg)}
 .work-detail-hero{

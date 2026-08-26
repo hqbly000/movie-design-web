@@ -20,13 +20,7 @@ const items = works
 ---
 
 <section class="content-section deferred-section" id="works">
-  <SectionHeading
-    title="作品展示"
-    subtitle="Exhibition of works"
-    previousLabel="查看上一件作品"
-    nextLabel="查看下一件作品"
-    controlsId="worksTrack"
-  />
+  <SectionHeading title="作品展示" subtitle="Exhibition of works" />
 
   <div class="work-filters" role="tablist" aria-label="作品栏目筛选">
     {
@@ -54,6 +48,7 @@ const items = works
               href={getWorkPath(work)}
               aria-label={`查看${work.title}作品详情`}
               data-work-channel={work.channelId}
+              draggable="false"
             >
               <img
                 src={work.cover}
@@ -62,6 +57,7 @@ const items = works
                 height="1200"
                 loading="lazy"
                 decoding="async"
+                draggable="false"
               />
               <div class="work-shade" aria-hidden="true"></div>
               <span class="work-tag" aria-hidden="true">{work.subtitle}</span>
@@ -73,6 +69,12 @@ const items = works
           ))
         }
       </div>
+      <button class="work-arrow work-arrow-prev" type="button" data-arrow="prev" aria-label="查看上一件作品">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8.5 10.5 12 14 15.5" /></svg>
+      </button>
+      <button class="work-arrow work-arrow-next" type="button" data-arrow="next" aria-label="查看下一件作品">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 8.5 13.5 12 10 15.5" /></svg>
+      </button>
     </div>
   </div>
 </section>

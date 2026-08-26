@@ -188,7 +188,8 @@ const page = await getHomeContent();
           const scale = 1 - dist * 0.12;
           const rot = offset * -7;
           card.style.transform = `translateX(${tx}px) translateZ(${tz}px) rotateY(${rot}deg) scale(${scale})`;
-          card.style.opacity = `${Math.max(0.32, 1 - dist * 0.24)}`;
+          card.style.opacity = `${Math.max(0.3, 1 - dist * 0.25)}`;
+          card.style.filter = dist === 0 ? '' : `blur(${dist * 4}px)`;
           card.style.zIndex = `${100 - dist}`;
           const isActive = offset === 0;
           card.classList.toggle('is-active', isActive);
@@ -213,25 +214,25 @@ const page = await getHomeContent();
         layout();
       };
 
-      // 上一件 / 下一件（区块标题区的圆形按钮）
+      // 上一件 / 下一件（SectionHeading 圆按钮 + 内联贴边箭头共用）
       document
         .querySelectorAll<HTMLButtonElement>('[data-carousel-prev="worksTrack"]')
         .forEach((btn) => btn.addEventListener('click', () => go(-1)));
       document
         .querySelectorAll<HTMLButtonElement>('[data-carousel-next="worksTrack"]')
         .forEach((btn) => btn.addEventListener('click', () => go(1)));
+      document.querySelectorAll<HTMLButtonElement>('[data-arrow]').forEach((btn) => {
+        btn.addEventListener('click', () => go(btn.dataset.arrow === 'next' ? 1 : -1));
+      });
 
-      // 点击侧卡 → 设为焦点；点击焦点卡 → 正常进入详情
+      // 点击侧卡 → 朝被点击方向步进一格（不直接跳目标）
       allCards.forEach((card) => {
         card.addEventListener('click', (event) => {
           if (card.classList.contains('is-active')) return;
           event.preventDefault();
           const vis = visibleCards();
           const idx = vis.indexOf(card);
-          if (idx >= 0) {
-            activeIndex = idx;
-            layout();
-          }
+          if (idx >= 0) go(idx > activeIndex ? 1 : -1);
         });
       });
 

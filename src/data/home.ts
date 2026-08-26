@@ -329,8 +329,8 @@ export const homeContent: HomeContent = {
       name: '张风',
       role: '商业影像 · 视觉导演',
       description: '专注品牌广告与人物拍摄，擅长控制灯光层次、现场节奏与画面气场，形成更克制、更专业的商业视觉输出。',
-      portrait: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1100&q=82',
-      alt: '高级摄影师张风形象示意',
+      portrait: '/photographers/zhangfeng.jpg',
+      alt: '高级摄影师张风人像',
       visible: true,
       sort: 1
     },
@@ -339,8 +339,8 @@ export const homeContent: HomeContent = {
       name: '王识宇',
       role: '人像摄影 · 创意统筹',
       description: '以冷静、简洁的构图语言处理人物形象，强调专业感、距离感与品牌调性之间的平衡。',
-      portrait: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=1100&q=82',
-      alt: '高级摄影师王识宇形象示意',
+      portrait: '/photographers/wangshiyu.jpg',
+      alt: '高级摄影师王识宇人像',
       visible: true,
       sort: 2
     }
