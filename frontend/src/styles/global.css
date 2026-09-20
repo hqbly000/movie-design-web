@@ -729,7 +729,8 @@ footer{padding:46px 0 60px;color:#777}
 .modal.show{display:grid}
 .modal-card{width:min(820px,100%);aspect-ratio:16/9;background:#101010;border:1px solid rgba(255,255,255,.15);display:grid;place-items:center;position:relative;box-shadow:0 30px 100px rgba(0,0,0,.5)}
 .modal-card > button{position:absolute;z-index:2;right:14px;top:14px;border:0;background:#222;color:white;width:36px;height:36px;border-radius:50%;cursor:pointer}
-.video-slot,.video-slot video{width:100%;height:100%}
+.video-slot,.video-slot video,.video-slot iframe{width:100%;height:100%}
+.video-slot iframe{border:0}
 .video-slot video{object-fit:contain;background:#000}
 .video-placeholder{height:100%;display:grid;place-content:center;text-align:center;color:#777}
 .video-placeholder strong{display:block;color:#ddd;font-size:24px;margin-bottom:8px}

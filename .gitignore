@@ -10,6 +10,11 @@ dist/
 .env.*
 !.env.example
 
+# backend runtime data（内容后台）
+server/data/
+server/uploads/
+server/.env
+
 # system / editor
 .DS_Store
 Thumbs.db

@@ -38,6 +38,9 @@ const page = await getHomeContent();
   <VideoModal />
 
   <script>
+    // 运行时从独立后台拉取公开内容（视频 / Hero 主图），接口不可用时回退 Mock
+    import { fetchPublicHome } from '@/lib/public-client';
+
     const siteHeader = document.querySelector<HTMLElement>('[data-site-header]');
 
     const syncHeaderState = () => {
@@ -62,6 +65,7 @@ const page = await getHomeContent();
         video.removeAttribute('src');
         video.load();
       }
+      videoSlot.replaceChildren();
     };
 
     playBtn?.addEventListener('click', () => {
@@ -92,6 +96,25 @@ const page = await getHomeContent();
 
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') closeVideo();
+    });
+
+    // 后台视频卡片（data-bvid）：点击聚焦卡片弹出 B 站播放弹层
+    const embedBilibili = (bvid: string) =>
+      `https://player.bilibili.com/player.html?bvid=${encodeURIComponent(bvid)}&autoplay=1&danmaku=0&high_quality=1`;
+
+    document.addEventListener('click', (event) => {
+      const card = (event.target as HTMLElement).closest<HTMLElement>('[data-bvid]');
+      if (!card || !card.classList.contains('is-active')) return;
+      if (!(modal instanceof HTMLElement) || !(videoSlot instanceof HTMLElement)) return;
+      event.preventDefault();
+      const iframe = document.createElement('iframe');
+      iframe.className = 'video-frame';
+      iframe.src = embedBilibili(card.dataset.bvid || '');
+      iframe.allowFullscreen = true;
+      iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+      videoSlot.replaceChildren(iframe);
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden', 'false');
     });
 
 
@@ -339,6 +362,88 @@ const page = await getHomeContent();
       // 初始栏目
       const defaultCh = worksGallery?.dataset.defaultChannel || 'video';
       setChannel(defaultCh);
+
+      // 后台数据接管：「视频 / 短片」栏目卡片替换为后台 B 站视频，Hero 主图运行时替换。
+      // 接口不可用时保留代码内 Mock 卡片（点击进详情页），不影响静态站本身。
+      fetchPublicHome().then((data) => {
+        if (data?.heroImage?.src) {
+          const heroImg = document.querySelector<HTMLImageElement>('.hero img');
+          if (heroImg && !heroImg.dataset.adminManaged) {
+            // 先预加载后台主图，加载成功才替换，避免假 URL 把 Hero 换成空图
+            const probe = new Image();
+            probe.onload = () => {
+              heroImg.src = data.heroImage!.src;
+              heroImg.alt = data.heroImage!.alt || heroImg.alt;
+              heroImg.dataset.adminManaged = '1';
+            };
+            probe.src = data.heroImage.src;
+          }
+        }
+
+        const adminVideos = data?.videos ?? [];
+        if (!adminVideos.length) return;
+
+        // 移除 Mock 视频卡片（后台视频已接管该栏目）
+        allCards.forEach((card) => {
+          if (card.dataset.workChannel === 'video' && !card.dataset.bvid) card.remove();
+        });
+
+        adminVideos.forEach((video, index) => {
+          const card = document.createElement('a');
+          card.className = 'work-card';
+          card.dataset.workChannel = 'video';
+          card.dataset.bvid = video.bvid;
+          card.draggable = false;
+          card.setAttribute('aria-label', `播放 ${video.title}`);
+
+          if (video.cover) {
+            const img = document.createElement('img');
+            img.src = video.cover;
+            img.alt = video.title;
+            img.loading = index === 0 ? 'eager' : 'lazy';
+            img.decoding = 'async';
+            img.draggable = false;
+            card.appendChild(img);
+          }
+
+          const shade = document.createElement('div');
+          shade.className = 'work-shade';
+          shade.setAttribute('aria-hidden', 'true');
+
+          const tag = document.createElement('span');
+          tag.className = 'work-tag';
+          tag.setAttribute('aria-hidden', 'true');
+          tag.textContent = 'VIDEO';
+
+          const copy = document.createElement('div');
+          copy.className = 'work-copy';
+          const h3 = document.createElement('h3');
+          h3.textContent = video.title;
+          const cta = document.createElement('span');
+          cta.className = 'work-cta';
+          cta.textContent = '播放视频 →';
+          copy.append(h3, cta);
+
+          card.append(shade, tag, copy);
+
+          // 与初始卡片一致：点击侧卡朝被点击方向步进一格
+          card.addEventListener('click', (event) => {
+            if (card.classList.contains('is-active')) return;
+            event.preventDefault();
+            const vis = visibleCards();
+            const idx = vis.indexOf(card);
+            if (idx >= 0) go(idx > activeIndex ? 1 : -1);
+          });
+
+          worksTrack.prepend(card);
+        });
+
+        // 重建卡片索引并按当前栏目重新布局
+        allCards.length = 0;
+        worksTrack.querySelectorAll<HTMLElement>('.work-card').forEach((c) => allCards.push(c));
+        const current = document.querySelector<HTMLButtonElement>('[data-channel-tab][aria-selected="true"]');
+        applyWorksFilter(current?.dataset.channelTab || 'video');
+      });
     }
 
     const navLinks = [...document.querySelectorAll<HTMLAnchorElement>('.nav a')];
