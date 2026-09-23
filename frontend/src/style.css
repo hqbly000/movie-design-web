@@ -1,0 +1,232 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   官网 · 全局设计 Token（暗调暖金）
+   依据《设计方案》§1.2 / §1.5 / §1.6 / §1.7
+   ============================================================ */
+:root {
+  --bg-base: #0a0a0a;
+  --surface: #14120f;
+  --surface-input: #0f0e0c;
+  --border-hairline: #1f1f1f;
+  --border-field: rgba(255, 255, 255, 0.24);
+  --border-card: rgba(255, 255, 255, 0.16);
+
+  --text-primary: #fafafa;
+  --text-body: rgba(255, 255, 255, 0.85);
+  --text-value: rgba(255, 255, 255, 0.9);
+  --text-muted: rgba(255, 255, 255, 0.6);
+  --text-decoration: rgba(255, 255, 255, 0.38);
+
+  --accent-orange: #ff6a00;
+  --accent-gold: #c49a4a;
+  --accent-gold-light: #e8c77a;
+  --ivory: #f4f0e8;
+  --ghost-stroke: #ffd9bf;
+
+  --font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
+  --font-sans: 'Noto Sans SC', 'Source Han Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui,
+    -apple-system, sans-serif;
+  --font-latin: Cormorant, 'EB Garamond', 'Times New Roman', Georgia, serif;
+
+  --pad-x-desktop: 120px;
+  --pad-x-mobile: 24px;
+  --section-y-desktop: 110px;
+  --section-y-mobile: 72px;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* 可读性硬规则（R11）：暗底信息文字不得低于白 55% */
+  p,
+  span,
+  li,
+  label {
+    color: inherit;
+  }
+
+  ::selection {
+    background: rgba(196, 154, 74, 0.35);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent-gold-light);
+    outline-offset: 2px;
+  }
+
+  button {
+    font-family: inherit;
+  }
+
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+  }
+
+  /* 滚动条（暗调） */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0a0a0a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2a2620;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3a342b;
+  }
+}
+
+@layer components {
+  .font-serif-sc {
+    font-family: var(--font-serif);
+  }
+
+  .font-latin-num {
+    font-family: var(--font-latin);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 内容容器：桌面左右 120，移动 24 */
+  .ly-container {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding-left: var(--pad-x-mobile);
+    padding-right: var(--pad-x-mobile);
+  }
+
+  @media (min-width: 1024px) {
+    .ly-container {
+      padding-left: var(--pad-x-desktop);
+      padding-right: var(--pad-x-desktop);
+    }
+  }
+
+  .ly-section {
+    padding-top: var(--section-y-mobile);
+    padding-bottom: var(--section-y-mobile);
+  }
+
+  @media (min-width: 1024px) {
+    .ly-section {
+      padding-top: var(--section-y-desktop);
+      padding-bottom: var(--section-y-desktop);
+    }
+  }
+
+  /* kicker：金色小标签 */
+  .ly-kicker {
+    font-size: 13px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+  }
+
+  /* 按钮体系 §1.4 —— 禁渐变 / 禁发光 / 禁箭头 / 悬浮只加深底色 */
+  .ly-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background-color 180ms ease, border-color 180ms ease, opacity 180ms ease;
+    user-select: none;
+  }
+
+  /* 官网 · 扁平实心橙（公司介绍「探索详情」） */
+  .ly-btn-orange {
+    background: var(--accent-orange);
+    color: #fff;
+    letter-spacing: 3px;
+    padding: 13px 34px;
+    border-radius: 2px;
+    font-size: 14px;
+  }
+  .ly-btn-orange:hover {
+    background: #e85f00;
+  }
+
+  /* 官网 · 照片/暗底主按钮 —— 象牙白实心 + 墨字 */
+  .ly-btn-ivory {
+    background: var(--ivory);
+    color: #1a1a1a;
+    letter-spacing: 3px;
+    padding: 13px 34px;
+    border-radius: 2px;
+    font-size: 14px;
+  }
+  .ly-btn-ivory:hover {
+    background: #ffffff;
+  }
+
+  /* 官网 · 照片/暗底次按钮 —— 透明底 + 1px 米白描边 55% */
+  .ly-btn-ghost-ivory {
+    background: transparent;
+    border-color: rgba(244, 240, 232, 0.55);
+    color: var(--ivory);
+    letter-spacing: 3px;
+    padding: 13px 34px;
+    border-radius: 2px;
+    font-size: 14px;
+  }
+  .ly-btn-ghost-ivory:hover {
+    border-color: rgba(244, 240, 232, 0.9);
+    background: rgba(244, 240, 232, 0.06);
+  }
+
+  .ly-btn[disabled],
+  .ly-btn.is-disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  /* 进入视口淡入上移（§10）：24px / 500ms / 依次延迟 80ms */
+  .ly-reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 500ms cubic-bezier(0.22, 0.61, 0.36, 1),
+      transform 500ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .ly-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 锚点滚动时为固定 Header 预留间距（§2.1） */
+section[id] {
+  scroll-margin-top: 84px;
+}
+
+/* 移动端可关闭复杂动效（保留淡入） */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

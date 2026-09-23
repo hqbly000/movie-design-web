@@ -1,0 +1,15 @@
+# 光屿摄影 LIGHT ISLE STUDIO · 后端依赖（FastAPI + MySQL）
+# 安装：pip install -r requirements.txt
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
+sqlalchemy==2.0.54
+pymysql==1.2.3
+cryptography==50.0.1
+python-jose==3.5.0
+passlib==1.7.4
+bcrypt==4.0.1
+python-multipart==0.0.32
+pydantic-settings==2.15.0
+email-validator==2.3.0
+requests==2.34.2
+Pillow>=10.0.0

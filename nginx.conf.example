@@ -1,0 +1,126 @@
+# ============================================================
+# 光屿摄影 LIGHT ISLE STUDIO · Nginx 配置示例
+# 官网 www.example.com  /  管理后台 admin.example.com
+# 后端 API 常驻 127.0.0.1:8000
+# ============================================================
+
+# ---------- 后端上行 ----------
+upstream lightisle_api {
+    server 127.0.0.1:8000;
+    keepalive 32;
+}
+
+# ---------- 官网（含作品分享页 /share/:token） ----------
+server {
+    listen 80;
+    server_name www.example.com example.com;
+
+    root  /srv/lightisle/frontend/dist;
+    index index.html;
+
+    charset utf-8;
+    client_max_body_size 8m;
+
+    gzip on;
+    gzip_min_length 1k;
+    gzip_comp_level 5;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+
+    # API
+    location /api/ {
+        proxy_pass         http://lightisle_api;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    # 上传与素材（后端直出）
+    location /uploads/ {
+        proxy_pass       http://lightisle_api;
+        proxy_set_header Host $host;
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+
+    # 静态资源长缓存
+    location ~* \.(js|css|woff2|png|jpg|jpeg|webp|svg|ico)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    # SPA 回退：/、/share/xxx 均交给 index.html
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+
+# ---------- 管理后台 ----------
+server {
+    listen 80;
+    server_name admin.example.com;
+
+    root  /srv/lightisle/admin/dist;
+    index index.html;
+
+    charset utf-8;
+    client_max_body_size 8m;
+
+    gzip on;
+    gzip_min_length 1k;
+    gzip_comp_level 5;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+
+    # 后台建议加 IP 白名单或基础认证
+    # allow 10.0.0.0/8;
+    # deny  all;
+
+    location /api/ {
+        proxy_pass         http://lightisle_api;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+
+    location /uploads/ {
+        proxy_pass       http://lightisle_api;
+        proxy_set_header Host $host;
+        expires 7d;
+    }
+
+    location ~* \.(js|css|woff2|png|jpg|jpeg|webp|svg|ico)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+
+# ============================================================
+# HTTPS 参考（配好证书后启用，并把上面的 80 端口改为 301 跳转）
+# ============================================================
+# server {
+#     listen 443 ssl http2;
+#     server_name www.example.com;
+#
+#     ssl_certificate     /etc/nginx/ssl/example.com.pem;
+#     ssl_certificate_key /etc/nginx/ssl/example.com.key;
+#     ssl_protocols       TLSv1.2 TLSv1.3;
+#     ssl_ciphers         HIGH:!aNULL:!MD5;
+#
+#     root  /srv/lightisle/frontend/dist;
+#     index index.html;
+#     client_max_body_size 8m;
+#
+#     location /api/     { proxy_pass http://lightisle_api; proxy_set_header Host $host; }
+#     location /uploads/ { proxy_pass http://lightisle_api; proxy_set_header Host $host; }
+#     location /         { try_files $uri $uri/ /index.html; }
+# }

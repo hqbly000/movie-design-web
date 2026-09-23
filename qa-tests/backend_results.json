@@ -1,0 +1,119 @@
+{
+  "total": 14,
+  "passed": 14,
+  "failed": 0,
+  "results": [
+    {
+      "group": "I.DB",
+      "name": "users 种子条数",
+      "expected": 3,
+      "actual": 3,
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "group": "I.DB",
+      "name": "asset_groups 种子条数",
+      "expected": 3,
+      "actual": 3,
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "group": "I.DB",
+      "name": "assets 种子条数",
+      "expected": 19,
+      "actual": 19,
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "group": "I.DB",
+      "name": "hero_slides 种子条数",
+      "expected": 3,
+      "actual": 3,
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "group": "I.DB",
+      "name": "company_profile 种子条数",
+      "expected": 1,
+      "actual": 1,
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "group": "I.DB",
+      "name": "segments 种子条数",
+      "expected": 5,
+      "actual": 5,
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "group": "I.DB",
+      "name": "segment_items 种子条数",
+      "expected": 10,
+      "actual": 10,
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "group": "I.DB",
+      "name": "videos 种子条数",
+      "expected": 12,
+      "actual": 12,
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "group": "I.DB",
+      "name": "honors 种子条数",
+      "expected": 5,
+      "actual": 5,
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "group": "I.DB",
+      "name": "collections 种子条数",
+      "expected": 3,
+      "actual": 3,
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "group": "I.DB",
+      "name": "collection_items 种子条数",
+      "expected": 7,
+      "actual": 7,
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "group": "I.DB",
+      "name": "distributions 种子条数",
+      "expected": 3,
+      "actual": 3,
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "group": "I.DB",
+      "name": "leads 种子条数",
+      "expected": 4,
+      "actual": 4,
+      "ok": true,
+      "evidence": ""
+    },
+    {
+      "group": "I.DB",
+      "name": "site_settings 种子条数",
+      "expected": 8,
+      "actual": 8,
+      "ok": true,
+      "evidence": ""
+    }
+  ]
+}

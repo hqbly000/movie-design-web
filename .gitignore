@@ -1,25 +1,47 @@
-# dependencies
+# 依赖
 node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
 
-# build
-.astro/
+# 构建产物
 dist/
+dist-ssr/
+build/
+# 注意：dist/ 只匹配名为 dist 的目录，QA 脚本用的临时构建目录要单独写
+.qa-dist/
+.qa-prod/
 
-# environment
+# 环境变量（含密钥，勿提交）
 .env
-.env.*
-!.env.example
+.env.local
+.env.*.local
 
-# backend runtime data（内容后台）
-server/data/
-server/uploads/
-server/.env
+# 上传文件（运行时产物，库中已有种子图）
+backend/uploads/*/*
+!backend/uploads/cover/
+backend/uploads/cover/*.png
 
-# system / editor
+# 日志与临时
+*.log
+npm-debug.log*
 .DS_Store
 Thumbs.db
-.idea/
 .vscode/
+.idea/
+*.swp
+.astro/
 
-# logs
-*.log
+# QA / 浏览器自动化产物（运行期生成，勿提交）
+qa-tests/.edge-*/
+qa-tests/.out/
+qa-tests/.out_start.txt
+qa-tests/_probe.txt
+qa-tests/_bashprobe.txt
+qa-tests/probe*.mjs
+
+# QA 截图（体积大，本地留存即可；docs/qa-report.md 中的图片链接会失效）
+docs/qa-shots/
+qa-tests/*.png

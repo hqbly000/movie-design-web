@@ -1,0 +1,104 @@
+[
+  {
+    "name": "query 校验失败 → code=1001 且 data.field='size'",
+    "expected": "1001 + field=size",
+    "got": "code=1001 field='size'",
+    "ok": true
+  },
+  {
+    "name": "body 校验失败 → code=1001 且 data.field 为真实字段名",
+    "expected": "1001 + field 非空字符串",
+    "got": "code=1001 field='title'",
+    "ok": true
+  },
+  {
+    "name": "path 校验失败 → code=1001 且 data.field 为路径参数名",
+    "expected": "1001 + field 非空字符串",
+    "got": "code=1001 field='video_id'",
+    "ok": true
+  },
+  {
+    "name": "JSON 解析失败 → code=1001 且 data.field is None",
+    "expected": "1001 + field=None",
+    "got": "code=1001 data={'field': None, 'detail': 'JSON decode error'}",
+    "ok": true
+  },
+  {
+    "name": "手动业务 1001（hero 顺序非法）→ code=1001 且 data is None",
+    "expected": "1001 + data=None",
+    "got": "code=1001 data=None",
+    "ok": true
+  },
+  {
+    "name": "框架级 404 → data is None",
+    "expected": "data=None",
+    "got": "http=404 code=1001 data=None",
+    "ok": true
+  },
+  {
+    "name": "框架级 405 → data is None",
+    "expected": "data=None",
+    "got": "http=405 code=1001 data=None",
+    "ok": true
+  },
+  {
+    "name": "3MB 真实图片 → code 0",
+    "expected": "0",
+    "got": "code=0",
+    "ok": true
+  },
+  {
+    "name": "6MB → 1001",
+    "expected": "1001",
+    "got": "code=1001",
+    "ok": true
+  },
+  {
+    "name": "恰好 5,242,880B → code 0（边界含）",
+    "expected": "0",
+    "got": "code=0",
+    "ok": true
+  },
+  {
+    "name": "5,242,881B → 1001（边界外）",
+    "expected": "1001",
+    "got": "code=1001",
+    "ok": true
+  },
+  {
+    "name": "上传失败返回 data:{field:'file',detail}",
+    "expected": "field=file",
+    "got": "{'field': 'file', 'detail': '文件大小超过 5MB 限制'}",
+    "ok": true
+  },
+  {
+    "name": "30MB 未出现 5 倍线性增长的「先读满再判」",
+    "expected": "< 4.0",
+    "got": "T30/T6=1.84（对照 T30txt/T6=1.70）",
+    "ok": true
+  },
+  {
+    "name": "失败用例未留下任何半成品文件（新增数 == 成功用例数 2）",
+    "expected": "2",
+    "got": "新增 2 个",
+    "ok": true
+  },
+  {
+    "name": "落盘文件均为非空完整文件",
+    "expected": "全部 >0",
+    "got": "[3145728, 5242880]",
+    "ok": true
+  },
+  {
+    "name": "无 .tmp/临时半成品命名",
+    "expected": "无",
+    "got": "[]",
+    "ok": true
+  },
+  {
+    "name": "测试产物已清理（uploads/upload 回到测试前集合）",
+    "expected": "0",
+    "got": "残留 0 个",
+    "ok": true
+  }
+]
