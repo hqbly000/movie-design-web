@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>畅享海量影视资源 · 海报墙还原 v5</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000;
+    color: #fff;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ===== 整块：固定 800px 高，文字压在墙上层 ===== */
+  .hero {
+    position: relative;
+    height: 800px;
+    overflow: hidden;
+  }
+
+  /* ---- 海报墙（底层） ---- */
+  .stage {
+    position: absolute; inset: 0;
+    perspective: 700px;              /* 强透视：低机位大压缩 */
+    perspective-origin: 50% 8%;      /* 视点放在顶部 → 越远压得越紧，墙连续 */
+    -webkit-mask-image: linear-gradient(180deg, transparent 14%, #000 40%, #000 94%, transparent 100%);
+    mask-image: linear-gradient(180deg, transparent 14%, #000 40%, #000 94%, transparent 100%);
+  }
+  /* 两侧暗角 */
+  .stage::before, .stage::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 16%;
+    z-index: 3; pointer-events: none;
+  }
+  .stage::before { left: 0; background: linear-gradient(90deg, #000, transparent); }
+  .stage::after  { right: 0; background: linear-gradient(-90deg, #000, transparent); }
+
+  /* 中心亮、四周压暗的 vignette，让文字浮起来 */
+  .vignette {
+    position: absolute; inset: 0; z-index: 4; pointer-events: none;
+    background: radial-gradient(ellipse 75% 60% at 50% 62%, transparent 0%, rgba(0,0,0,.45) 62%, rgba(0,0,0,.8) 100%);
+  }
+
+  .wall { position: absolute; inset: 0; transform-style: preserve-3d; }
+
+  .row {
+    position: absolute; top: 0; left: 50%;
+    display: flex; justify-content: center; gap: 3px;   /* 紧咬成一面墙 */
+    transform-origin: 50% 0;          /* 绕顶边旋转：投影顶边 = 堆叠坐标 */
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+  }
+  .poster {
+    width: clamp(70px, 9.5vw, 170px); /* 原型单张约占屏宽 1/10 */
+    aspect-ratio: 2 / 3;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+    filter: brightness(.55) saturate(.9);  /* 整墙压暗，和原型一致 */
+    transform: rotateY(var(--ry, 0deg));   /* 边缘列 skew，贴大平面的梯形感 */
+    backface-visibility: hidden;
+  }
+
+  /* ---- 文案层（原型文字，完整还原） ---- */
+  .copy {
+    position: absolute; top: 0; left: 0; right: 0;
+    z-index: 5; pointer-events: none;
+    text-align: center; padding-top: 96px;
+  }
+  .copy h1 { font-size: 38px; font-weight: 600; letter-spacing: 4px; }
+  .copy .desc { margin-top: 20px; color: #8f8f8f; font-size: 14px; line-height: 1.9; }
+
+  .stats { display: flex; justify-content: center; gap: 88px; margin-top: 40px; }
+  .stat { text-align: center; }
+  .stat .num {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 52px; line-height: 1;
+    background: linear-gradient(180deg, #f7e8b0 0%, #d9a942 60%, #b8860b 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+  }
+  .stat .unit {
+    font-size: 15px; margin-left: 4px;
+    background: linear-gradient(180deg, #f7e8b0, #d9a942);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .stat .label { margin-top: 8px; color: #777; font-size: 12px; }
+
+  .footnote {
+    position: absolute; left: 0; right: 0; bottom: 12px;
+    z-index: 5; text-align: center; color: #666; font-size: 12px;
+    pointer-events: none;
+  }
+
+  @media (max-width: 768px) {
+    .stats { gap: 30px; }
+    .stat .num { font-size: 34px; }
+    .copy h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="stage" id="stage">
+    <div class="wall" id="wall"></div>
+  </div>
+  <div class="vignette"></div>
+
+  <div class="copy">
+    <h1>畅享海量影视资源</h1>
+    <p class="desc">联网登录影视会员，畅享近3000部电影、10万集电视剧，还有不断更新的曲库资源，丰富你的娱乐生活。<br>所有内容均获得正版授权，不用担心停播风险！</p>
+    <div class="stats">
+      <div class="stat"><span class="num">HD</span><span class="unit">正版</span><div class="label">高清正版</div></div>
+      <div class="stat"><span class="num">30</span><span class="unit">万小时</span><div class="label">小时影视内容</div></div>
+      <div class="stat"><span class="num">10</span><span class="unit">万集</span><div class="label">集电视剧</div></div>
+    </div>
+  </div>
+
+  <p class="footnote">*部分专享内容需付费观看。</p>
+</section>
+
+<script>
+  // ===== 配置（按原型比例推：10 列、可见约 4 排、缝 4px） =====
+  const COLS = 10;     // 每排张数（原型的数量感）
+  const ROWS = 6;      // 循环总排数
+  const SPEED = 40;    // 沿曲面滚动速度 px/s
+  const GAP = 4;       // 排间隙：紧咬，不产生黑带
+
+  const stage = document.getElementById('stage');
+  const wall = document.getElementById('wall');
+  const center = (COLS - 1) / 2;
+
+  const rows = [];
+  for (let r = 0; r < ROWS; r++) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    for (let c = 0; c < COLS; c++) {
+      const img = document.createElement('img');
+      img.className = 'poster';
+      img.src = `https://picsum.photos/seed/movie${(r * COLS + c) % 90}/200/300`;
+      img.alt = '电影海报';
+      img.loading = 'lazy';
+      // 边缘列向内扣 → 整墙像贴在一块大平面上，两端呈梯形
+      img.style.setProperty('--ry', (-(c - center) * 3.5).toFixed(1) + 'deg');
+      row.appendChild(img);
+    }
+    wall.appendChild(row);
+    rows.push(row);
+  }
+
+  // ===== 屏幕空间堆叠：缝隙由构造保证 =====
+  // 之前把行放在"世界坐标曲面"上，投影会把行距吃掉（桌面尺寸下墙断成三条）。
+  // 现在反过来：先定每行的"投影后"位置——从屏幕底边往上逐行堆叠，
+  // 行间距恒等于 GAP（4px），再按该行自身的缩放 s 反解 translate 值。
+  // 透视(perspective)只负责梯形畸变，不再参与行距计算 → 任何尺寸下墙都连续。
+  //
+  //   q = 行在循环中的进度（0=底部入场，1=顶部退场）
+  //   θ(q)：55°→12°（凹面立起）→ 12°（近正）→ 45°（向地平线后倒）
+  //   z(q)：0 → -480（越上越远，配合透视产生收敛与梯形）
+  //   s = p/(p - z)：该行整体缩放
+  //   投影行高 h' = h·cosθ·s → 堆叠时扣除，缝隙恒为 GAP
+  const P = 700;
+  const QN = 240;                       // Y(q) 曲线采样数
+  function thetaAt(q) {
+    if (q < 0.30) return 55 + (12 - 55) * (q / 0.30);
+    if (q < 0.50) return 12;
+    return 12 + (45 - 12) * ((q - 0.50) / 0.50);
+  }
+  function zAt(q) { return -480 * Math.pow(q, 1.2); }
+  function sAt(q) { return P / (P - zAt(q)); }
+  function hProjAt(q) { return rowH * Math.cos(thetaAt(q) * Math.PI / 180) * sAt(q); }
+
+  let rowH = 0, Ytab = null, scroll = 0, last = performance.now(), paused = false;
+  const clamp = (v) => Math.max(0, Math.min(1, v));
+
+  // Y(q)：进度 q 对应的"投影顶边"屏幕坐标。
+  // 预积分一次：dY/dq = -(行投影高 + GAP) / Δq，Δq = 1/ROWS
+  // → 缝隙恒为 GAP；且 Y 只依赖 q，每行沿固定曲线匀速上移 = 真滚动，不再整体缩放。
+  function measure() {
+    const t = rows[0].style.transform;
+    rows[0].style.transform = 'none';
+    rowH = rows[0].getBoundingClientRect().height || 200;
+    rows[0].style.transform = t;
+    const H = stage.clientHeight;
+    Ytab = new Array(QN + 1);
+    let y = H + 30;
+    for (let i = 0; i <= QN; i++) {
+      const q = i / QN;
+      Ytab[i] = y;
+      y -= (hProjAt(q) + GAP) * ROWS / QN;
+    }
+  }
+
+  function layout(now) {
+    const H = stage.clientHeight;
+    const oy = H * 0.08;                       // 与 CSS perspective-origin 一致
+    const dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+    if (!paused) scroll = (scroll + (40 / (H + 300)) * dt) % 1;
+
+    rows.forEach((row, r) => {
+      const q = (r / ROWS + scroll) % 1;
+      const x = q * QN;
+      const i = Math.min(Math.floor(x), QN - 1);
+      const k = x - i;
+      const yTop = Ytab[i] + (Ytab[i + 1] - Ytab[i]) * k;
+      const th = thetaAt(q), z = zAt(q), s = sAt(q);
+      const y = oy + (yTop - oy) / s;          // 反解投影 → translate
+      const fade = clamp(q / 0.06) * clamp((1 - q) / 0.16);
+      row.style.opacity = fade;
+      row.style.transform =
+        `translate(-50%, ${y}px) translateZ(${z}px) rotateX(${th}deg)`;
+    });
+    requestAnimationFrame(layout);
+  }
+
+  // 悬停只暂停滚动
+  stage.addEventListener('mouseenter', () => paused = true);
+  stage.addEventListener('mouseleave', () => paused = false);
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  measure();
+  if (reduced) paused = true;
+  requestAnimationFrame(layout);
+  addEventListener('resize', measure);
+</script>
+
+</body>
+</html>

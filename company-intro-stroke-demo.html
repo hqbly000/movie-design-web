@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>公司介绍 · 方案 A-2 · SVG 描边字 + 描边动画</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-base: #0a0a0a;
+        --surface: #14120f;
+        --hairline: #1f1f1f;
+        --text-primary: #fafafa;
+        --accent-orange: #ff6a00;
+        --accent-gold: #c49a4a;
+        --accent-gold-light: #e8c77a;
+        --hl-gold: #f0d9a0;
+        --ivory: #f4f0e8;
+        --font-serif: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
+        --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #050505;
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      .stage {
+        width: 1440px;
+        margin: 0 auto;
+      }
+      .group + .group {
+        margin-top: 56px;
+        border-top: 2px solid var(--hairline);
+      }
+      .tag {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 18px;
+        background: rgba(10, 10, 10, 0.92);
+        border-bottom: 1px solid var(--hairline);
+        font-size: 12px;
+        letter-spacing: 3px;
+        color: var(--accent-gold);
+        width: 100%;
+      }
+      .tag b {
+        font-weight: 700;
+      }
+      .tag span {
+        color: rgba(255, 255, 255, 0.45);
+        letter-spacing: 1px;
+      }
+      .ly-container {
+        width: 100%;
+        max-width: 1440px;
+        margin: 0 auto;
+        padding-left: 120px;
+        padding-right: 120px;
+      }
+      .ly-section {
+        padding-top: 110px;
+        padding-bottom: 110px;
+      }
+      .kicker {
+        font-size: 13px;
+        letter-spacing: 5px;
+        color: var(--accent-gold);
+        text-transform: uppercase;
+      }
+
+      /* ===== 区块外壳 ===== */
+      .new {
+        position: relative;
+        background: var(--bg-base);
+        overflow: hidden;
+      }
+      .new::before {
+        content: '';
+        position: absolute;
+        top: -220px;
+        left: -160px;
+        width: 900px;
+        height: 700px;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(196, 154, 74, 0.17),
+          rgba(196, 154, 74, 0.06) 46%,
+          transparent 72%
+        );
+        filter: blur(10px);
+        pointer-events: none;
+      }
+      .new::after {
+        content: '';
+        position: absolute;
+        right: -200px;
+        bottom: -260px;
+        width: 720px;
+        height: 560px;
+        background: radial-gradient(ellipse at center, rgba(232, 199, 122, 0.07), transparent 66%);
+        filter: blur(14px);
+        pointer-events: none;
+      }
+      .inner {
+        position: relative;
+        z-index: 2;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        align-items: center;
+        gap: 80px;
+      }
+      h2 {
+        font-family: var(--font-serif);
+        font-weight: 400;
+        font-size: 44px;
+        line-height: 1.15;
+        margin: 18px 0 0;
+        color: var(--text-primary);
+      }
+      .rule {
+        width: 44px;
+        height: 1px;
+        background: var(--accent-gold);
+        margin: 22px 0 20px;
+      }
+      .cname {
+        font-size: 20px;
+        font-weight: 500;
+        letter-spacing: 1px;
+        color: var(--ivory);
+        margin: 0;
+      }
+      .body {
+        font-size: 17px;
+        line-height: 32px;
+        color: rgba(255, 255, 255, 0.85);
+        margin: 16px 0 0;
+        max-width: 62ch;
+      }
+      .years {
+        justify-self: center;
+      }
+      .hair {
+        position: absolute;
+        left: 120px;
+        right: 120px;
+        bottom: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(196, 154, 74, 0.28) 22%,
+          rgba(196, 154, 74, 0.28) 78%,
+          transparent
+        );
+        z-index: 3;
+      }
+
+      /* ===== 按钮三种候选 ===== */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 13px 34px;
+        border-radius: 2px;
+        font-size: 14px;
+        letter-spacing: 3px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+      }
+      .btn-orange {
+        background: var(--accent-orange);
+        color: #fff;
+      }
+      .btn-orange:hover {
+        background: #e85f00;
+      }
+      .btn-goldline {
+        background: transparent;
+        border-color: rgba(196, 154, 74, 0.55);
+        color: var(--accent-gold-light);
+      }
+      .btn-goldline:hover {
+        border-color: rgba(232, 199, 122, 0.9);
+        background: rgba(196, 154, 74, 0.1);
+      }
+      .btn-ivory {
+        background: var(--ivory);
+        color: #1a1a1a;
+      }
+      .btn-ivory:hover {
+        background: #fff;
+      }
+      .btn-row {
+        margin-top: 30px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+      .btn-cap {
+        font-size: 11px;
+        letter-spacing: 2px;
+        color: rgba(255, 255, 255, 0.32);
+      }
+
+      /* ============================================================
+         参考：橙色实心数字（方案 A 原版）
+         ============================================================ */
+      .emblem-solid {
+        display: flex;
+        align-items: flex-end;
+        gap: 20px;
+        line-height: 1;
+      }
+      .solid-wrap {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+      }
+      .solid-ghost {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-weight: 900;
+        font-size: 302px;
+        line-height: 1;
+        color: transparent;
+        -webkit-text-stroke: 2px rgba(255, 217, 191, 0.5);
+      }
+      .solid-fg {
+        position: relative;
+        font-weight: 900;
+        font-size: 208px;
+        line-height: 1;
+        color: var(--accent-orange);
+      }
+      .side {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding-bottom: 8px;
+      }
+      .side .since {
+        font-size: 14px;
+        letter-spacing: 3px;
+        font-weight: 600;
+        color: var(--accent-gold);
+      }
+      .side .unit {
+        font-size: 30px;
+        font-weight: 700;
+        line-height: 1.2;
+        color: var(--ivory);
+      }
+
+      /* ============================================================
+         方案 A-2：SVG 描边字 + 逐笔勾出动画
+         ============================================================ */
+      .emblem-stroke {
+        display: flex;
+        align-items: flex-end;
+        gap: 6px;
+      }
+      /* viewBox 按 300px 字号的实测墨迹裁切：ink 159×234，左右各留 8.5 给描边 */
+      .year-svg {
+        display: block;
+        width: 176px;
+        height: 240px;
+        overflow: visible;
+      }
+      .year-svg text {
+        font-family: var(--font-sans);
+        font-weight: 900;
+        line-height: 1;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+      }
+      /* 主体数字：金色渐变描边，逐笔勾出后落一层极淡金填充。外圈幽灵描边已去掉 */
+      .year-svg .m {
+        --len: 1500;
+        font-size: 300px;
+        fill: rgba(196, 154, 74, 0);
+        stroke: url(#goldStroke);
+        stroke-width: 2.2;
+        stroke-dasharray: var(--len);
+        stroke-dashoffset: var(--len);
+      }
+      .play .year-svg .m {
+        animation:
+          drawM 4.4s cubic-bezier(0.33, 0.02, 0.2, 1) 0.9s forwards,
+          fillM 2s ease-out 5s forwards,
+          glowM 2s ease-out 5s forwards;
+      }
+      @keyframes drawM {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+      @keyframes fillM {
+        to {
+          fill: rgba(196, 154, 74, 0.13);
+        }
+      }
+      @keyframes glowM {
+        to {
+          filter: drop-shadow(0 0 26px rgba(232, 199, 122, 0.28));
+        }
+      }
+      /* 未播放时保持终态，避免静态截图看不到效果 */
+      .settled .year-svg .m {
+        stroke-dashoffset: 0;
+      }
+      .settled .year-svg .m {
+        fill: rgba(196, 154, 74, 0.13);
+        filter: drop-shadow(0 0 26px rgba(232, 199, 122, 0.28));
+      }
+      .emblem-stroke .side .since {
+        color: var(--accent-gold-light);
+      }
+      .emblem-stroke .side .unit {
+        font-family: var(--font-serif);
+        font-weight: 400;
+        color: var(--ivory);
+      }
+
+      /* ===== SINCE 2017 竖排四种走法 ===== */
+      /* V1 · 字母直立堆叠（主推）：一列自上而下，Han 与拉丁都正立 */
+      .v1 {
+        writing-mode: vertical-rl;
+        text-orientation: upright;
+        display: inline-flex;
+        flex-direction: row; /* vertical-rl 下 row = 自上而下 */
+        align-items: flex-start;
+        gap: 14px;
+      }
+      /* V2 · 字母侧倒自上而下：vertical 默认 mixed，拉丁转 90° */
+      .v2 {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        display: inline-flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 14px;
+      }
+      /* V3 · 整行侧倒自下而上：经典片尾字幕感 */
+      .v3 {
+        writing-mode: vertical-lr;
+        transform: rotate(180deg);
+        text-orientation: mixed;
+        display: inline-flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 14px;
+      }
+      /* 容器整体转了 180°，「年」要反向转回来，否则汉字倒立 */
+      .v3 .v-unit {
+        display: inline-block;
+        transform: rotate(180deg);
+      }
+      /* V4 · 不竖排，拆两行横排 */
+      .v4 {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .v-since {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 6px;
+        color: var(--accent-gold-light);
+        white-space: nowrap;
+      }
+      .v-unit {
+        font-family: var(--font-serif);
+        font-weight: 400;
+        font-size: 26px;
+        line-height: 1;
+        color: var(--ivory);
+      }
+      .v4 .v-since {
+        letter-spacing: 3px;
+      }
+      .v4 .v-unit {
+        font-size: 30px;
+      }
+
+      /* 竖排对照卡 */
+      .cmp {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        background: var(--hairline);
+        border-top: 1px solid var(--hairline);
+      }
+      .cmp-cell {
+        background: var(--bg-base);
+        padding: 40px 24px 34px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 26px;
+      }
+      .cmp-cell .row {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        min-height: 150px;
+      }
+      .cmp-cell .year-svg {
+        width: 132px;
+        height: 180px;
+      }
+      /* viewBox 缩放会等比缩描边，反向补回字重 */
+      .cmp-cell .year-svg .m {
+        stroke-width: 2.9;
+      }
+      .cmp-cell .lbl {
+        font-size: 11px;
+        letter-spacing: 2px;
+        color: rgba(255, 255, 255, 0.42);
+        text-align: center;
+        line-height: 20px;
+      }
+      .cmp-cell .lbl b {
+        display: block;
+        color: var(--accent-gold);
+        font-weight: 600;
+        letter-spacing: 3px;
+      }
+
+      /* ===== 控制条 ===== */
+      .ctrl {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 120px;
+        background: #080808;
+        border-bottom: 1px solid var(--hairline);
+      }
+      .ctrl button {
+        padding: 9px 22px;
+        border: 1px solid rgba(196, 154, 74, 0.5);
+        border-radius: 2px;
+        background: transparent;
+        color: var(--accent-gold-light);
+        font-size: 12px;
+        letter-spacing: 3px;
+        cursor: pointer;
+        font-family: var(--font-sans);
+      }
+      .ctrl button:hover {
+        background: rgba(196, 154, 74, 0.12);
+      }
+      .ctrl i {
+        font-style: normal;
+        font-size: 12px;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      /* ===== 移动端 ===== */
+      .m-shell {
+        display: flex;
+        justify-content: center;
+        padding: 40px 0 24px;
+        background: #050505;
+      }
+      .m-frame {
+        width: 390px;
+        border: 1px solid var(--hairline);
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--bg-base);
+      }
+      .m-frame .new::before {
+        top: -190px;
+        left: -150px;
+        width: 540px;
+        height: 420px;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(196, 154, 74, 0.12),
+          rgba(196, 154, 74, 0.04) 46%,
+          transparent 72%
+        );
+      }
+      .m-frame .new::after {
+        display: none;
+      }
+      .m-pad {
+        padding: 72px 24px;
+      }
+      .m-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .m-stack h2 {
+        font-size: 34px;
+        margin: 0;
+      }
+      .m-stack .rule {
+        margin: 0;
+      }
+      .m-stack .cname {
+        font-size: 18px;
+      }
+      .m-stack .body {
+        font-size: 17px;
+        line-height: 32px;
+        margin: 0;
+      }
+      .m-stack .year-svg {
+        width: 100px;
+        height: 136px;
+      }
+      .m-stack .year-svg .m {
+        stroke-width: 4;
+      }
+      .m-stack .settled .year-svg .m {
+        fill: rgba(196, 154, 74, 0.2);
+      }
+      .m-stack .emblem-stroke {
+        gap: 4px;
+        padding: 8px 0 4px;
+      }
+      .m-stack .v-since {
+        font-size: 12px;
+        letter-spacing: 5px;
+      }
+      .m-stack .v-unit {
+        font-size: 20px;
+      }
+      .m-stack .btn-row {
+        margin-top: 4px;
+      }
+
+      .note {
+        width: 1440px;
+        margin: 0 auto;
+        padding: 26px 120px 70px;
+        font-size: 13px;
+        line-height: 25px;
+        color: rgba(255, 255, 255, 0.52);
+      }
+      .note h3 {
+        font-family: var(--font-serif);
+        font-size: 19px;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.88);
+        margin: 0 0 14px;
+      }
+      .note ul {
+        margin: 0 0 22px;
+        padding-left: 18px;
+      }
+      .note li {
+        margin-bottom: 7px;
+      }
+      code {
+        font-family: Consolas, Menlo, monospace;
+        font-size: 12px;
+        color: var(--hl-gold);
+        background: rgba(196, 154, 74, 0.1);
+        padding: 1px 6px;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <linearGradient id="goldStroke" x1="0" y1="0" x2="0.35" y2="1">
+          <stop offset="0%" stop-color="#f7e6bd" />
+          <stop offset="38%" stop-color="#e8c77a" />
+          <stop offset="72%" stop-color="#c49a4a" />
+          <stop offset="100%" stop-color="#8f6a2c" />
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <div class="stage">
+      <div class="ctrl">
+        <button type="button" onclick="replay()">&#9654; 重播描边动画</button>
+        <i>动画在进入视口时触发一次；这里手动重播</i>
+      </div>
+
+      <!-- ============ 参考：橙色实心 ============ -->
+      <div class="group">
+        <div class="tag"><b>参考</b><span>方案 A 原版 · 橙色实心数字 + 幽灵叠印</span></div>
+        <section class="new">
+          <div class="ly-container ly-section inner">
+            <div class="grid">
+              <div>
+                <div class="kicker">ABOUT · 关于我们</div>
+                <h2>公司介绍</h2>
+                <div class="rule"></div>
+                <p class="cname">光屿影像文化传媒有限公司</p>
+                <p class="body">
+                  光屿摄影成立于 2017 年，是一家专注于人像、婚礼与商业影像的文化传媒机构。我们相信每一次相遇都值得被认真记录。九年来，团队以自然光与电影感为语言，为个人与品牌留下经得起时间回望的画面。
+                </p>
+                <div class="btn-row"><span class="btn btn-orange">探索详情</span></div>
+              </div>
+              <div class="years">
+                <div class="emblem-solid">
+                  <div class="solid-wrap">
+                    <span class="solid-ghost">9</span>
+                    <span class="solid-fg">9</span>
+                  </div>
+                  <div class="side">
+                    <span class="since">SINCE 2017</span>
+                    <span class="unit">年</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="hair"></div>
+        </section>
+      </div>
+
+      <!-- ============ 方案 A-2：描边字 ============ -->
+      <div class="group">
+        <div class="tag"><b>方案 A-2 · 描边字</b><span>金色渐变描边 · 逐笔勾出 · 落笔后极淡金填充</span></div>
+        <section class="new" id="sec-a2">
+          <div class="ly-container ly-section inner">
+            <div class="grid">
+              <div>
+                <div class="kicker">ABOUT · 关于我们</div>
+                <h2>公司介绍</h2>
+                <div class="rule"></div>
+                <p class="cname">光屿影像文化传媒有限公司</p>
+                <p class="body">
+                  光屿摄影成立于 2017 年，是一家专注于人像、婚礼与商业影像的文化传媒机构。我们相信每一次相遇都值得被认真记录。九年来，团队以自然光与电影感为语言，为个人与品牌留下经得起时间回望的画面。
+                </p>
+                <div class="btn-row">
+                  <span class="btn btn-goldline">探索详情</span>
+                  <span class="btn btn-ivory">探索详情</span>
+                  <span class="btn btn-orange">探索详情</span>
+                </div>
+                <p class="btn-cap" style="margin: 12px 0 0">
+                  按钮候选：① 金线描边（最贴这套暗调） ② 象牙实心（复用全站已有
+                  <code>ly-btn-ivory</code>） ③ 橙色实心（保持原样）
+                </p>
+              </div>
+              <div class="years">
+                <div class="emblem-stroke">
+                  <svg class="year-svg" viewBox="-88 -234 176 240" role="img" aria-label="成立 9 年">
+                    <text class="m" x="0" y="0" text-anchor="middle">9</text>
+                  </svg>
+                  <div class="v2">
+                    <span class="v-since">SINCE 2017</span>
+                    <span class="v-unit">年</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="hair"></div>
+        </section>
+      </div>
+
+      <!-- ============ SINCE 竖排四选一 ============ -->
+      <div class="group">
+        <div class="tag"><b>SINCE 2017 竖排四选一</b><span>已选 V2 应用到上方主区块，其余三个留作对照</span></div>
+        <div class="cmp">
+          <div class="cmp-cell">
+            <div class="row settled">
+              <svg class="year-svg" viewBox="-88 -234 176 240" aria-hidden="true">
+                <text class="m" x="0" y="0" text-anchor="middle">9</text>
+              </svg>
+              <div class="v1">
+                <span class="v-since">SINCE 2017</span>
+                <span class="v-unit">年</span>
+              </div>
+            </div>
+            <div class="lbl"><b>V1 直立堆叠</b>字母全部正立，自上而下<br />与「年」同一书写方向，最整体</div>
+          </div>
+          <div class="cmp-cell">
+            <div class="row settled">
+              <svg class="year-svg" viewBox="-88 -234 176 240" aria-hidden="true">
+                <text class="m" x="0" y="0" text-anchor="middle">9</text>
+              </svg>
+              <div class="v2">
+                <span class="v-since">SINCE 2017</span>
+                <span class="v-unit">年</span>
+              </div>
+            </div>
+            <div class="lbl"><b>V2 侧倒向下 ✓ 已采用</b>拉丁转 90°，自上而下读<br />Han 在 mixed 下本就正立，「年」不用额外处理</div>
+          </div>
+          <div class="cmp-cell">
+            <div class="row settled">
+              <svg class="year-svg" viewBox="-88 -234 176 240" aria-hidden="true">
+                <text class="m" x="0" y="0" text-anchor="middle">9</text>
+              </svg>
+              <div class="v3">
+                <span class="v-since">SINCE 2017</span>
+                <span class="v-unit">年</span>
+              </div>
+            </div>
+            <div class="lbl"><b>V3 侧倒向上</b>整行转 180°，自下而上读<br />片尾字幕感，最"电影"，但最难读</div>
+          </div>
+          <div class="cmp-cell">
+            <div class="row settled">
+              <svg class="year-svg" viewBox="-88 -234 176 240" aria-hidden="true">
+                <text class="m" x="0" y="0" text-anchor="middle">9</text>
+              </svg>
+              <div class="v4">
+                <span class="v-since">SINCE 2017</span>
+                <span class="v-unit">年</span>
+              </div>
+            </div>
+            <div class="lbl"><b>V4 拆两行横排</b>不竖排，SINCE 与 2017 分列<br />最稳妥，改动最小</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 移动端 ============ -->
+      <div class="group">
+        <div class="tag"><b>方案 A-2 · 移动端 390</b><span>viewBox 等比缩到 100×136，描边补粗到 4 抵消缩放</span></div>
+        <div class="m-shell">
+          <div class="m-frame">
+            <div class="m-pad new">
+              <div class="m-stack inner">
+                <div class="kicker">ABOUT · 关于我们</div>
+                <h2>公司介绍</h2>
+                <div class="rule"></div>
+                <p class="cname">光屿影像文化传媒有限公司</p>
+                <p class="body">
+                  光屿摄影成立于 2017 年，是一家专注于人像、婚礼与商业影像的文化传媒机构。我们相信每一次相遇都值得被认真记录。九年来，团队以自然光与电影感为语言，为个人与品牌留下经得起时间回望的画面。
+                </p>
+                <div class="emblem-stroke">
+                  <svg class="year-svg" viewBox="-88 -234 176 240" aria-hidden="true">
+                    <text class="m" x="0" y="0" text-anchor="middle">9</text>
+                  </svg>
+                  <div class="v2">
+                    <span class="v-since">SINCE 2017</span>
+                    <span class="v-unit">年</span>
+                  </div>
+                </div>
+                <div class="btn-row"><span class="btn btn-goldline">探索详情</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <h3>描边字怎么做的</h3>
+        <ul>
+          <li>
+            单层 <code>&lt;text&gt;</code>：主体 300px 走 <code>stroke: url(#goldStroke)</code>
+            竖向金渐变（<code>#F7E6BD → #E8C77A → #C49A4A → #8F6A2C</code>）。外圈幽灵描边已删除 ——
+            前景本身就是金线，再套一层线只剩脏
+          </li>
+          <li>
+            <b>间距是裁出来的，不是调 gap 调出来的</b>：SVG <code>getBBox()</code> 对
+            <code>&lt;text&gt;</code> 返回的是字体行盒（Noto Sans SC 约 1.45em）而不是字形墨迹，所以旧
+            viewBox <code>0 0 300 210</code> 里"9"实际只占 110×161，左右各空 95px。改用 canvas
+            <code>measureText().actualBoundingBox*</code> 量到 300px 下墨迹 159×234，viewBox 收成
+            <code>-88 -234 176 240</code>，再把 <code>.emblem-stroke</code> 的 gap 从 20 降到 6
+          </li>
+          <li>
+            逐笔勾出 = <code>stroke-dasharray</code> / <code>stroke-dashoffset</code> 从 1500 收到
+            0，<b>4.4s</b> 起笔延后 0.9s，缓动 <code>cubic-bezier(.33,.02,.2,1)</code>（去掉原来
+            <code>.16,.84</code> 那种"甩出去"的急收）；落金 + 辉光推到 5s 才开始，整段约 7s 走完
+          </li>
+          <li>
+            勾完再接 2s 把 <code>fill</code> 淡入到 <code>rgba(196,154,74,.13)</code>，同时
+            <code>drop-shadow(0 0 26px)</code> 起辉光 —— 线框数字没有实心色块压场，辉光比之前更关键</li
+          >
+          <li>
+            <code>SINCE 2017</code> 竖排取 <b>V2</b>（<code>writing-mode: vertical-rl</code> +
+            <code>text-orientation: mixed</code>，拉丁侧倒自上而下）。注意 flex 要写
+            <code>flex-direction: row</code>，vertical-rl 下 row 才是自上而下，写 column 会横着排</li
+          >
+          <li>
+            <code>SINCE 2017</code> 提亮到 <code>#E8C77A</code>，「年」改用 Noto Serif SC
+            与左侧标题同源，替掉原来的黑体 <code>#1F2329</code></li
+          >
+        </ul>
+        <h3>三个要拍板的点</h3>
+        <ul>
+          <li>
+            <b>计数动画要不要留</b>：现在 <code>useCountUp</code> 是 1→9 跳数字，和逐笔勾出是两套语言、
+            放一起会打架。建议<b>去掉计数，只留描边</b>；数字保持静态 9，靠描边动画承担"活"的部分
+          </li>
+          <li>
+            <b>dasharray 要随位数变</b>：300px 下单个数字轮廓周长约 1440，两位数约 2880。实现时按
+            <code>String(years).length</code> 给系数（<code>位数 × 1500</code>）即可，不然两位数时后半段
+            画不完。宁大勿小：偏大只是结尾空转一小段，偏小则永远缺一截
+          </li>
+          <li>
+            <b>按钮选哪个</b>：① 金线描边最贴这套暗调；② 象牙实心是全站已有 token，
+            和荣誉/首屏的按钮体系同源；③ 橙色实心保持原样。选 ③ 的话这一屏就还是有一块橙色斑
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      const targets = () => document.querySelectorAll('#sec-a2 .emblem-stroke, .m-stack .emblem-stroke');
+      function settle() {
+        targets().forEach((el) => {
+          el.classList.remove('play');
+          el.classList.add('settled');
+        });
+      }
+      function replay() {
+        targets().forEach((el) => {
+          el.classList.remove('play', 'settled');
+          void el.offsetWidth;
+          el.classList.add('play');
+        });
+      }
+      // 首屏先给终态，滚动到区块时自动播一次
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (!e.isIntersecting) return;
+            e.target.classList.remove('settled');
+            void e.target.offsetWidth;
+            e.target.classList.add('play');
+            io.unobserve(e.target);
+          });
+        },
+        { threshold: 0.4 }
+      );
+      settle();
+      targets().forEach((el) => io.observe(el));
+    </script>
+  </body>
+</html>

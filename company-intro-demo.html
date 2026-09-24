@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>公司介绍 · 方案 A 暗调沉浸 · 效果对比</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500&family=EB+Garamond:wght@400&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-base: #0a0a0a;
+        --surface: #14120f;
+        --border-hairline: #1f1f1f;
+        --text-primary: #fafafa;
+        --accent-orange: #ff6a00;
+        --accent-gold: #c49a4a;
+        --accent-gold-light: #e8c77a;
+        --hl-gold: #f0d9a0;
+        --ivory: #f4f0e8;
+        --ghost-stroke: #ffd9bf;
+        --font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
+        --font-sans: 'Noto Sans SC', 'Source Han Sans SC', 'PingFang SC', 'Microsoft YaHei',
+          system-ui, sans-serif;
+        --font-latin: Cormorant, 'EB Garamond', 'Times New Roman', Georgia, serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #050505;
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ===== 演示外壳：宽度锁 1440，与站点 ly-container 对齐 ===== */
+      .stage {
+        width: 1440px;
+        margin: 0 auto;
+      }
+      .group + .group {
+        margin-top: 56px;
+        border-top: 2px solid #1f1f1f;
+      }
+      .tag {
+        position: relative;
+        left: 0;
+        z-index: 20;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 0 0;
+        padding: 9px 18px;
+        background: rgba(10, 10, 10, 0.9);
+        border-bottom: 1px solid var(--border-hairline);
+        border-right: 1px solid var(--border-hairline);
+        font-size: 12px;
+        letter-spacing: 3px;
+        color: var(--accent-gold);
+        width: 100%;
+      }
+      .tag b {
+        font-weight: 700;
+        letter-spacing: 3px;
+      }
+      .tag span {
+        color: rgba(255, 255, 255, 0.45);
+        letter-spacing: 1px;
+      }
+
+      /* ===== 通用区块骨架 ===== */
+      .ly-container {
+        width: 100%;
+        max-width: 1440px;
+        margin: 0 auto;
+        padding-left: 120px;
+        padding-right: 120px;
+      }
+      .ly-section {
+        padding-top: 110px;
+        padding-bottom: 110px;
+      }
+      .kicker {
+        font-family: var(--font-sans);
+        font-size: 13px;
+        letter-spacing: 5px;
+        color: var(--accent-gold);
+        text-transform: uppercase;
+      }
+
+      /* ===== 上下文条：模拟上一屏（首屏照片）与下一屏（荣誉射灯） ===== */
+      .ctx {
+        position: relative;
+        height: 190px;
+        overflow: hidden;
+      }
+      .ctx-hero {
+        background:
+          radial-gradient(120% 90% at 72% 18%, rgba(120, 86, 48, 0.5), transparent 62%),
+          linear-gradient(199deg, #2a231a 0%, #14100c 44%, #070605 100%);
+      }
+      .ctx-hero::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.55) 0%,
+          rgba(0, 0, 0, 0.2) 52%,
+          rgba(0, 0, 0, 0.72) 100%
+        );
+      }
+      .ctx-hero .cap {
+        position: absolute;
+        left: 120px;
+        bottom: 26px;
+        z-index: 2;
+        font-family: var(--font-serif);
+        font-weight: 300;
+        font-size: 26px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      .ctx-hero .cap i {
+        display: block;
+        margin-bottom: 8px;
+        font-style: normal;
+        font-family: var(--font-sans);
+        font-size: 11px;
+        letter-spacing: 5px;
+        color: var(--accent-gold);
+      }
+
+      .ctx-honor {
+        background: #0a0a0a;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
+      .ctx-honor .glow {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 62%;
+        height: 170px;
+        background: radial-gradient(
+          ellipse at center bottom,
+          rgba(196, 154, 74, 0.24),
+          rgba(196, 154, 74, 0.07) 44%,
+          transparent 72%
+        );
+        filter: blur(7px);
+      }
+      .ctx-honor .lamp {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 22%;
+        height: 2px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, transparent, rgba(240, 217, 160, 0.5), transparent);
+      }
+      .ctx-honor .cards {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        gap: 18px;
+        margin-bottom: -34px;
+      }
+      .ctx-honor .hc {
+        width: 148px;
+        height: 92px;
+        border: 1px solid rgba(196, 154, 74, 0.3);
+        border-radius: 4px;
+        background: linear-gradient(180deg, rgba(255, 246, 218, 0.14), rgba(196, 154, 74, 0.05));
+      }
+      .ctx-honor .hc:nth-child(2) {
+        border-color: rgba(232, 199, 122, 0.7);
+        box-shadow: 0 0 60px rgba(240, 217, 120, 0.24);
+        background: linear-gradient(180deg, rgba(255, 246, 218, 0.34), rgba(196, 154, 74, 0.08));
+      }
+      .ctx-honor .hc:nth-child(odd) {
+        opacity: 0.45;
+      }
+
+      /* ============================================================
+         现状：米白平涂（bg-light-section）
+         ============================================================ */
+      .old {
+        background: var(--ivory);
+        color: #1a1a1a;
+      }
+      .old .kicker {
+        /* #C49A4A 在米白上实测约 2.2:1，几乎糊掉 */
+        color: var(--accent-gold);
+      }
+      .old h2 {
+        font-family: var(--font-serif);
+        font-size: 44px;
+        line-height: 1.15;
+        margin: 18px 0 0;
+        color: #1a1a1a;
+        font-weight: 400;
+      }
+      .old .cname {
+        font-size: 20px;
+        font-weight: 500;
+        color: #1f2329;
+        margin: 14px 0 0;
+      }
+      .old .body {
+        font-size: 17px;
+        line-height: 32px;
+        color: rgba(26, 26, 26, 0.6);
+        margin: 14px 0 0;
+      }
+      .old .grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        align-items: center;
+        gap: 80px;
+      }
+      .old .years {
+        justify-self: center;
+      }
+      .btn-orange {
+        display: inline-flex;
+        margin-top: 30px;
+        padding: 13px 34px;
+        background: var(--accent-orange);
+        color: #fff;
+        font-size: 14px;
+        letter-spacing: 3px;
+        border-radius: 2px;
+      }
+
+      /* 年份叠印（两版共用结构，色值各自覆盖） */
+      .emblem {
+        display: flex;
+        align-items: flex-end;
+        gap: 20px;
+        line-height: 1;
+      }
+      .num-wrap {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+      }
+      .ghost {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-family: var(--font-sans);
+        font-weight: 900;
+        font-size: 302px;
+        line-height: 1;
+        color: transparent;
+        -webkit-text-stroke-width: 2px;
+        white-space: nowrap;
+      }
+      .fg {
+        position: relative;
+        font-family: var(--font-sans);
+        font-weight: 900;
+        font-size: 208px;
+        line-height: 1;
+        color: var(--accent-orange);
+      }
+      .side {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding-bottom: 8px;
+      }
+      .side .since {
+        font-size: 14px;
+        letter-spacing: 3px;
+        font-weight: 600;
+      }
+      .side .unit {
+        font-size: 30px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      /* 现状配色：SINCE 冷灰蓝、年 冷灰、幽灵描边在米白上不可见 */
+      .old .ghost {
+        -webkit-text-stroke-color: var(--ghost-stroke);
+      }
+      .old .side .since {
+        color: #8a919c;
+      }
+      .old .side .unit {
+        color: #1f2329;
+      }
+
+      /* ============================================================
+         方案 A：暗调沉浸
+         ============================================================ */
+      .new {
+        position: relative;
+        background: var(--bg-base);
+        overflow: hidden;
+      }
+      /* 金色漏光：左上主光 + 右下极淡回光，与荣誉展厅同一束光语言 */
+      .new::before {
+        content: '';
+        position: absolute;
+        top: -220px;
+        left: -160px;
+        width: 900px;
+        height: 700px;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(196, 154, 74, 0.17),
+          rgba(196, 154, 74, 0.06) 46%,
+          transparent 72%
+        );
+        filter: blur(10px);
+        pointer-events: none;
+      }
+      .new::after {
+        content: '';
+        position: absolute;
+        right: -200px;
+        bottom: -260px;
+        width: 720px;
+        height: 560px;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(232, 199, 122, 0.07),
+          transparent 66%
+        );
+        filter: blur(14px);
+        pointer-events: none;
+      }
+      .new .inner {
+        position: relative;
+        z-index: 2;
+      }
+      .new .grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        align-items: center;
+        gap: 80px;
+      }
+      .new h2 {
+        font-family: var(--font-serif);
+        font-size: 44px;
+        line-height: 1.15;
+        font-weight: 400;
+        margin: 18px 0 0;
+        color: var(--text-primary);
+      }
+      .new .rule {
+        width: 44px;
+        height: 1px;
+        background: var(--accent-gold);
+        margin: 22px 0 20px;
+      }
+      .new .cname {
+        font-size: 20px;
+        font-weight: 500;
+        letter-spacing: 1px;
+        color: var(--ivory);
+        margin: 0;
+      }
+      .new .body {
+        font-size: 17px;
+        line-height: 32px;
+        color: rgba(255, 255, 255, 0.85);
+        margin: 16px 0 0;
+        max-width: 62ch;
+      }
+      .new .years {
+        justify-self: center;
+      }
+      /* 暗底下幽灵描边终于可见；SINCE 换金色、年换象牙白，冷灰全部退出 */
+      .new .ghost {
+        -webkit-text-stroke-color: rgba(255, 217, 191, 0.5);
+      }
+      .new .side .since {
+        color: var(--accent-gold);
+      }
+      .new .side .unit {
+        color: var(--ivory);
+      }
+      .new .hair {
+        position: absolute;
+        left: 120px;
+        right: 120px;
+        bottom: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(196, 154, 74, 0.28) 22%,
+          rgba(196, 154, 74, 0.28) 78%,
+          transparent
+        );
+        z-index: 3;
+      }
+
+      /* ============================================================
+         方案 A · 移动端（390 视口，等比复刻组件断点值）
+         ============================================================ */
+      .m-shell {
+        display: flex;
+        justify-content: center;
+        padding: 40px 0 8px;
+        background: #050505;
+      }
+      .m-frame {
+        width: 390px;
+        border: 1px solid #1f1f1f;
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--bg-base);
+      }
+      .m-cap {
+        text-align: center;
+        font-size: 12px;
+        letter-spacing: 3px;
+        color: rgba(255, 255, 255, 0.4);
+        padding-bottom: 18px;
+      }
+      .m-pad {
+        padding: 72px 24px;
+      }
+      /* 移动端漏光按视口收窄，避免 900px 光斑糊满整卡 */
+      .m-frame .new::before {
+        top: -190px;
+        left: -150px;
+        width: 540px;
+        height: 420px;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(196, 154, 74, 0.12),
+          rgba(196, 154, 74, 0.04) 46%,
+          transparent 72%
+        );
+      }
+      .m-frame .new::after {
+        display: none;
+      }
+      .m-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .m-stack h2 {
+        font-family: var(--font-serif);
+        font-weight: 400;
+        font-size: 34px;
+        line-height: 1.15;
+        margin: 0;
+        color: var(--text-primary);
+      }
+      .m-stack .rule {
+        width: 44px;
+        height: 1px;
+        background: var(--accent-gold);
+      }
+      .m-stack .cname {
+        font-size: 18px;
+        font-weight: 500;
+        letter-spacing: 1px;
+        color: var(--ivory);
+        margin: 0;
+      }
+      .m-stack .body {
+        font-size: 17px;
+        line-height: 32px;
+        color: rgba(255, 255, 255, 0.85);
+        margin: 0;
+      }
+      .m-stack .btn-orange {
+        margin-top: 4px;
+        align-self: flex-start;
+      }
+      .m-stack .emblem {
+        padding: 8px 0 4px;
+      }
+      .m-stack .ghost {
+        font-size: 188px;
+      }
+      .m-stack .fg {
+        font-size: 130px;
+      }
+      .m-stack .side .since {
+        font-size: 12px;
+        color: var(--accent-gold);
+      }
+      .m-stack .side .unit {
+        font-size: 20px;
+        color: var(--ivory);
+      }
+
+      .note {
+        width: 1440px;
+        margin: 0 auto;
+        padding: 26px 120px 60px;
+        font-size: 13px;
+        line-height: 24px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .note b {
+        color: var(--accent-gold-light);
+        font-weight: 500;
+      }
+      .note h3 {
+        font-family: var(--font-serif);
+        font-size: 19px;
+        color: rgba(255, 255, 255, 0.86);
+        margin: 0 0 14px;
+        font-weight: 400;
+      }
+      .note ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+      .note li {
+        margin-bottom: 6px;
+      }
+      code {
+        font-family: 'Consolas', 'Menlo', monospace;
+        font-size: 12px;
+        color: var(--hl-gold);
+        background: rgba(196, 154, 74, 0.1);
+        padding: 1px 6px;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <!-- ============ 现状 ============ -->
+      <div class="group">
+      <div class="tag"><b>现状</b><span>米白平涂 · 黑 → 白 → 黑 的亮度断层</span></div>
+      <div class="ctx ctx-hero">
+        <div class="cap"><i>LIGHT ISLE STUDIO · 光屿影像</i>用光影，铭记时光</div>
+      </div>
+      <section class="old">
+        <div class="ly-container ly-section">
+          <div class="grid">
+            <div>
+              <div class="kicker">ABOUT · 关于我们</div>
+              <h2>公司介绍</h2>
+              <p class="cname">光屿影像文化传媒有限公司</p>
+              <p class="body">
+                光屿摄影成立于 2017 年，是一家专注于人像、婚礼与商业影像的文化传媒机构。我们相信每一次相遇都值得被认真记录。九年来，团队以自然光与电影感为语言，为个人与品牌留下经得起时间回望的画面。
+              </p>
+              <span class="btn-orange">探索详情</span>
+            </div>
+            <div class="years">
+              <div class="emblem">
+                <div class="num-wrap">
+                  <span class="ghost">9</span>
+                  <span class="fg">9</span>
+                </div>
+                <div class="side">
+                  <span class="since">SINCE 2017</span>
+                  <span class="unit">年</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div class="ctx ctx-honor">
+        <span class="lamp"></span>
+        <span class="glow"></span>
+        <div class="cards">
+          <div class="hc"></div>
+          <div class="hc"></div>
+          <div class="hc"></div>
+        </div>
+      </div>
+
+      <!-- ============ 方案 A ============ -->
+      </div>
+      <div class="group">
+      <div class="tag"><b>方案 A · 暗调沉浸</b><span>推荐 · 橙色年份与橙色按钮保留</span></div>
+      <div class="ctx ctx-hero">
+        <div class="cap"><i>LIGHT ISLE STUDIO · 光屿影像</i>用光影，铭记时光</div>
+      </div>
+      <section class="new">
+        <div class="ly-container ly-section inner">
+          <div class="grid">
+            <div>
+              <div class="kicker">ABOUT · 关于我们</div>
+              <h2>公司介绍</h2>
+              <div class="rule"></div>
+              <p class="cname">光屿影像文化传媒有限公司</p>
+              <p class="body">
+                光屿摄影成立于 2017 年，是一家专注于人像、婚礼与商业影像的文化传媒机构。我们相信每一次相遇都值得被认真记录。九年来，团队以自然光与电影感为语言，为个人与品牌留下经得起时间回望的画面。
+              </p>
+              <span class="btn-orange">探索详情</span>
+            </div>
+            <div class="years">
+              <div class="emblem">
+                <div class="num-wrap">
+                  <span class="ghost">9</span>
+                  <span class="fg">9</span>
+                </div>
+                <div class="side">
+                  <span class="since">SINCE 2017</span>
+                  <span class="unit">年</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="hair"></div>
+      </section>
+      <div class="ctx ctx-honor">
+        <span class="lamp"></span>
+        <span class="glow"></span>
+        <div class="cards">
+          <div class="hc"></div>
+          <div class="hc"></div>
+          <div class="hc"></div>
+        </div>
+      </div>
+
+      </div>
+
+      <!-- ============ 方案 A · 移动端 ============ -->
+      <div class="group">
+      <div class="tag"><b>方案 A · 移动端 390</b><span>顺序：kicker → 标题 → 全称 → 正文 → 年份 → 按钮</span></div>
+      <div class="m-shell">
+        <div class="m-frame">
+          <div class="m-pad new" style="position: relative">
+            <div class="m-stack">
+              <div class="kicker">ABOUT · 关于我们</div>
+              <h2>公司介绍</h2>
+              <div class="rule"></div>
+              <p class="cname">光屿影像文化传媒有限公司</p>
+              <p class="body">
+                光屿摄影成立于 2017 年，是一家专注于人像、婚礼与商业影像的文化传媒机构。我们相信每一次相遇都值得被认真记录。九年来，团队以自然光与电影感为语言，为个人与品牌留下经得起时间回望的画面。
+              </p>
+              <div class="emblem">
+                <div class="num-wrap">
+                  <span class="ghost">9</span>
+                  <span class="fg">9</span>
+                </div>
+                <div class="side">
+                  <span class="since">SINCE 2017</span>
+                  <span class="unit">年</span>
+                </div>
+              </div>
+              <span class="btn-orange">探索详情</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="m-cap">390 × auto · 与桌面同一套色值，仅字号与栅格降级</div>
+
+      <div class="note">
+        <h3>方案 A 具体改了什么</h3>
+        <ul>
+          <li>底色 <code>#F4F0E8</code> → <code>#0A0A0A</code>，与首屏 / 荣誉 / 业务板块连成一条暗流</li>
+          <li>左上 + 右下各一束金色漏光，和荣誉展厅的射灯是同一套语言</li>
+          <li>标题 <code>#1A1A1A</code> → <code>#FAFAFA</code>；正文 <code>rgba(26,26,26,.6)</code> →
+            <code>rgba(255,255,255,.85)</code>（满足 R11 暗底 ≥55% 白）</li>
+          <li>冷灰泄漏清理：<code>#8A919C</code> → 金 <code>#C49A4A</code>；<code>#1F2329</code> →
+            象牙 <code>#F4F0E8</code></li>
+          <li>幽灵描边 <code>#FFD9BF</code> 在米白上本来是不可见的，落到暗底后按 50% 强度显形</li>
+          <li>公司全称与标题之间补一根 44×1 金色短线，对齐首屏 kicker 的处理</li>
+          <li>栅格由 <code>row-span-6 / row-start-1</code> 跨行 hack 换成
+            <code>grid-cols-[1.15fr_.85fr]</code>，DOM 顺序不变</li>
+          <li>橙色实心按钮 + 橙色年份数字 + 跳转 <code>#segments</code>：按你的要求全部保持原样</li>
+          <li>移动端：底色同步转暗，栅格退化为纵向堆叠，DOM 顺序（kicker → 标题 → 全称 → 正文 →
+            年份 → 按钮）不变，漏光收窄避免糊满窄卡</li>
+        </ul>
+      </div>
+    </div>
+  </body>
+</html>

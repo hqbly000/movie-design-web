@@ -128,8 +128,8 @@ const HOME_DYN = `(async () => {
   // ---- 年份 ----
   document.getElementById('about').scrollIntoView();
   await sleep(1800);
-  const yEl = document.querySelector('#about .text-accent-orange');
-  out.year = yEl ? yEl.innerText.trim() : null;
+  const yEl = document.querySelector('#about .year-number');
+  out.year = yEl ? yEl.textContent.trim() : null;
   return JSON.stringify(out);
 })()`
 
@@ -204,7 +204,7 @@ async function main() {
   cdp = await openPage(`${frontend}/`)
   await cdp.evaluate(`document.getElementById('about').scrollIntoView()`)
   await new Promise((r) => setTimeout(r, 1800))
-  const y2015 = await cdp.evaluate(`document.querySelector('#about .text-accent-orange')?.innerText.trim()`)
+  const y2015 = await cdp.evaluate(`document.querySelector('#about .year-number')?.textContent.trim()`)
   const since = await cdp.evaluate(`(document.body.innerText.match(/SINCE \\d{4}/)||[''])[0]`)
   cdp.close()
   console.log(`founded_year=2015 -> year=${y2015} ${since}`)
