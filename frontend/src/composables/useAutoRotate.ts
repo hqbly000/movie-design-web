@@ -12,6 +12,13 @@ export interface UseAutoRotateOptions {
   count: () => number
   /** 是否悬停暂停，默认 true。 */
   pauseOnHover?: boolean
+  /**
+   * 交互暂停后，指针静止多少毫秒自动恢复轮播（0 = 不自动恢复，默认 0）。
+   *
+   * 首屏这类**全屏铺满视口**的轮播必须开启此项：PC 上指针几乎永远落在区域内，
+   * 只靠 `mouseleave` 恢复会退化成"永久暂停"（表现为 PC 端不自动轮播，移动端正常）。
+   */
+  idleResume?: number
 }
 
 export interface UseAutoRotateReturn {
@@ -37,13 +44,17 @@ export interface UseAutoRotateReturn {
   onHoverStart: () => void
   /** 悬停离开处理。 */
   onHoverEnd: () => void
+  /** 指针在区域内移动：暂停并重置"静止自动恢复"计时。 */
+  onPointerMove: () => void
 }
 
 export function useAutoRotate(options: UseAutoRotateOptions): UseAutoRotateReturn {
-  const { interval = 6000, pauseOnHover = true } = options
+  const { interval = 6000, pauseOnHover = true, idleResume = 0 } = options
   const activeIndex = ref(0)
   const isPaused = ref(false)
   let timer: ReturnType<typeof setInterval> | null = null
+  let idleTimer: ReturnType<typeof setTimeout> | null = null
+  let lastMoveTs = 0
 
   const size = (): number => Math.max(1, options.count())
 
@@ -65,6 +76,7 @@ export function useAutoRotate(options: UseAutoRotateOptions): UseAutoRotateRetur
       clearInterval(timer)
       timer = null
     }
+    clearIdle()
   }
 
   function play(): void {
@@ -75,11 +87,31 @@ export function useAutoRotate(options: UseAutoRotateOptions): UseAutoRotateRetur
     }, interval)
   }
 
+  /** 清掉"静止自动恢复"计时。 */
+  function clearIdle(): void {
+    if (idleTimer !== null) {
+      clearTimeout(idleTimer)
+      idleTimer = null
+    }
+  }
+
+  /** 指针静止 idleResume 毫秒后自动恢复轮播。 */
+  function scheduleIdleResume(): void {
+    if (idleResume <= 0) return
+    clearIdle()
+    idleTimer = setTimeout(() => {
+      idleTimer = null
+      isPaused.value = false
+    }, idleResume)
+  }
+
   function pause(): void {
     isPaused.value = true
+    scheduleIdleResume()
   }
 
   function resume(): void {
+    clearIdle()
     isPaused.value = false
   }
 
@@ -89,6 +121,15 @@ export function useAutoRotate(options: UseAutoRotateOptions): UseAutoRotateRetur
 
   function onHoverEnd(): void {
     if (pauseOnHover) resume()
+  }
+
+  /** 指针移动（节流 400ms）：暂停 + 重置静止计时，避免高频重建定时器。 */
+  function onPointerMove(): void {
+    if (!pauseOnHover) return
+    const now = Date.now()
+    if (now - lastMoveTs < 400) return
+    lastMoveTs = now
+    pause()
   }
 
   // 条目数变化时重置计时并夹紧索引
@@ -113,7 +154,8 @@ export function useAutoRotate(options: UseAutoRotateOptions): UseAutoRotateRetur
     pause,
     resume,
     onHoverStart,
-    onHoverEnd
+    onHoverEnd,
+    onPointerMove
   }
 }
 

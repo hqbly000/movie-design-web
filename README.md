@@ -161,10 +161,12 @@ cd admin    && npm run build    # → admin/dist
 | 工程 | 构建 | 端到端验证 |
 |---|---|---|
 | backend | — | `scripts/smoke-test.sh` **24 / 24 PASS** |
-| frontend | `npm run build` 零错误（dist 269K） | `frontend/scripts/cdp-verify.mjs` **73 / 73 PASS**（真实产物） |
+| frontend | `npm run build` 零错误 | `frontend/scripts/cdp-verify.mjs` **76 / 76 PASS**（真实产物） |
 | admin | `npm run build` 零错误（dist ~405K） | `scripts/verify-admin-routes.mjs` **20 / 20 PASS**（桌面 + 移动，真实产物） |
 
 已闭环的缺陷：`Teleport` 目标未就绪导致 6 个页面崩溃（P0）、分页 `size` 超接口上限导致列表恒空（P1）、后台桌面档主内容被下推 100vh（P0）、移动端列表未转卡片流（P2）、上传仅按扩展名校验（P2）、分发列表缺生成人（P3）。
+
+**第四轮（验收反馈修复，2026-09-23）**：分享页视频可点击清单切换 + 播放器撑满内容列、PC 端首屏恢复自动轮播（悬停暂停不再退化为死暂停）、荣誉展厅补回舞台射灯与正中卡受光高亮。明细与根因见 `docs/qa-report.md` §11。
 
 **已知未覆盖**：移动端真机、Safari / Firefox 兼容性、线上部署配置（无线上环境）。详见 `docs/qa-report.md` §10.8。
 

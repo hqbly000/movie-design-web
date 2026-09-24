@@ -257,12 +257,12 @@ function shareJs() {
   out.hasRelatedWorks = T().includes('相关作品');
   out.customerLeak = T().includes('王女士') || T().includes('13800008821');
   out.filing = T().includes('苏ICP备2026000000号-1') && T().includes('苏公网安备32040002000000号');
-  const cur = document.querySelector('li[aria-current="true"]');
+  const cur = document.querySelector('li button[aria-current="true"], li[aria-current="true"]');
   out.currentRowExists = !!cur;
   out.currentRowBorder = cur ? getComputedStyle(cur).borderColor : null;
   out.currentRowBg = cur ? getComputedStyle(cur).backgroundColor : null;
   out.rows = [...document.querySelectorAll('li')].length;
-  out.leftBarPresent = !!document.querySelector('li[aria-current="true"] [class*="border-l"]');
+  out.leftBarPresent = !!document.querySelector('[aria-current="true"] [class*="border-l"]');
   out.playBtn = !!document.querySelector('[aria-label="播放"]');
   return JSON.stringify(out);
 })()`

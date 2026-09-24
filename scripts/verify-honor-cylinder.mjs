@@ -80,6 +80,7 @@ const structure = await c.evaluate(`(() => {
   const section = document.querySelector('#honors')
   const ring = section?.querySelector('.honor-stage > div > div')
   const cards = ring ? Array.from(ring.children) : []
+  const light = section?.querySelector('.honor-light')
   return JSON.stringify({
     hasStage: !!section?.querySelector('.honor-stage'),
     hasRing: !!ring,
@@ -88,9 +89,13 @@ const structure = await c.evaluate(`(() => {
     cardCount: cards.length,
     cardTransforms: cards.slice(0, 3).map((el) => el.style.transform),
     glow: !!Array.from(section.querySelectorAll('div')).find((d) => (d.getAttribute('style') || '').includes('radial-gradient')),
+    spotlight: {
+      beams: light ? light.querySelectorAll('.beam').length : 0,
+      pool: light ? light.querySelectorAll('.pool').length : 0,
+      blur: light ? getComputedStyle(light).filter : null
+    },
     oldArtifacts: {
       mesh: (section.innerHTML.match(/repeating-linear-gradient/g) || []).length,
-      spotlight: (section.innerHTML.match(/clip-path/g) || []).length,
       dots: section.querySelectorAll('[aria-label^="查看第"]').length
     }
   })
@@ -101,7 +106,9 @@ check('转盘使用 rotateY 变换', /rotateY/.test(S.ringInline || ''), S.ringI
 check('卡片数 = 荣誉条数（≤6）', S.cardCount > 0 && S.cardCount <= 6, `cards=${S.cardCount}`)
 check('卡片等大等角排布（rotateY + translateZ）', S.cardTransforms.every((s) => /rotateY/.test(s) && /translateZ/.test(s)), JSON.stringify(S.cardTransforms))
 check('底部径向光晕存在', S.glow)
-check('旧装饰已移除（网格/射灯/指示点）', S.oldArtifacts.mesh === 0 && S.oldArtifacts.spotlight === 0 && S.oldArtifacts.dots === 0, JSON.stringify(S.oldArtifacts))
+check('顶部射灯三层光锥 + 地面光斑存在（§2.4-3）', S.spotlight.beams === 3 && S.spotlight.pool === 1, JSON.stringify(S.spotlight))
+check('射灯层模糊 15~22 软化边缘', /blur\((1[5-9]|2[0-2])(\.\d+)?px\)/.test(String(S.spotlight.blur)), String(S.spotlight.blur))
+check('旧装饰已移除（网格/指示点）', S.oldArtifacts.mesh === 0 && S.oldArtifacts.dots === 0, JSON.stringify(S.oldArtifacts))
 
 // 匀速自转：取两次转盘角度，间隔应持续变化
 const a1 = await c.evaluate(`document.querySelector('#honors .honor-stage > div > div').style.transform`)
@@ -111,6 +118,24 @@ check('匀速自转（角度随时间变化）', a1 !== a2, `${a1} → ${a2}`)
 
 await c.shot('honor-cylinder-desktop')
 const before = c.errors.length
+
+// 正中卡受光：顶部暖白高光（::before）+ 顶部内阴影
+const lit = await c.evaluate(`(() => {
+  const card = document.querySelector('#honors .honor-stage .is-active .card-body')
+  if (!card) return null
+  const before = getComputedStyle(card, '::before')
+  const self = getComputedStyle(card)
+  return JSON.stringify({
+    glass: before.backgroundImage.slice(0, 70),
+    blend: before.mixBlendMode,
+    inset: /inset/.test(self.boxShadow)
+  })
+})()`)
+check('正中卡带自上而下的受光高光', !!lit && JSON.parse(lit).glass.includes('gradient'), lit || 'no active card')
+if (lit) {
+  const L = JSON.parse(lit)
+  check('受光高光用 screen 混合叠亮', L.blend === 'screen', L.blend)
+}
 
 // hover 暂停
 await c.evaluate(`(() => { const s = document.querySelector('#honors .honor-stage'); s.dispatchEvent(new MouseEvent('mouseenter', { bubbles: false })) })()`)
@@ -167,14 +192,20 @@ await new Promise((r) => setTimeout(r, 1200))
 const mob = await c.evaluate(`(() => {
   const stage = document.querySelector('#honors .honor-stage')
   const card = stage?.querySelector('.honor-stage > div > div > div')
+  const body = stage?.querySelector('.is-active .card-body')
+  const issuer = body?.querySelector('.issuer')
+  const cb = body?.getBoundingClientRect()
+  const ib = issuer?.getBoundingClientRect()
   return JSON.stringify({
     stageW: stage ? stage.getBoundingClientRect().width : 0,
     hScroll: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
-    cardW: card ? Math.round(card.getBoundingClientRect().width) : 0
+    cardW: card ? Math.round(card.getBoundingClientRect().width) : 0,
+    issuerOverflowY: cb && ib ? Math.round(ib.bottom - cb.bottom) : null
   })
 })()`)
 const M = JSON.parse(mob)
 check('移动端舞台不超宽', M.stageW > 0 && M.stageW <= 390 && !M.hScroll, JSON.stringify(M))
+check('移动端卡片内容不裁切（窄卡字号已适配）', M.issuerOverflowY !== null && M.issuerOverflowY <= 4, `issuer 底部超出卡片 ${M.issuerOverflowY}px`)
 await c.shot('honor-cylinder-mobile')
 
 c.close()

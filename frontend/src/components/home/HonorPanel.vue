@@ -130,6 +130,54 @@ const rootClass = computed(() => ({ large: props.large }))
   pointer-events: none;
 }
 
+/* ===== 窄卡片档适配（舞台半径收窄时卡片同步变小，字号必须跟着收，否则内容被裁） ===== */
+@media (max-width: 767px) {
+  .card-body {
+    padding: 12px 14px;
+  }
+  .badge {
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+  }
+  .title {
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+  .divider {
+    margin-top: 8px;
+    width: 32px;
+  }
+  .issuer {
+    margin-top: 6px;
+    font-size: 9px;
+    line-height: 1.4;
+  }
+  /* 窄卡片放不下描述行；详情视图（.large）不受影响 */
+  :not(.large) .desc {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .card-body {
+    padding: 16px 18px;
+  }
+  .badge {
+    font-size: 11px;
+  }
+  .title {
+    font-size: 18px;
+  }
+  .issuer {
+    font-size: 10px;
+  }
+  .desc {
+    font-size: 10px;
+  }
+}
+
 /* ===== 详情视图（点击放大） ===== */
 .large .card-body {
   border-color: rgba(232, 199, 122, 0.55);

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 /**
  * SharePlayer —— 分享页主播放器（§3.2-3 / 4）。
- * 342×192 的 16:9；点击播放由 B 站 iframe 接管（复用 VideoPlayer 只读样式）。
+ * 16:9 播放器**撑满内容列**（移动 390 → 342×192；PC 内容列 520 → 472×265），
+ * 不再写死 342 宽，否则 PC 上左右留白与上方信息列对不齐。
+ * 点击播放由 B 站 iframe 接管（复用 VideoPlayer 只读样式）。
  * 主视频信息行：序号（金 / Cormorant）+ 标题（Noto Serif SC 14）；**不显示时长**。
- * **不提供切换能力**（R16）。
+ * 切换由合集清单（ShareList）驱动，本组件只跟随 `activeIndex`。
  */
 import { computed } from 'vue'
 import VideoPlayer from '@/components/home/VideoPlayer.vue'
@@ -13,7 +15,7 @@ import type { ShareVideo } from '@/types/share'
 const props = defineProps<{
   /** 视频清单 */
   videos: ShareVideo[]
-  /** 当前展示索引（固定为首支，分享页不切换） */
+  /** 当前展示索引（由 ShareView 随清单点击更新） */
   activeIndex: number
 }>()
 
@@ -23,7 +25,7 @@ const current = computed<ShareVideo | null>(() => props.videos[props.activeIndex
 <template>
   <section v-if="current" class="mx-auto w-full max-w-[520px] px-6 pt-6">
     <div
-      class="relative aspect-video w-full max-w-[342px] overflow-hidden rounded-[2px] border border-[rgba(196,154,74,0.3)]"
+      class="relative aspect-video w-full overflow-hidden rounded-[2px] border border-[rgba(196,154,74,0.3)]"
     >
       <VideoPlayer :video="current" variant="share" />
     </div>

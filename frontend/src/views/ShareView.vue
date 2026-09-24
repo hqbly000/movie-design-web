@@ -2,9 +2,10 @@
 /**
  * ShareView —— 作品分享页（R15–R18 / §3）。
  * 移动优先 390；`GET /api/share/{token}` 返回 code 4001 → 渲染失效页。
- * **不渲染** R16 列出的任何模块（分享入口 / 作品参数 / 相关作品 / 播放数据 / 外跳按钮 / 时长 / 切换）。
+ * **不渲染** R16 列出的任何模块（分享入口 / 作品参数 / 相关作品 / 播放数据 / 外跳按钮 / 时长）。
+ * 「切换能力」按验收反馈开放：点击合集清单即切换主播放器（仍不加左右箭头/播放数据）。
  */
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import ShareHeader from '@/components/share/ShareHeader.vue'
 import ShareCollection from '@/components/share/ShareCollection.vue'
@@ -29,8 +30,10 @@ const token = computed(() => {
 
 const state = ref<PageState>('loading')
 const collection = ref<ShareCollectionModel | null>(null)
-/** 分享页不提供切换能力，固定展示首支（R16）。 */
+/** 当前主播放器索引；由合集清单点击驱动。 */
 const activeIndex = ref(0)
+/** 主播放器包裹层（切换后按需滚回播放器）。 */
+const playerWrap = ref<HTMLElement | null>(null)
 
 async function load(): Promise<void> {
   if (!token.value) {
@@ -52,6 +55,23 @@ async function load(): Promise<void> {
   }
 }
 
+/**
+ * 切换主播放器。播放器若已被滚出视口（清单在下方时常见），
+ * 平滑滚回其顶部；否则保持当前滚动位置不动。
+ */
+async function selectVideo(index: number): Promise<void> {
+  if (index === activeIndex.value) return
+  activeIndex.value = index
+  await nextTick()
+  const el = playerWrap.value
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const safeOffset = 24
+  if (rect.top < safeOffset || rect.bottom > window.innerHeight) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
 watch(token, () => void load(), { immediate: true })
 
 onMounted(() => {
@@ -69,7 +89,7 @@ onMounted(() => {
       <div class="h-4 w-40 animate-pulse rounded bg-white/10" />
       <div class="mt-5 h-9 w-3/4 animate-pulse rounded bg-white/10" />
       <div class="mt-3 h-4 w-1/2 animate-pulse rounded bg-white/10" />
-      <div class="mt-8 aspect-video w-full max-w-[342px] animate-pulse rounded-[2px] bg-white/10" />
+      <div class="mt-8 aspect-video w-full animate-pulse rounded-[2px] bg-white/10" />
       <div class="mt-8 flex flex-col gap-3">
         <div v-for="row in 3" :key="row" class="h-[66px] animate-pulse rounded bg-white/[0.06]" />
       </div>
@@ -97,13 +117,15 @@ onMounted(() => {
     <template v-else-if="collection">
       <!-- 空合集兜底 -->
       <ShareCollection :collection="collection" />
-      <SharePlayer
-        v-if="collection.videos.length > 0"
-        :videos="collection.videos"
-        :active-index="activeIndex"
-      />
+      <div ref="playerWrap" class="scroll-mt-6">
+        <SharePlayer
+          v-if="collection.videos.length > 0"
+          :videos="collection.videos"
+          :active-index="activeIndex"
+        />
+      </div>
       <p
-        v-else
+        v-if="collection.videos.length === 0"
         class="mx-auto w-full max-w-[520px] px-6 pt-8 text-center font-sans text-[13px] text-white/60"
       >
         该合集暂无作品
@@ -113,6 +135,7 @@ onMounted(() => {
         :videos="collection.videos"
         :active-index="activeIndex"
         :generated-at="collection.generated_at"
+        @select="selectVideo"
       />
     </template>
 

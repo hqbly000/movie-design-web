@@ -2,7 +2,8 @@
 /**
  * ShareList —— 合集清单（§3.2-5 / R17）。
  * 每行：缩略图 88×50 + 标题 13 + 类型/年份 10（白 50%）。
- * 当前项**只用金色描边高亮（40%）+ 极淡暖底**，**不加左侧竖条**（R17）；**不可点击切换**（R16）。
+ * 当前项**只用金色描边高亮（40%）+ 极淡暖底**，**不加左侧竖条**（R17）。
+ * 点击任意行即切换主播放器（验收反馈：原「不可切换」已开放）。
  */
 import { computed } from 'vue'
 import { assetUrl } from '@/utils/asset'
@@ -16,6 +17,11 @@ const props = defineProps<{
   activeIndex: number
   /** 生成时间 */
   generatedAt: string | null
+}>()
+
+const emit = defineEmits<{
+  /** 选中某支视频作为主播放器内容 */
+  (event: 'select', index: number): void
 }>()
 
 const generatedLabel = computed(() =>
@@ -41,34 +47,37 @@ function metaOf(video: ShareVideo): string {
       }}</span>
     </div>
 
-    <ul class="mt-5 flex flex-col gap-2">
-      <li
-        v-for="(video, index) in videos"
-        :key="`${video.bv_id}-${index}`"
-        class="flex items-center gap-3 rounded-[2px] border px-2 py-2"
-        :class="
-          index === activeIndex
-            ? 'border-[rgba(196,154,74,0.4)] bg-[rgba(196,154,74,0.06)]'
-            : 'border-transparent'
-        "
-        :aria-current="index === activeIndex"
-      >
-        <img
-          v-if="video.cover_url"
-          :src="assetUrl(video.cover_url)"
-          :alt="video.title"
-          class="h-[50px] w-[88px] shrink-0 rounded-[2px] object-cover"
-          draggable="false"
-        />
-        <span v-else class="h-[50px] w-[88px] shrink-0 rounded-[2px] bg-[#1A1712]" />
-        <span class="min-w-0 flex-1">
-          <span class="block truncate font-sans text-[13px] text-txt-primary">{{
-            video.title
-          }}</span>
-          <span class="mt-1 block font-sans text-[10px] text-white/50">{{
-            metaOf(video)
-          }}</span>
-        </span>
+    <ul class="mt-5 flex flex-col gap-2" aria-label="合集清单">
+      <li v-for="(video, index) in videos" :key="`${video.bv_id}-${index}`">
+        <button
+          type="button"
+          class="flex w-full items-center gap-3 rounded-[2px] border px-2 py-2 text-left transition-colors duration-200"
+          :class="
+            index === activeIndex
+              ? 'border-[rgba(196,154,74,0.4)] bg-[rgba(196,154,74,0.06)]'
+              : 'border-transparent hover:border-[rgba(196,154,74,0.24)] hover:bg-[rgba(196,154,74,0.04)]'
+          "
+          :aria-current="index === activeIndex ? 'true' : undefined"
+          :aria-label="`切换到：${video.title}`"
+          @click="emit('select', index)"
+        >
+          <img
+            v-if="video.cover_url"
+            :src="assetUrl(video.cover_url)"
+            :alt="video.title"
+            class="h-[50px] w-[88px] shrink-0 rounded-[2px] object-cover"
+            draggable="false"
+          />
+          <span v-else class="h-[50px] w-[88px] shrink-0 rounded-[2px] bg-[#1A1712]" />
+          <span class="min-w-0 flex-1">
+            <span class="block truncate font-sans text-[13px] text-txt-primary">{{
+              video.title
+            }}</span>
+            <span class="mt-1 block font-sans text-[10px] text-white/50">{{
+              metaOf(video)
+            }}</span>
+          </span>
+        </button>
       </li>
     </ul>
   </section>

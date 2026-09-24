@@ -138,14 +138,16 @@ const ROTATE_JS = `(async () => {
   // 展厅自动旋转由 IntersectionObserver 进入视口后启动，必须先滚入
   document.getElementById('honors').scrollIntoView();
   await sleep(1200);
-  const t = () => document.querySelector('#honors .variant-main h3')?.innerText.trim() || '';
+  // 现行方案为等大圆柱（rAF 驱动 rotateY）；旧的 .variant-main 展板方案已废弃
+  const t = () => document.querySelector('#honors .honor-stage > div > div')?.style.transform || '';
+  const title = () => document.querySelector('#honors .honor-stage .is-active .title')?.innerText.trim() || '';
   const arrows = !!document.querySelector('#honors [aria-label="上一支"]') || !!document.querySelector('#honors [aria-label="下一支"]');
-  const a = t();
+  const a = t(); const ta = title();
   await sleep(6000);
-  const b = t();
+  const b = t(); const tb = title();
   await sleep(6000);
-  const c = t();
-  return JSON.stringify({ a, b, c, rotated: (a !== b) || (b !== c), arrows });
+  const c = t(); const tc = title();
+  return JSON.stringify({ a, b, c, ta, tb, tc, rotated: (a !== b) || (b !== c) || (ta !== tb) || (tb !== tc), arrows });
 })()`
 
 const OFFLINE_JS = `(async () => {

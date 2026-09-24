@@ -5,7 +5,8 @@
  * 结构：纯 CSS 3D —— perspective 舞台 + preserve-3d 转盘，
  *       n 张等大全息卡各 rotateY(i×step) translateZ(R) 围成圆柱（n = 荣誉条数，≤6）。
  * 动效：转盘整体匀速自转（rAF 驱动角度，纯 CSS transform 渲染）；
- *       底部一个径向渐变光晕作"地面反射"；无透视网格 / 轨道 / 射灯。
+ *       顶部三层叠加射灯光锥 + 地面椭圆光斑（§2.4-3）打在正对镜头的卡上；
+ *       底部一个径向渐变光晕作"地面反射"；无透视网格 / 轨道。
  * 交互：hover 暂停；点击当前正对镜头的卡放大查看详情（Esc / 点遮罩关闭）。
  * 约束：无左右箭头（R6）；荣誉最多 6 条；prefers-reduced-motion 时不自转、点击步进。
  */
@@ -54,7 +55,6 @@ let lastTs = 0
 
 /** 逐帧只写 DOM：转盘角度 + 逐卡景深透明度（不走 Vue 响应式，避免 60fps 重渲染）。 */
 function applyFrame(): void {
-  const radius = geometry.value.radius
   if (ringEl.value) {
     ringEl.value.style.transform = `rotateY(${angle.value.toFixed(2)}deg)`
     ringEl.value.style.transformStyle = 'preserve-3d'
@@ -68,7 +68,6 @@ function applyFrame(): void {
     const t = Math.min(dist / 90, 1)
     el.style.opacity = (dist > 90 ? 0 : 1 - t * 0.58).toFixed(3)
     el.style.filter = t * 1.6 > 0.05 ? `blur(${(t * 1.6).toFixed(2)}px)` : 'none'
-    void radius
   }
 }
 
@@ -240,6 +239,16 @@ const cardStyle = (index: number): Record<string, string> => ({
           aria-hidden="true"
         />
 
+        <!-- 顶部射灯：灯具 + 三层叠加光锥（外 6% → 中 10% → 内 16%）+ 聚焦光斑 + 地面椭圆光斑（§2.4-3） -->
+        <div class="honor-light" aria-hidden="true">
+          <span class="lamp" />
+          <span class="beam beam-outer" />
+          <span class="beam beam-mid" />
+          <span class="beam beam-inner" />
+          <span class="focus" />
+          <span class="pool" />
+        </div>
+
         <!-- 圆柱转盘 -->
         <div class="absolute inset-0" style="transform-style: preserve-3d">
           <div ref="ringEl" class="absolute left-1/2 top-[44%] h-0 w-0">
@@ -306,12 +315,139 @@ const cardStyle = (index: number): Record<string, string> => ({
 </template>
 
 <style scoped>
-/* 当前正对镜头的卡：金边提亮（其余卡由 rAF 控制景深透明度） */
+/* ===== 舞台射灯（§2.4-3）：顶部光源 + 三层叠加光锥 + 地面椭圆光斑，整层模糊软化边缘 ===== */
+.honor-light {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* 设计稿要求 20~22 的模糊量；收窄光锥后取 18 保证锥形可辨 */
+  filter: blur(18px);
+}
+
+/* 顶部灯具：一条极淡的横向亮带，暗示光源（不抢主体） */
+.lamp {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 26%;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgba(240, 217, 160, 0.55), transparent);
+}
+
+.beam {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  /* 上窄（光源）→ 下宽（铺到展板），形成光锥 */
+  clip-path: polygon(49% 0, 51% 0, 100% 100%, 0% 100%);
+}
+
+.beam-outer {
+  width: 54%;
+  height: 56%;
+  background: linear-gradient(
+    to bottom,
+    rgba(196, 154, 74, 0.1) 0%,
+    rgba(196, 154, 74, 0.09) 58%,
+    rgba(196, 154, 74, 0.03) 84%,
+    transparent 100%
+  );
+}
+
+.beam-mid {
+  width: 36%;
+  height: 52%;
+  background: linear-gradient(
+    to bottom,
+    rgba(232, 199, 122, 0.15) 0%,
+    rgba(232, 199, 122, 0.13) 56%,
+    rgba(232, 199, 122, 0.05) 84%,
+    transparent 100%
+  );
+}
+
+.beam-inner {
+  width: 22%;
+  height: 54%;
+  background: linear-gradient(
+    to bottom,
+    rgba(240, 217, 160, 0.24) 0%,
+    rgba(240, 217, 160, 0.19) 52%,
+    rgba(240, 217, 160, 0.06) 82%,
+    transparent 100%
+  );
+}
+
+/* 聚焦光斑：光锥落在正中展板（top 44% 处）的照度中心 */
+.focus {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  transform: translate(-50%, -50%);
+  width: 34%;
+  height: 64%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(240, 217, 160, 0.2),
+    rgba(196, 154, 74, 0.07) 46%,
+    transparent 74%
+  );
+}
+
+/* 地面椭圆光斑：光锥落到展板脚下的落点 */
+.pool {
+  position: absolute;
+  left: 50%;
+  bottom: 3%;
+  transform: translateX(-50%);
+  width: 52%;
+  height: 150px;
+  background: radial-gradient(
+    ellipse at center bottom,
+    rgba(196, 154, 74, 0.13),
+    rgba(196, 154, 74, 0.05) 46%,
+    transparent 74%
+  );
+}
+
+/* 当前正对镜头的卡：金边提亮 + 「自上而下受光」的舞台高光（其余卡由 rAF 控制景深透明度） */
 .is-active :deep(.card-body) {
-  border-color: rgba(232, 199, 122, 0.78);
+  border-color: rgba(232, 199, 122, 0.86);
   box-shadow:
-    0 0 90px rgba(240, 217, 120, 0.26),
-    inset 0 0 52px rgba(196, 154, 74, 0.1);
+    0 0 96px rgba(240, 217, 120, 0.3),
+    inset 0 0 52px rgba(196, 154, 74, 0.12),
+    inset 0 30px 46px -18px rgba(255, 246, 218, 0.4);
+}
+
+/* 受光面：卡片顶部往下衰减的暖白高光，模拟射灯打在正面展板上 */
+.is-active :deep(.card-body)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 246, 218, 0.4) 0%,
+    rgba(240, 217, 160, 0.2) 22%,
+    rgba(196, 154, 74, 0.06) 48%,
+    transparent 72%
+  );
+  mix-blend-mode: screen;
+  animation: honor-lamp 6s ease-in-out infinite;
+}
+
+@keyframes honor-lamp {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.94;
+  }
 }
 
 .holo-fade-enter-active,
