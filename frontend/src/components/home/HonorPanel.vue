@@ -1,8 +1,12 @@
 <script setup lang="ts">
 /**
- * HonorPanel —— 全息荣誉卡（圆柱陈列用，等大统一形态）。
- * 玻璃质感 + 金色描边 + 扫描线纹理；large 用于点击放大后的详情视图。
- * （原"main/side/narrow 三档景深展板"已按新方案废弃：新方案为等大圆柱，不再按远近缩放。）
+ * HonorPanel —— 荣誉卡（舞台圆柱用）。
+ * 暖黑玻璃 + 金边 + 扫描线纹理；large 用于点击放大后的详情视图。
+ *
+ * 远近缩放由父级 HonorHall 逐帧写在 .slot 的 transform 上（scale + opacity + blur 三通道），
+ * 卡体本身不感知远近。历史上曾一度改成「等大圆柱不缩放」，现已随舞台化方案恢复景深。
+ * .mirror 是地面倒影（压扁 + 模糊 + 渐隐的卡体轮廓），.lit 是射灯受光面，
+ * 两者都由父级 / 媒体查询驱动。
  */
 import { computed } from 'vue'
 import type { Honor } from '@/types/site'
@@ -22,15 +26,19 @@ const rootClass = computed(() => ({ large: props.large }))
 
 <template>
   <div class="holo-card" :class="rootClass">
+    <!-- 地面镜面倒影：压扁 + 模糊 + 渐隐遮罩的卡体轮廓（详情视图不需要） -->
+    <div class="mirror" aria-hidden="true">
+      <div class="inner" />
+    </div>
     <div class="card-body">
+      <!-- 受光面：由 HonorHall 的 .is-active 驱动，模拟射灯自上而下打在展板上 -->
+      <span class="lit" aria-hidden="true" />
       <span class="badge">{{ honor.level }}</span>
       <h3 class="title">{{ honor.title }}</h3>
       <div class="divider" aria-hidden="true" />
       <p class="issuer">{{ honor.issuer }}</p>
       <p v-if="honor.description" class="desc">{{ honor.description }}</p>
     </div>
-    <!-- 卡片自身的地面反射（叠加在舞台底部光晕之上） -->
-    <div class="reflection" aria-hidden="true" />
   </div>
 </template>
 
@@ -118,16 +126,47 @@ const rootClass = computed(() => ({ large: props.large }))
   line-height: 1.7;
 }
 
-/* 地面反射：卡片下缘的金色渐变倒影 */
-.reflection {
+/* 受光面：默认隐藏，正对镜头的卡由父级 .is-active 点亮 */
+.lit {
   position: absolute;
-  left: 6%;
-  right: 6%;
-  top: 100%;
-  height: 46%;
-  background: linear-gradient(180deg, rgba(196, 154, 74, 0.2), rgba(196, 154, 74, 0));
-  filter: blur(3px);
+  inset: 0;
+  border-radius: inherit;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 500ms ease;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 246, 218, 0.42) 0%,
+    rgba(240, 217, 160, 0.2) 20%,
+    rgba(196, 154, 74, 0.05) 48%,
+    transparent 74%
+  );
+  mix-blend-mode: screen;
+}
+
+/* 地面镜面倒影：卡体轮廓压扁 0.52 倍 + 模糊 + 向下渐隐，
+   比原来那条纯色渐变更像"反光地板上的像" */
+.mirror {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100%;
+  height: 100%;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.mirror .inner {
+  height: 100%;
+  width: 100%;
+  transform: scaleY(-0.52);
+  transform-origin: 50% 0%;
+  filter: blur(3px);
+  border: 1px solid rgba(196, 154, 74, 0.3);
+  border-radius: 6px;
+  background: linear-gradient(160deg, rgba(196, 154, 74, 0.14), #0d0b08);
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent 62%);
+  mask-image: linear-gradient(180deg, #000, transparent 62%);
 }
 
 /* ===== 窄卡片档适配（舞台半径收窄时卡片同步变小，字号必须跟着收，否则内容被裁） ===== */
@@ -212,5 +251,14 @@ const rootClass = computed(() => ({ large: props.large }))
   margin-top: 12px;
   font-size: 14px;
   color: rgba(255, 255, 255, 0.62);
+}
+
+/* 详情弹框里卡是浮层，不落地 → 去掉倒影，受光面常亮 */
+.large .mirror {
+  display: none;
+}
+
+.large .lit {
+  opacity: 1;
 }
 </style>

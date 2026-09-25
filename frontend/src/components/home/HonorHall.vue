@@ -1,14 +1,19 @@
 <script setup lang="ts">
 /**
- * HonorHall —— 荣誉展示 · 全息圆柱（R6 / R7 / §2.4 新方案）。
+ * HonorHall —— 荣誉展示 · 舞台射灯圆柱。
  *
  * 结构：纯 CSS 3D —— perspective 舞台 + preserve-3d 转盘，
- *       n 张等大全息卡各 rotateY(i×step) translateZ(R) 围成圆柱（n = 荣誉条数，≤6）。
- * 动效：转盘整体匀速自转（rAF 驱动角度，纯 CSS transform 渲染）；
- *       顶部三层叠加射灯光锥 + 地面椭圆光斑（§2.4-3）打在正对镜头的卡上；
- *       底部一个径向渐变光晕作"地面反射"；无透视网格 / 轨道。
+ *       n 张卡各 rotateY(i×step) translateZ(R) 围成圆柱（n = 荣誉条数，≤6）。
+ * 舞台感来源（对齐 honor-stage-demo.html 的「新方案」）：
+ *   1. 体积光锥 —— 边缘清晰的 cone(blur5) + 外扩雾 haze(blur26) + 亮芯 core(blur9)，
+ *      不再对整个光束层糊 18px（那会把锥体边界擦掉）；
+ *   2. 浮尘 canvas —— 丁达尔介质，粒子在锥内缓慢上浮，亮度按「离锥轴距离 + 离光源高度」衰减；
+ *   3. 地面 —— 透视地格 + 地平线亮边 + 落点亮池，让光有地方落；
+ *   4. 景深 —— 按夹角做 scale / opacity / blur 三通道衰减，侧后方沉入暗处；
+ *   5. 节奏 —— 步进 + 停顿（走一张 1.5s easeInOutCubic，到位停 1.6s），取代匀速转圈；
+ *   6. 空间边界 —— 后墙幕布 + 全场暗角。
  * 交互：hover 暂停；点击当前正对镜头的卡放大查看详情（Esc / 点遮罩关闭）。
- * 约束：无左右箭头（R6）；荣誉最多 6 条；prefers-reduced-motion 时不自转、点击步进。
+ * 约束：无左右箭头（R6）；荣誉最多 6 条；prefers-reduced-motion 时不自转、无浮尘、点击步进。
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useMediaQuery, usePreferredReducedMotion } from '@vueuse/core'
@@ -31,70 +36,196 @@ const isTabletUp = useMediaQuery('(min-width: 768px)')
 const reducedMotion = usePreferredReducedMotion()
 
 const geometry = computed(() => {
-  if (isWide.value) return { radius: 320, cardW: 300, cardH: 190, stageH: 540, perspective: 1150 }
-  if (isTabletUp.value) return { radius: 260, cardW: 250, cardH: 162, stageH: 460, perspective: 950 }
-  return { radius: 160, cardW: 168, cardH: 110, stageH: 340, perspective: 640 }
+  if (isWide.value) return { radius: 340, cardW: 300, cardH: 190, stageH: 700, perspective: 1400 }
+  if (isTabletUp.value) return { radius: 268, cardW: 250, cardH: 162, stageH: 540, perspective: 1150 }
+  return { radius: 164, cardW: 168, cardH: 110, stageH: 400, perspective: 780 }
 })
 
 /** 相邻两卡夹角（荣誉不足 6 条时自动放大夹角，不写死 60°）。 */
 const stepAngle = computed(() => 360 / Math.max(props.honors.length, 1))
 
-/* ---------- 匀速自转（rAF 驱动角度，渲染仍走 CSS transform） ---------- */
-const DEG_PER_SEC = 12 // 30s 一圈
+/* ---------- 步进旋转（转 → 停 → 再转） ---------- */
+const MOVE_MS = 1500
+const DWELL_MS = 1600
 
-const angle = ref(0)
 const hovering = ref(false)
 const entered = ref(false)
 const activeIndex = ref(0)
 
+/** 逐帧写入 DOM，不走响应式，避免 60fps 重渲染。 */
+let angle = 0
+let moving = false
+let moveFrom = 0
+let targetAngle = 0
+let moveStart = 0
+let holdUntil = 0
+let lastTs = 0
+let clockMs = 0
+
 const cardEls = ref<(HTMLElement | null)[]>([])
 const ringEl = ref<HTMLElement | null>(null)
+const stageEl = ref<HTMLElement | null>(null)
 
-let rafId = 0
-let lastTs = 0
-
-/** 逐帧只写 DOM：转盘角度 + 逐卡景深透明度（不走 Vue 响应式，避免 60fps 重渲染）。 */
-function applyFrame(): void {
-  if (ringEl.value) {
-    ringEl.value.style.transform = `rotateY(${angle.value.toFixed(2)}deg)`
-    ringEl.value.style.transformStyle = 'preserve-3d'
-  }
-  const n = props.honors.length
-  for (let i = 0; i < n; i += 1) {
-    const el = cardEls.value[i]
-    if (!el) continue
-    const d = (((i * stepAngle.value + angle.value) % 360) + 360) % 360
-    const dist = Math.min(d, 360 - d) // 0 = 正对镜头
-    const t = Math.min(dist / 90, 1)
-    el.style.opacity = (dist > 90 ? 0 : 1 - t * 0.58).toFixed(3)
-    el.style.filter = t * 1.6 > 0.05 ? `blur(${(t * 1.6).toFixed(2)}px)` : 'none'
-  }
-}
-
-function loop(ts: number): void {
-  rafId = requestAnimationFrame(loop)
-  if (!lastTs) {
-    lastTs = ts
-    return
-  }
-  const dt = Math.min((ts - lastTs) / 1000, 0.05)
-  lastTs = ts
-  const spinning =
-    entered.value && !hovering.value && !detailOpen.value && reducedMotion.value !== 'reduce'
-  if (spinning) angle.value = (angle.value + DEG_PER_SEC * dt) % 360
-  applyFrame()
-}
+const easeInOutCubic = (t: number): number =>
+  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
 
 /** 当前正对镜头的卡：由转盘角度反算（i×step + angle ≡ 0 mod 360）。 */
 function recomputeActive(): void {
   const n = props.honors.length
   if (n === 0) return
-  const normalized = ((-angle.value % 360) + 360) % 360
+  const normalized = ((-angle % 360) + 360) % 360
   const idx = Math.round(normalized / stepAngle.value) % n
   if (idx !== activeIndex.value) activeIndex.value = idx
 }
 
-watch(angle, recomputeActive)
+/** 逐帧写 DOM：转盘角度 + 每卡的景深（scale / opacity / blur）。 */
+function applyFrame(): void {
+  if (ringEl.value) {
+    ringEl.value.style.transform = `rotateY(${angle.toFixed(2)}deg)`
+    ringEl.value.style.transformStyle = 'preserve-3d'
+  }
+  const n = props.honors.length
+  const r = geometry.value.radius
+  for (let i = 0; i < n; i += 1) {
+    const el = cardEls.value[i]
+    if (!el) continue
+    const raw = (((i * stepAngle.value + angle) % 360) + 360) % 360
+    const dist = Math.min(raw, 360 - raw) // 0 = 正对镜头
+    const t = Math.min(dist / 90, 1)
+    const behind = dist > 90
+    const scale = 1 - t * 0.26
+    el.style.transform =
+      `rotateY(${(i * stepAngle.value).toFixed(2)}deg) translateZ(${r}px) scale(${scale.toFixed(3)})`
+    el.style.opacity = behind ? '0' : (1 - t * 0.78).toFixed(3)
+    el.style.filter = t * 2.6 > 0.05 ? `blur(${(t * 2.6).toFixed(2)}px)` : 'none'
+  }
+  recomputeActive()
+}
+
+/* ---------- 浮尘（丁达尔介质） ---------- */
+/** 与 CSS 光锥共享的几何比例：顶点 y 占比、锥底 y 占比、锥底半宽占比。 */
+const CONE_APEX_Y = 0.008
+const CONE_BOTTOM_Y = 0.66
+const CONE_HALF_W = 0.23
+
+interface Dust {
+  /** 沿锥体 0（顶点）→ 1（锥底）的进度 */
+  v: number
+  /** 归一化横向偏移 -1..1 */
+  u: number
+  vy: number
+  vx: number
+  r: number
+  ph: number
+}
+
+const dustEl = ref<HTMLCanvasElement | null>(null)
+let dustCtx: CanvasRenderingContext2D | null = null
+let dustW = 0
+let dustH = 0
+const dust: Dust[] = Array.from({ length: 170 }, () => ({
+  v: Math.random(),
+  u: (Math.random() * 2 - 1) * 0.86,
+  vy: 0.012 + Math.random() * 0.038,
+  vx: (Math.random() - 0.5) * 0.05,
+  r: 0.5 + Math.random() * 1.5,
+  ph: Math.random() * Math.PI * 2
+}))
+
+function resizeDust(): void {
+  const cv = dustEl.value
+  const stage = stageEl.value
+  if (!cv || !stage) return
+  const rect = stage.getBoundingClientRect()
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  dustW = rect.width
+  dustH = rect.height
+  cv.width = Math.max(1, Math.round(dustW * dpr))
+  cv.height = Math.max(1, Math.round(dustH * dpr))
+  dustCtx = cv.getContext('2d')
+  if (dustCtx) dustCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
+}
+
+function drawDust(): void {
+  const ctx = dustCtx
+  if (!ctx || dustW === 0) return
+  ctx.clearRect(0, 0, dustW, dustH)
+  if (!entered.value || reducedMotion.value === 'reduce') return
+
+  const apexY = CONE_APEX_Y * dustH
+  const coneH = (CONE_BOTTOM_Y - CONE_APEX_Y) * dustH
+  const halfBottom = CONE_HALF_W * dustW
+  const cx = dustW / 2
+
+  ctx.globalCompositeOperation = 'lighter'
+  for (const p of dust) {
+    const y = apexY + p.v * coneH
+    const half = halfBottom * Math.max(p.v, 0.02)
+    const x = cx + p.u * half
+    const axis = 1 - Math.min(Math.abs(p.u), 1)
+    const vert = 0.25 + 0.75 * (1 - p.v)
+    const twinkle = 0.55 + 0.45 * Math.sin(clockMs / 590 + p.ph)
+    const a = 0.3 * axis * axis * vert * twinkle
+    if (a <= 0.004) continue
+    ctx.beginPath()
+    ctx.fillStyle = `rgba(255, 240, 208, ${a.toFixed(3)})`
+    ctx.arc(x, y, p.r, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.globalCompositeOperation = 'source-over'
+}
+
+function stepDust(dt: number): void {
+  if (!entered.value || reducedMotion.value === 'reduce') return
+  const paused = hovering.value || detailOpen.value
+  const k = paused ? 0 : dt / 1000
+  for (const p of dust) {
+    p.v -= p.vy * k
+    p.u += p.vx * k
+    if (p.v < 0) {
+      p.v = 0.94 + Math.random() * 0.06
+      p.u = (Math.random() * 2 - 1) * 0.86
+    }
+    if (p.u < -1) p.u = 1
+    else if (p.u > 1) p.u = -1
+  }
+}
+
+function loop(ts: number): void {
+  rafId = requestAnimationFrame(loop)
+  if (!lastTs) lastTs = ts
+  const dt = Math.min(ts - lastTs, 50)
+  lastTs = ts
+  clockMs += dt
+
+  const paused = hovering.value || detailOpen.value || !entered.value
+  const spinning = reducedMotion.value !== 'reduce'
+
+  if (paused || !spinning) {
+    // 暂停时把计时基准顺延，避免恢复瞬间立刻跳步
+    if (moving) moveStart += dt
+    holdUntil = ts + 400
+  } else if (moving) {
+    const p = Math.min((ts - moveStart) / MOVE_MS, 1)
+    angle = moveFrom + (targetAngle - moveFrom) * easeInOutCubic(p)
+    if (p >= 1) {
+      moving = false
+      angle = targetAngle
+      holdUntil = ts + DWELL_MS
+    }
+  } else if (ts >= holdUntil) {
+    moving = true
+    moveFrom = angle
+    targetAngle = angle - stepAngle.value
+    moveStart = ts
+  }
+
+  applyFrame()
+  stepDust(dt)
+  drawDust()
+}
+
+let rafId = 0
 
 /** 数据异步到达 / 条数变化时，重建卡片元素引用。 */
 watch(
@@ -107,16 +238,28 @@ watch(
   }
 )
 
-onMounted(() => {
-  recomputeActive()
+/** 档位切换会改半径与舞台尺寸，需要重算景深并同步 canvas。 */
+watch(geometry, async () => {
+  await nextTick()
+  resizeDust()
   applyFrame()
-  rafId = requestAnimationFrame(loop)
 })
 
-onBeforeUnmount(() => cancelAnimationFrame(rafId))
+onMounted(() => {
+  recomputeActive()
+  resizeDust()
+  applyFrame()
+  rafId = requestAnimationFrame(loop)
+  window.addEventListener('resize', resizeDust)
+})
 
-/** 进入视口后才开始自转（避免首屏外空转）。 */
-const stageEl = ref<HTMLElement | null>(null)
+onBeforeUnmount(() => {
+  cancelAnimationFrame(rafId)
+  window.removeEventListener('resize', resizeDust)
+  observer?.disconnect()
+})
+
+/* ---------- 进入视口后才开始转与浮尘 ---------- */
 let observer: IntersectionObserver | null = null
 onMounted(() => {
   const el = stageEl.value
@@ -139,7 +282,8 @@ onMounted(() => {
 /* ---------- reduced-motion 降级：不自转，点击舞台步进一张 ---------- */
 function onStageClick(): void {
   if (reducedMotion.value !== 'reduce') return
-  angle.value = (angle.value + stepAngle.value) % 360
+  angle -= stepAngle.value
+  moving = false
   recomputeActive()
   applyFrame()
 }
@@ -167,12 +311,22 @@ function onEsc(e: KeyboardEvent): void {
 onMounted(() => window.addEventListener('keydown', onEsc))
 onBeforeUnmount(() => window.removeEventListener('keydown', onEsc))
 
+/**
+ * 状态胶囊文案。必须把 reduced-motion 算进来 ——
+ * 之前只看 hovering/detailOpen，无障碍降级下会显示「自动旋转中」而下方提示是「已关闭」，自相矛盾。
+ */
+const pillText = computed(() => {
+  if (reducedMotion.value === 'reduce') return '已按系统偏好停用动效'
+  if (hovering.value || detailOpen.value) return '已暂停'
+  return '自动旋转中'
+})
+
 function setCardRef(el: unknown, index: number): void {
   cardEls.value[index] = (el as HTMLElement | null) ?? null
 }
 
+/** 静态盒模型定位；transform 由 applyFrame 逐帧写入。 */
 const cardStyle = (index: number): Record<string, string> => ({
-  transform: `rotateY(${(index * stepAngle.value).toFixed(2)}deg) translateZ(${geometry.value.radius}px)`,
   left: `${-geometry.value.cardW / 2}px`,
   top: `${-geometry.value.cardH / 2}px`,
   width: `${geometry.value.cardW}px`,
@@ -198,7 +352,7 @@ const cardStyle = (index: number): Record<string, string> => ({
             style="letter-spacing: 2px"
           >
             <span class="inline-block h-1.5 w-1.5 rounded-full bg-accent-gold-light" />
-            {{ hovering || detailOpen ? '已暂停' : '自动旋转中' }}
+            {{ pillText }}
           </span>
         </div>
       </div>
@@ -208,7 +362,7 @@ const cardStyle = (index: number): Record<string, string> => ({
         荣誉资料整理中，敬请期待
       </p>
 
-      <!-- 3D 圆柱舞台 -->
+      <!-- 舞台 -->
       <div
         v-else
         ref="stageEl"
@@ -216,42 +370,36 @@ const cardStyle = (index: number): Record<string, string> => ({
         :style="{
           height: `${geometry.stageH}px`,
           perspective: `${geometry.perspective}px`,
-          perspectiveOrigin: 'center 42%'
+          perspectiveOrigin: 'center 34%'
         }"
         @mouseenter="hovering = true"
         @mouseleave="hovering = false"
         @click="onStageClick"
       >
-        <!-- 底部径向光晕：充当地面反射 -->
-        <div
-          class="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2"
-          style="
-            width: 88%;
-            height: 180px;
-            background: radial-gradient(
-              ellipse at center bottom,
-              rgba(196, 154, 74, 0.22),
-              rgba(196, 154, 74, 0.07) 42%,
-              transparent 72%
-            );
-            filter: blur(6px);
-          "
-          aria-hidden="true"
-        />
+        <!-- 后墙幕布：给空间一个边界（竖向褶皱 + 顶部受光） -->
+        <div class="backwall" aria-hidden="true" />
 
-        <!-- 顶部射灯：灯具 + 三层叠加光锥（外 6% → 中 10% → 内 16%）+ 聚焦光斑 + 地面椭圆光斑（§2.4-3） -->
-        <div class="honor-light" aria-hidden="true">
-          <span class="lamp" />
-          <span class="beam beam-outer" />
-          <span class="beam beam-mid" />
-          <span class="beam beam-inner" />
-          <span class="focus" />
+        <!-- 地面：透视地格 + 地平线 + 落点亮池 -->
+        <div class="floor" aria-hidden="true">
+          <span class="edge" />
           <span class="pool" />
+          <span class="grid" />
         </div>
 
+        <!-- 体积光锥：外扩雾 + 清晰锥体 + 亮芯（分工，不再整层糊掉） -->
+        <div class="beam" aria-hidden="true">
+          <span class="haze" />
+          <span class="cone" />
+          <span class="core" />
+        </div>
+        <!-- 浮尘（丁达尔介质） -->
+        <canvas ref="dustEl" class="dust" aria-hidden="true" />
+        <!-- 顶部灯具亮带 -->
+        <span class="lampbar" aria-hidden="true" />
+
         <!-- 圆柱转盘 -->
-        <div class="absolute inset-0" style="transform-style: preserve-3d">
-          <div ref="ringEl" class="absolute left-1/2 top-[44%] h-0 w-0">
+        <div class="absolute inset-0 z-[4]" style="transform-style: preserve-3d">
+          <div ref="ringEl" class="absolute left-1/2 top-[40%] h-0 w-0">
             <div
               v-for="(honor, index) in honors"
               :key="honor.id"
@@ -259,6 +407,7 @@ const cardStyle = (index: number): Record<string, string> => ({
               class="absolute"
               :class="index === activeIndex ? 'is-active' : ''"
               :style="cardStyle(index)"
+              style="transform-style: preserve-3d"
             >
               <button
                 type="button"
@@ -272,6 +421,9 @@ const cardStyle = (index: number): Record<string, string> => ({
             </div>
           </div>
         </div>
+
+        <!-- 暗角：把注意力压到中央光区 -->
+        <div class="vignette" aria-hidden="true" />
       </div>
 
       <!-- 提示文案 -->
@@ -315,128 +467,192 @@ const cardStyle = (index: number): Record<string, string> => ({
 </template>
 
 <style scoped>
-/* ===== 舞台射灯（§2.4-3）：顶部光源 + 三层叠加光锥 + 地面椭圆光斑，整层模糊软化边缘 ===== */
-.honor-light {
+/* ===== 后墙幕布 ===== */
+.backwall {
   position: absolute;
   inset: 0;
+  z-index: 0;
   pointer-events: none;
-  /* 设计稿要求 20~22 的模糊量；收窄光锥后取 18 保证锥形可辨 */
-  filter: blur(18px);
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(196, 154, 74, 0.1), transparent 60%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.022) 0 2px,
+      transparent 2px 46px
+    ),
+    linear-gradient(180deg, #0b0a08 0%, #0a0a0a 55%, #070706 100%);
 }
 
-/* 顶部灯具：一条极淡的横向亮带，暗示光源（不抢主体） */
-.lamp {
+/* ===== 地面 ===== */
+.floor {
   position: absolute;
-  left: 50%;
+  left: -10%;
+  right: -10%;
+  bottom: 0;
+  height: 34%;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      60% 100% at 50% 0%,
+      rgba(196, 154, 74, 0.16),
+      rgba(196, 154, 74, 0.04) 45%,
+      transparent 72%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 40%);
+}
+
+/* 透视地格：rotateX 让横线向地平线收拢 */
+.floor .grid {
+  position: absolute;
+  inset: 0;
+  transform: perspective(420px) rotateX(66deg);
+  transform-origin: 50% 0%;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(196, 154, 74, 0.14) 0 1px, transparent 1px 92px),
+    repeating-linear-gradient(0deg, rgba(196, 154, 74, 0.12) 0 1px, transparent 1px 60px);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%, transparent 82%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 22%, transparent 82%);
+  opacity: 0.5;
+}
+
+.floor .edge {
+  position: absolute;
   top: 0;
-  transform: translateX(-50%);
-  width: 26%;
-  height: 3px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, transparent, rgba(240, 217, 160, 0.55), transparent);
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(232, 199, 122, 0.34), transparent);
 }
 
-.beam {
+/* 光落在地上的亮池 */
+.floor .pool {
   position: absolute;
+  top: 2%;
   left: 50%;
-  top: 0;
+  width: 420px;
+  height: 130px;
   transform: translateX(-50%);
-  /* 上窄（光源）→ 下宽（铺到展板），形成光锥 */
-  clip-path: polygon(49% 0, 51% 0, 100% 100%, 0% 100%);
-}
-
-.beam-outer {
-  width: 54%;
-  height: 56%;
-  background: linear-gradient(
-    to bottom,
-    rgba(196, 154, 74, 0.1) 0%,
-    rgba(196, 154, 74, 0.09) 58%,
-    rgba(196, 154, 74, 0.03) 84%,
-    transparent 100%
-  );
-}
-
-.beam-mid {
-  width: 36%;
-  height: 52%;
-  background: linear-gradient(
-    to bottom,
-    rgba(232, 199, 122, 0.15) 0%,
-    rgba(232, 199, 122, 0.13) 56%,
-    rgba(232, 199, 122, 0.05) 84%,
-    transparent 100%
-  );
-}
-
-.beam-inner {
-  width: 22%;
-  height: 54%;
-  background: linear-gradient(
-    to bottom,
-    rgba(240, 217, 160, 0.24) 0%,
-    rgba(240, 217, 160, 0.19) 52%,
-    rgba(240, 217, 160, 0.06) 82%,
-    transparent 100%
-  );
-}
-
-/* 聚焦光斑：光锥落在正中展板（top 44% 处）的照度中心 */
-.focus {
-  position: absolute;
-  left: 50%;
-  top: 44%;
-  transform: translate(-50%, -50%);
-  width: 34%;
-  height: 64%;
   background: radial-gradient(
     ellipse at center,
-    rgba(240, 217, 160, 0.2),
-    rgba(196, 154, 74, 0.07) 46%,
-    transparent 74%
-  );
-}
-
-/* 地面椭圆光斑：光锥落到展板脚下的落点 */
-.pool {
-  position: absolute;
-  left: 50%;
-  bottom: 3%;
-  transform: translateX(-50%);
-  width: 52%;
-  height: 150px;
-  background: radial-gradient(
-    ellipse at center bottom,
-    rgba(196, 154, 74, 0.13),
-    rgba(196, 154, 74, 0.05) 46%,
-    transparent 74%
-  );
-}
-
-/* 当前正对镜头的卡：金边提亮 + 「自上而下受光」的舞台高光（其余卡由 rAF 控制景深透明度） */
-.is-active :deep(.card-body) {
-  border-color: rgba(232, 199, 122, 0.86);
-  box-shadow:
-    0 0 96px rgba(240, 217, 120, 0.3),
-    inset 0 0 52px rgba(196, 154, 74, 0.12),
-    inset 0 30px 46px -18px rgba(255, 246, 218, 0.4);
-}
-
-/* 受光面：卡片顶部往下衰减的暖白高光，模拟射灯打在正面展板上 */
-.is-active :deep(.card-body)::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 246, 218, 0.4) 0%,
-    rgba(240, 217, 160, 0.2) 22%,
-    rgba(196, 154, 74, 0.06) 48%,
+    rgba(255, 240, 205, 0.3),
+    rgba(196, 154, 74, 0.1) 42%,
     transparent 72%
   );
-  mix-blend-mode: screen;
+  filter: blur(12px);
+}
+
+/* ===== 体积光锥（几何比例必须与脚本里的 CONE_* 常量一致） ===== */
+.beam {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.beam .cone,
+.beam .haze,
+.beam .core {
+  position: absolute;
+  left: 50%;
+  top: 0.8%;
+  transform: translateX(-50%);
+}
+
+/* 外扩雾 */
+.beam .haze {
+  width: 74%;
+  height: 74%;
+  clip-path: polygon(48.5% 0, 51.5% 0, 100% 100%, 0% 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(196, 154, 74, 0.07),
+    rgba(196, 154, 74, 0.02) 60%,
+    transparent
+  );
+  filter: blur(26px);
+}
+
+/* 主锥：blur 只给 5px，保住锥体边缘 */
+.beam .cone {
+  width: 46%;
+  height: 66%;
+  clip-path: polygon(47.5% 0, 52.5% 0, 100% 100%, 0% 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 240, 205, 0.3) 0%,
+    rgba(240, 217, 160, 0.14) 26%,
+    rgba(196, 154, 74, 0.07) 62%,
+    rgba(196, 154, 74, 0.02) 88%,
+    transparent 100%
+  );
+  filter: blur(5px);
+}
+
+/* 亮芯 */
+.beam .core {
+  width: 9%;
+  height: 64%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 248, 228, 0.5),
+    rgba(255, 240, 205, 0.06) 70%,
+    transparent
+  );
+  filter: blur(9px);
+}
+
+.dust {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.lampbar {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 12px;
+  z-index: 6;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center top,
+    rgba(240, 217, 160, 0.75),
+    transparent 70%
+  );
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 90% at 50% 40%,
+    transparent 38%,
+    rgba(0, 0, 0, 0.55) 78%,
+    rgba(0, 0, 0, 0.82) 100%
+  );
+}
+
+/* ===== 当前正对镜头的卡：金边提亮 + 自上而下的受光面 ===== */
+.is-active :deep(.card-body) {
+  border-color: rgba(240, 224, 176, 0.9);
+  box-shadow:
+    0 0 110px rgba(255, 236, 190, 0.34),
+    0 26px 60px rgba(0, 0, 0, 0.6),
+    inset 0 0 54px rgba(196, 154, 74, 0.12);
+}
+
+.is-active :deep(.lit) {
+  opacity: 1;
+  /* 呼吸挂在 .is-active 上而不是 .lit 本身：动画会接管 opacity，
+     写在 .lit 上会把非活跃卡的 opacity: 0 也覆盖成亮 */
   animation: honor-lamp 6s ease-in-out infinite;
 }
 
