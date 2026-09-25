@@ -1,12 +1,13 @@
 <script setup lang="ts">
 /**
  * AppButton —— 官网按钮（R13 / §1.4）。
- * 变体：orange（扁平实心橙）/ ivory（象牙白实心）/ ivory-outline（米白描边）。
- * 统一禁止：装饰箭头、渐变、外发光、内高光；悬浮仅加深底色。
+ * 变体：gold-outline（金描边幽灵）/ ivory（象牙白实心）/ ivory-outline（米白描边）。
+ * 统一禁止：装饰箭头、渐变、外发光、内高光；悬浮仅微调底色。
  */
+
 import { computed } from 'vue'
 
-type ButtonVariant = 'orange' | 'ivory' | 'ivory-outline'
+type ButtonVariant = 'gold-outline' | 'ivory' | 'ivory-outline'
 
 const props = withDefaults(
   defineProps<{
@@ -26,8 +27,8 @@ const emit = defineEmits<{ (e: 'click', ev: MouseEvent): void }>()
 
 const variantClass = computed(() => {
   switch (props.variant) {
-    case 'orange':
-      return 'ly-btn-orange'
+    case 'gold-outline':
+      return 'ly-btn-ghost-gold'
     case 'ivory-outline':
       return 'ly-btn-ghost-ivory'
     default:

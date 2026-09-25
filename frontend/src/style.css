@@ -37,6 +37,19 @@
   --section-y-mobile: 72px;
 }
 
+/* 年份描边数字专用字体（YearEmblem）：Archivo Black latin 子集 18KB
+   （Arial Black 的开源替身，OFL 协议；文件本身为单字重设计，
+   在专用族名下声明为 900 以匹配组件 font-weight，避免合成加粗）。
+   系统字体栈（雅黑/苹方）数字字形轮廓存在自交叠，填充时不可见，
+   纯描边动画会暴露内部线条；Archivo Black 轮廓干净且全平台一致。 */
+@font-face {
+  font-family: 'Digits Black';
+  src: url('/fonts/digits-900.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: block;
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
@@ -155,17 +168,20 @@
     user-select: none;
   }
 
-  /* 官网 · 扁平实心橙（公司介绍「探索详情」） */
-  .ly-btn-orange {
-    background: var(--accent-orange);
-    color: #fff;
+  /* 官网 · 公司介绍主按钮 —— 金描边幽灵：黑底 + 金边 + 金字 */
+  .ly-btn-ghost-gold {
+    background: var(--bg-base);
+    color: var(--accent-gold);
+    border: 1px solid var(--accent-gold);
     letter-spacing: 3px;
     padding: 13px 34px;
     border-radius: 2px;
     font-size: 14px;
   }
-  .ly-btn-orange:hover {
-    background: #e85f00;
+  .ly-btn-ghost-gold:hover {
+    color: var(--accent-gold-light);
+    border-color: var(--accent-gold-light);
+    background: rgba(196, 154, 74, 0.06);
   }
 
   /* 官网 · 照片/暗底主按钮 —— 象牙白实心 + 墨字 */
