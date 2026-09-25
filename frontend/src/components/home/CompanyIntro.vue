@@ -61,9 +61,9 @@ defineProps<{
           <YearEmblem :founded-year="profile?.founded_year ?? 2017" />
         </div>
 
-        <!-- 主按钮（扁平橙，全站唯一）：保持原样 -->
+        <!-- 主按钮（金描边，全站唯一） -->
         <div v-reveal="320" class="pt-2 lg:col-start-1 lg:row-start-2">
-          <AppButton variant="orange" @click="scrollToId('segments')">
+          <AppButton variant="gold-outline" @click="scrollToId('segments')">
             探索详情
           </AppButton>
         </div>

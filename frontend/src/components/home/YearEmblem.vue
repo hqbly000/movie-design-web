@@ -5,8 +5,13 @@
  * 形态：单个 SVG `<text>`，金色渐变描边 + `stroke-dashoffset` 逐笔勾出动画；
  *       勾完淡入一层极淡金填充并起辉光。原「幽灵叠印」外圈已移除 ——
  *       前景本身就是金线，再套一层线只剩脏。
- * 尺寸：viewBox 按 300px 字号下字形**墨迹**（非字体行盒）裁切，见下方常量注释；
- *       桌面 176×240 / 移动 100×136，按数字位数等比加宽。
+ * 字体：数字专用自托管 'Digits Black'（Archivo Black latin 子集，public/fonts，
+ *       Arial Black 的开源替身）。系统字体（雅黑/苹方）数字轮廓有自交叠，
+ *       纯描边会露出内部线条；Archivo Black 轮廓干净且为等宽数字、
+ *       全平台度量一致（canvas TextMetrics 实测）。
+ * 尺寸：viewBox 按 323px 字号下字形**墨迹**（非字体行盒）裁切；
+ *       Archivo Black @323px 实测：墨迹高 227 / 最宽数字墨迹 207 / 步进 215（等宽）。
+ *       桌面 230px/位 1:1 渲染 / 移动 130px/位（130/230 ≈ 0.565 缩放）。
  * 文案：`SINCE {成立年}` 竖排（writing-mode: vertical-rl + text-orientation: mixed，
  *       拉丁侧倒自上而下，Han 在 mixed 下本就正立）。
  * 交互：展示年限 = 当前年 − 成立年（前端实时计算，不落库）；进入视口触发一次描边。
@@ -34,23 +39,23 @@ const sinceLabel = computed(() => `SINCE ${props.foundedYear}`)
 const digits = computed(() => String(years.value).length)
 
 /**
- * 描边总长：300px 字号下单个数字轮廓周长约 1440（实测墨迹 159×234 反推），
- * 按位数线性放大。宁大勿小 —— 偏大只是结尾空转一小段，偏小则永远缺一截。
- * 带 px 单位：SVG 几何属性在 CSS 里接受无单位数字，但补上单位对 Safari 更稳。
+ * 描边总长：323px 字号下 Archivo Black 单个数字轮廓周长约 1550–1650，
+ * 取 1700/位并按位数线性放大。宁大勿小 —— 偏大只是结尾空转一小段，
+ * 偏小则永远缺一截（轮廓画不满）。带 px 单位：对 Safari 更稳。
  */
-const dashLen = computed(() => `${digits.value * 1500}px`)
+const dashLen = computed(() => `${digits.value * 1700}px`)
 
 /**
- * viewBox 半宽：单个数字墨迹 159 + 左右各 8.5 描边余量 ≈ 176 全宽，即半宽 88。
- * 注意 SVG `getBBox()` 对 `<text>` 返回的是字体行盒（Noto Sans SC 约 1.45em = 434）
- * 而不是墨迹，直接按行盒裁会把数字切成两半，所以这里用实测墨迹值写死。
+ * viewBox 半宽：每数字槽位 230（等宽步进 215 + 描边余量），即半宽 115/位。
+ * 注意 SVG `getBBox()` 对 `<text>` 返回的是字体行盒而不是墨迹，
+ * 直接按行盒裁会把数字切成两半，所以这里用 canvas TextMetrics 实测值写死。
  */
-const halfWidth = computed(() => digits.value * 88)
+const halfWidth = computed(() => digits.value * 115)
 const viewBox = computed(() => `${-halfWidth.value} -234 ${halfWidth.value * 2} 240`)
 
-/** SVG 盒子尺寸：与 viewBox 1:1，避免缩放把描边一起缩细。 */
+/** SVG 盒子尺寸：桌面与 viewBox 1:1，避免缩放把描边一起缩细；移动按 0.565 缩放。 */
 const svgStyle = computed(() => ({
-  width: `${digits.value * (isDesktop.value ? 176 : 100)}px`,
+  width: `${digits.value * (isDesktop.value ? 230 : 130)}px`,
   height: `${isDesktop.value ? 240 : 136}px`
 }))
 
@@ -110,9 +115,9 @@ watch(isInView, (visible) => {
 }
 
 .year-number {
-  font-family: var(--font-sans);
+  font-family: 'Digits Black', var(--font-sans);
   font-weight: 900;
-  font-size: 300px;
+  font-size: 323px; /* 校准值：墨迹高 ≈ 227，贴近原雅黑视觉（234）且留足描边余量 */
   line-height: 1;
   fill: rgba(196, 154, 74, 0);
   stroke: url(#year-gold-stroke);

@@ -168,7 +168,14 @@ cd admin    && npm run build    # → admin/dist
 
 **第四轮（验收反馈修复，2026-09-23）**：分享页视频可点击清单切换 + 播放器撑满内容列、PC 端首屏恢复自动轮播（悬停暂停不再退化为死暂停）、荣誉展厅补回舞台射灯与正中卡受光高亮。明细与根因见 `docs/qa-report.md` §11。
 
-**已知未覆盖**：移动端真机、Safari / Firefox 兼容性、线上部署配置（无线上环境）。详见 `docs/qa-report.md` §10.8。
+**已知未覆盖**：移动端真机、Safari / Firefox 兼容性。详见 `docs/qa-report.md` §10.8。
+
+**线上环境（2026-09-25 起）**：官网 `http://124.223.29.189`、管理后台 `http://124.223.29.189:19010`、API 同源 `/api`。
+当日排查过一次线上故障——**管理后台 19010 的 `dist` 缺 12 个 chunk，导致「登录成功后不跳转」**
+（登录接口正常，但懒加载 `DashboardView`/`AdminLayout` 的依赖 404，路由导航静默中断）。
+连带第二种表现：浏览器里留着未过期 token 时，`/` 与 `/login` 都被守卫重定向去 dashboard，
+dashboard 又打不开 → **整页白屏，连登录页都进不去**（自救：清掉 localStorage 的 `lightisle_admin_token`）。
+处置：整体重传 `admin/dist`；并新增部署后强制校验，见 `docs/DEPLOY.md` §三。
 
 ### 常用验证命令
 
@@ -182,6 +189,13 @@ node scripts/verify-admin-routes.mjs 9223 http://127.0.0.1:4174
 
 # 冷加载鉴权稳定性实验（定性"偶发 401"）
 node scripts/verify-auth-coldload.mjs 9223 http://127.0.0.1:4174 8
+
+# 静态产物部署完整性核对（爬完 index.html 的整张 chunk 依赖图，缺失即报错）
+# 线上部署后必跑：缺 chunk 会让路由懒加载静默失败（表现为"登录后不跳转"）
+node scripts/verify-static-integrity.mjs http://124.223.29.189:19010
+
+# 线上登录 → 工作台 端到端探针（需先起 CDP 无头浏览器，见 docs/DEPLOY.md §三）
+node qa-tests/verify-admin-login.mjs http://124.223.29.189:19010 9223
 ```
 
 > ⚠️ 本机系统代理会拦截 `127.0.0.1`：curl 需 `--noproxy '*'`，Node 需 `NO_PROXY='*'`，否则会出现整片假失败。
