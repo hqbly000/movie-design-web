@@ -36,9 +36,9 @@ const isTabletUp = useMediaQuery('(min-width: 768px)')
 const reducedMotion = usePreferredReducedMotion()
 
 const geometry = computed(() => {
-  if (isWide.value) return { radius: 340, cardW: 300, cardH: 190, stageH: 700, perspective: 1400 }
-  if (isTabletUp.value) return { radius: 268, cardW: 250, cardH: 162, stageH: 540, perspective: 1150 }
-  return { radius: 164, cardW: 168, cardH: 110, stageH: 400, perspective: 780 }
+  if (isWide.value) return { radius: 340, cardW: 300, cardH: 190, stageH: 580, perspective: 1400 }
+  if (isTabletUp.value) return { radius: 268, cardW: 250, cardH: 162, stageH: 450, perspective: 1150 }
+  return { radius: 164, cardW: 168, cardH: 110, stageH: 330, perspective: 780 }
 })
 
 /** 相邻两卡夹角（荣誉不足 6 条时自动放大夹角，不写死 60°）。 */
@@ -105,7 +105,7 @@ function applyFrame(): void {
 /* ---------- 浮尘（丁达尔介质） ---------- */
 /** 与 CSS 光锥共享的几何比例：顶点 y 占比、锥底 y 占比、锥底半宽占比。 */
 const CONE_APEX_Y = 0.008
-const CONE_BOTTOM_Y = 0.66
+const CONE_BOTTOM_Y = 0.78
 const CONE_HALF_W = 0.23
 
 interface Dust {
@@ -425,15 +425,6 @@ const cardStyle = (index: number): Record<string, string> => ({
         <!-- 暗角：把注意力压到中央光区 -->
         <div class="vignette" aria-hidden="true" />
       </div>
-
-      <!-- 提示文案 -->
-      <p v-if="honors.length" class="mt-4 text-center font-sans text-[12px] text-white/50">
-        {{
-          reducedMotion === 'reduce'
-            ? '点击切换 · 自动旋转已关闭'
-            : '点击当前卡片查看详情 · 悬停暂停'
-        }}
-      </p>
     </div>
 
     <!-- 放大详情（Teleport 到 body，Esc / 点遮罩关闭） -->
@@ -467,7 +458,9 @@ const cardStyle = (index: number): Record<string, string> => ({
 </template>
 
 <style scoped>
-/* ===== 后墙幕布 ===== */
+/* ===== 后墙幕布 =====
+   幕布只画在舞台盒内，盒外是区块纯色 #0A0A0A，四边会留下亮度台阶（实测约 4 级）。
+   用双向遮罩把幕布融进区块底色，舞台边界不再显形。 */
 .backwall {
   position: absolute;
   inset: 0;
@@ -481,39 +474,57 @@ const cardStyle = (index: number): Record<string, string> => ({
       transparent 2px 46px
     ),
     linear-gradient(180deg, #0b0a08 0%, #0a0a0a 55%, #070706 100%);
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%),
+    linear-gradient(180deg, #000 0%, #000 80%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%),
+    linear-gradient(180deg, #000 0%, #000 80%, transparent 100%);
+  mask-composite: intersect;
 }
 
-/* ===== 地面 ===== */
+/* ===== 地面 =====
+   地平线固定在 78%（= 脚本 CONE_BOTTOM_Y，光锥底边正好落在地面上，两者必须同步改）。
+   地面只保留 12% 厚度，下移到贴近舞台底部，与上方卡片区拉开留白。 */
 .floor {
   position: absolute;
   left: -10%;
   right: -10%;
-  bottom: 0;
-  height: 34%;
+  bottom: 10%;
+  height: 12%;
   z-index: 1;
   pointer-events: none;
   background:
     radial-gradient(
       60% 100% at 50% 0%,
-      rgba(196, 154, 74, 0.16),
-      rgba(196, 154, 74, 0.04) 45%,
+      rgba(196, 154, 74, 0.14),
+      rgba(196, 154, 74, 0.035) 45%,
       transparent 72%
     ),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 40%);
+    radial-gradient(70% 110% at 50% 0%, rgba(255, 255, 255, 0.03), transparent 62%);
 }
 
-/* 透视地格：rotateX 让横线向地平线收拢 */
+/* 透视地格：rotateX 让横线向地平线收拢。
+   双向遮罩（上下淡出 + 左右淡出）削掉矩形硬边，地格才会「铺开」而不是一块亮板。
+   地面压薄后倾角同步放缓（66°→56°），否则投影高度只剩十几像素、地格会整条消失。 */
 .floor .grid {
   position: absolute;
   inset: 0;
-  transform: perspective(420px) rotateX(66deg);
+  transform: perspective(420px) rotateX(56deg);
   transform-origin: 50% 0%;
   background-image:
     repeating-linear-gradient(90deg, rgba(196, 154, 74, 0.14) 0 1px, transparent 1px 92px),
     repeating-linear-gradient(0deg, rgba(196, 154, 74, 0.12) 0 1px, transparent 1px 60px);
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%, transparent 82%);
-  mask-image: linear-gradient(180deg, transparent 0%, #000 22%, transparent 82%);
-  opacity: 0.5;
+  -webkit-mask-image:
+    linear-gradient(180deg, transparent 0%, #000 14%, transparent 92%),
+    linear-gradient(90deg, transparent 0%, #000 26%, #000 74%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(180deg, transparent 0%, #000 14%, transparent 92%),
+    linear-gradient(90deg, transparent 0%, #000 26%, #000 74%, transparent 100%);
+  mask-composite: intersect;
+  opacity: 0.55;
 }
 
 .floor .edge {
@@ -525,18 +536,18 @@ const cardStyle = (index: number): Record<string, string> => ({
   background: linear-gradient(90deg, transparent, rgba(232, 199, 122, 0.34), transparent);
 }
 
-/* 光落在地上的亮池 */
+/* 光落在地上的亮池（随地面一起收窄，避免亮池溢出到地面带之外） */
 .floor .pool {
   position: absolute;
-  top: 2%;
+  top: 0;
   left: 50%;
-  width: 420px;
-  height: 130px;
+  width: 320px;
+  height: 52px;
   transform: translateX(-50%);
   background: radial-gradient(
     ellipse at center,
-    rgba(255, 240, 205, 0.3),
-    rgba(196, 154, 74, 0.1) 42%,
+    rgba(255, 240, 205, 0.28),
+    rgba(196, 154, 74, 0.09) 42%,
     transparent 72%
   );
   filter: blur(12px);
@@ -562,7 +573,7 @@ const cardStyle = (index: number): Record<string, string> => ({
 /* 外扩雾 */
 .beam .haze {
   width: 74%;
-  height: 74%;
+  height: 86%;
   clip-path: polygon(48.5% 0, 51.5% 0, 100% 100%, 0% 100%);
   background: linear-gradient(
     to bottom,
@@ -573,10 +584,10 @@ const cardStyle = (index: number): Record<string, string> => ({
   filter: blur(26px);
 }
 
-/* 主锥：blur 只给 5px，保住锥体边缘 */
+/* 主锥：blur 只给 5px，保住锥体边缘。高度 = 地平线 78%，底面落在新地平线上 */
 .beam .cone {
   width: 46%;
-  height: 66%;
+  height: 78%;
   clip-path: polygon(47.5% 0, 52.5% 0, 100% 100%, 0% 100%);
   background: linear-gradient(
     to bottom,
@@ -592,7 +603,7 @@ const cardStyle = (index: number): Record<string, string> => ({
 /* 亮芯 */
 .beam .core {
   width: 9%;
-  height: 64%;
+  height: 76%;
   background: linear-gradient(
     to bottom,
     rgba(255, 248, 228, 0.5),
@@ -627,6 +638,7 @@ const cardStyle = (index: number): Record<string, string> => ({
   );
 }
 
+/* 暗角：把注意力压到中央光区（四边同样做遮罩过渡，避免与区块底色接缝） */
 .vignette {
   position: absolute;
   inset: 0;
@@ -638,6 +650,14 @@ const cardStyle = (index: number): Record<string, string> => ({
     rgba(0, 0, 0, 0.55) 78%,
     rgba(0, 0, 0, 0.82) 100%
   );
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, #000 12%, #000 76%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, #000 12%, #000 76%, transparent 100%);
+  mask-composite: intersect;
 }
 
 /* ===== 当前正对镜头的卡：金边提亮 + 自上而下的受光面 ===== */
