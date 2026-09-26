@@ -9,7 +9,7 @@ await c.send('Page.navigate',{url:'http://127.0.0.1:5175/login'})
 let ok=false
 for(let i=0;i<30;i++){await new Promise(r=>setTimeout(r,500));try{ok=await c.ev(`!!document.querySelector('input[type=email]')`)}catch{}if(ok)break}
 console.log('login form ready=',ok,'path=',await c.ev('location.pathname'))
-await c.ev(`(()=>{const e=document.querySelector('input[type=email]');const p=document.querySelector('input[type=password]');e.value='admin@lightisle.studio';e.dispatchEvent(new Event('input',{bubbles:true}));p.value='Admin@123456';p.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('form').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));return 1})()`)
+await c.ev(`(()=>{const e=document.querySelector('input[type=email]');const p=document.querySelector('input[type=password]');e.value='admin@jiaodianfilm.com';e.dispatchEvent(new Event('input',{bubbles:true}));p.value='Admin@123456';p.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('form').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));return 1})()`)
 await new Promise(r=>setTimeout(r,3000))
 c.exc=[]
 await c.ev(`location.href='/videos'`);await new Promise(r=>setTimeout(r,5000))

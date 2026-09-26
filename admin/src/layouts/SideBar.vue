@@ -3,7 +3,6 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NAV_ITEMS } from './nav'
-import BrandMark from '@/components/BrandMark.vue'
 import AppIcon from '@/components/AppIcon.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ROLE_LABELS } from '@/utils/constants'
@@ -15,7 +14,7 @@ const auth = useAuthStore()
 const items = computed(() => NAV_ITEMS.filter((i) => !i.adminOnly || auth.isAdmin))
 const currentName = computed(() => String(route.name ?? ''))
 const roleLabel = computed(() => (auth.role ? ROLE_LABELS[auth.role] : ''))
-const initials = computed(() => (auth.displayName || '光').slice(0, 1))
+const initials = computed(() => (auth.displayName || '交').slice(0, 1))
 
 async function onLogout(): Promise<void> {
   await auth.logout()
@@ -29,11 +28,16 @@ async function onLogout(): Promise<void> {
   <aside class="w-sidebar shrink-0 h-screen fixed top-0 left-0 flex-col bg-ad-surface border-r border-ad-border-strong">
     <!-- 品牌块 -->
     <div class="flex items-center gap-3 px-5 h-topbar border-b border-ad-border-strong">
-      <BrandMark :size="36" />
-      <div class="leading-tight">
-        <p class="text-[15px] font-semibold text-ad-text">光屿摄影</p>
-        <p class="text-[11px] text-ad-text-4 mt-0.5">管理后台</p>
-      </div>
+      <img
+        src="/logo-on-light.png"
+        alt="交点影视"
+        class="h-6 w-auto"
+        width="1200"
+        height="259"
+      />
+      <span class="border-l border-ad-border-strong pl-3 text-[12px] leading-tight text-ad-text-3"
+        >管理后台</span
+      >
     </div>
 
     <!-- 导航 -->

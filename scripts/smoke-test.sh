@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 光屿摄影 · 后端接口冒烟测试
+# 交点影视 · 后端接口冒烟测试
 # 用法：./scripts/smoke-test.sh [API_BASE]   默认 http://127.0.0.1:8000
 set -uo pipefail
 
@@ -47,7 +47,7 @@ check "site_settings 含 icp_no（R12 备案）" "True" "$SET"
 echo "[2] 鉴权"
 LOGIN=$(curl -s --noproxy '*' --max-time 15 -X POST "$API/api/auth/login" \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@lightisle.studio","password":"Admin@123456"}')
+  -d '{"email":"admin@jiaodianfilm.com","password":"Admin@123456"}')
 check "admin 登录 code=0" "0" "$(code "$LOGIN")"
 TOKEN=$(echo "$LOGIN" | python -c "import sys,json;print(json.load(sys.stdin)['data']['token'])" 2>/dev/null || echo "")
 [ -n "$TOKEN" ] && green "  [PASS] 取得 token" && PASS=$((PASS+1)) || { red "  [FAIL] 未取得 token"; FAIL=$((FAIL+1)); }
@@ -55,20 +55,20 @@ AUTH="Authorization: Bearer $TOKEN"
 
 BAD=$(curl -s --noproxy '*' --max-time 15 -X POST "$API/api/auth/login" \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@lightisle.studio","password":"wrong-password"}')
+  -d '{"email":"admin@jiaodianfilm.com","password":"wrong-password"}')
 check "错误密码 → 1004" "1004" "$(code "$BAD")"
 
 # ---------- 3. 权限矩阵 ----------
 echo "[3] 权限"
 VT=$(curl -s --noproxy '*' --max-time 15 -X POST "$API/api/auth/login" -H 'Content-Type: application/json' \
-  -d '{"email":"viewer@lightisle.studio","password":"Viewer@123456"}' \
+  -d '{"email":"viewer@jiaodianfilm.com","password":"Viewer@123456"}' \
   | python -c "import sys,json;print(json.load(sys.stdin)['data']['token'])" 2>/dev/null || echo "")
 VD=$(curl -s --noproxy '*' --max-time 15 -X POST "$API/api/admin/honors" -H "Authorization: Bearer $VT" \
   -H 'Content-Type: application/json' -d '{"title":"x","issuer":"y","level":"其他"}')
 check "viewer 写操作 → 1003" "1003" "$(code "$VD")"
 
 ET=$(curl -s --noproxy '*' --max-time 15 -X POST "$API/api/auth/login" -H 'Content-Type: application/json' \
-  -d '{"email":"editor@lightisle.studio","password":"Editor@123456"}' \
+  -d '{"email":"editor@jiaodianfilm.com","password":"Editor@123456"}' \
   | python -c "import sys,json;print(json.load(sys.stdin)['data']['token'])" 2>/dev/null || echo "")
 EM=$(curl -s --noproxy '*' --max-time 15 "$API/api/admin/members" -H "Authorization: Bearer $ET")
 check "editor 访问成员管理 → 1003" "1003" "$(code "$EM")"

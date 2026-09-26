@@ -10,13 +10,13 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     name: 'home',
     component: () => import('@/views/HomeView.vue'),
-    meta: { title: '光屿摄影 LIGHT ISLE STUDIO · 以光影，铭记时光' }
+    meta: { title: '交点影视 JIAO DIAN FILM AND TELEVISION · 以光影，铭记时光' }
   },
   {
     path: '/share/:token',
     name: 'share',
     component: () => import('@/views/ShareView.vue'),
-    meta: { title: '临时合集预览 · 光屿摄影' }
+    meta: { title: '临时合集预览 · 交点影视' }
   },
   {
     path: '/:pathMatch(.*)*',

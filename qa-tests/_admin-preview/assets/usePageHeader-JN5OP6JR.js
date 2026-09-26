@@ -1,1 +1,0 @@
-import{u as r}from"./ui-BHOAiw5A.js";import{a5 as s,o as u,a6 as f}from"./index-DkvlRfTP.js";function t(e){return typeof e=="string"?e:e.value}function m(e,a="",c=""){const o=r(),n=s(()=>{o.setPage(e,t(a))});u(()=>{o.setPage(e,t(a))}),f(()=>n())}export{m as u};

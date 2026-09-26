@@ -123,7 +123,7 @@ async function main() {
 
   // =============== A1. BUG-01 崩溃面复验 ===============
   console.log('\n-- A1. BUG-01：10 条路由逐条复验（0 error / 0 warn / 0 异常 / 0 骨架屏 / 顶栏按钮可见）--')
-  let cdp = await loginAs('admin@lightisle.studio', 'Admin@123456')
+  let cdp = await loginAs('admin@jiaodianfilm.com', 'Admin@123456')
   const sweep = []
   for (const [route, name] of ROUTES) {
     cdp.reset()
@@ -157,7 +157,7 @@ async function main() {
 
   // =============== A2. BUG-02 数据可见性 + 友好文案 ===============
   console.log('\n-- A2. BUG-02：列表数据 / 页眉统计 / 选视频弹框 / 错误文案 --')
-  cdp = await loginAs('admin@lightisle.studio', 'Admin@123456')
+  cdp = await loginAs('admin@jiaodianfilm.com', 'Admin@123456')
   await go(cdp, '/leads')
   const leads = JSON.parse(await cdp.evaluate(`JSON.stringify({ rows: document.querySelectorAll('table tbody tr').length, errs: [...document.querySelectorAll('.ad-field-error')].map(e=>e.innerText.trim()), sub: (document.querySelector('header p')||{}).innerText||'' })`))
   console.log('  /leads', JSON.stringify(leads))
@@ -168,7 +168,7 @@ async function main() {
   console.log('  /distributions', JSON.stringify(dist))
   check('A2 /distributions 显示 DB 3 条分发且无原始报错', dist.rows >= 3 && dist.errs.length === 0, JSON.stringify(dist))
   check('A2 BUG-05 分发表头含「生成人」列且位于「状态」与「操作」之间', (() => { const h = dist.heads; const i = h.findIndex((x) => x.includes('状态')); return h.some((x) => x.includes('生成人')) && h[i + 1] && h[i + 1].includes('生成人') })(), JSON.stringify(dist.heads))
-  check('A2 BUG-05 首行「生成人」显示真实姓名', /光屿/.test(dist.firstRow), dist.firstRow)
+  check('A2 BUG-05 首行「生成人」显示真实姓名', /交点/.test(dist.firstRow), dist.firstRow)
 
   await go(cdp, '/videos')
   const vids = JSON.parse(await cdp.evaluate(`JSON.stringify({ rows: document.querySelectorAll('table tbody tr').length, sub: (document.querySelector('header p')||{}).innerText||'', errs: [...document.querySelectorAll('.ad-field-error')].map(e=>e.innerText.trim()) })`))
@@ -226,7 +226,7 @@ async function main() {
 
   // =============== A2b. 友好文案（强制注入 1001 响应） ===============
   console.log('\n-- A2b. 前端不再把后端原始报错暴露给用户（构造 1001）--')
-  cdp = await loginAs('admin@lightisle.studio', 'Admin@123456')
+  cdp = await loginAs('admin@jiaodianfilm.com', 'Admin@123456')
   await cdp.send('Fetch.enable', { patterns: [{ urlPattern: '*api/admin/leads*', requestStage: 'Response' }] })
   cdp.on('Fetch.requestPaused', async (p) => {
     const body = Buffer.from(JSON.stringify({ code: 1001, data: { field: 'size', detail: 'Input should be less than or equal to 100' }, message: '参数校验失败' })).toString('base64')
@@ -244,7 +244,7 @@ async function main() {
 
   // =============== A3. BUG-03 移动端卡片流 ===============
   console.log('\n-- A3. BUG-03：390 档 5 个列表页 —— 无 <table>、卡片流、无横向滚动 --')
-  cdp = await loginAs('admin@lightisle.studio', 'Admin@123456', 390, 780)
+  cdp = await loginAs('admin@jiaodianfilm.com', 'Admin@123456', 390, 780)
   const mob = []
   for (const [route] of [['/videos'], ['/distributions'], ['/honors'], ['/members'], ['/leads']]) {
     await go(cdp, route, 3000)
@@ -282,7 +282,7 @@ async function main() {
 
   // =============== A2c. 全流程：真正生成一次分发 ===============
   console.log('\n-- A2c. 端到端：新建分发（选视频 → 生成 → 列表出现 → 关闭）--')
-  cdp = await loginAs('admin@lightisle.studio', 'Admin@123456')
+  cdp = await loginAs('admin@jiaodianfilm.com', 'Admin@123456')
   await go(cdp, '/distributions')
   const flow = JSON.parse(await cdp.evaluate(`(async () => {
     const sleep = ms => new Promise(r => setTimeout(r, ms));

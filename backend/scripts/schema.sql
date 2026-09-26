@@ -1,5 +1,5 @@
 -- ============================================================
--- 光屿摄影 LIGHT ISLE STUDIO · 数据库初始化脚本
+-- 交点影视 JIAO DIAN FILM AND TELEVISION · 数据库初始化脚本
 -- 目标：MySQL 8.x   库名：lightisle   utf8mb4 / utf8mb4_unicode_ci
 -- ！！该实例存在他人业务库（ctm / itrial_* 等），本脚本只操作 lightisle ！！
 -- 执行：mysql -h10.66.237.199 -P3306 -uroot -p12345678 < schema.sql

@@ -93,7 +93,7 @@ async function save(): Promise<void> {
         v-model="form.email"
         label="登录账号（邮箱）"
         type="email"
-        placeholder="name@lightisle.studio"
+        placeholder="name@jiaodianfilm.com"
         required
         :disabled="isEdit"
         :error="errors.email"

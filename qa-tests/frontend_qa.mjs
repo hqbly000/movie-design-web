@@ -1,5 +1,5 @@
 /**
- * 光屿摄影 · 官网补充对抗性 CDP 校验（QA 严过关独立编写）
+ * 交点影视 · 官网补充对抗性 CDP 校验（QA 严过关独立编写）
  * 覆盖既有 cdp-verify.mjs 未覆盖 / 仅弱覆盖的点。
  * 用法：node frontend_qa.mjs <cdpPort> <frontendBase> <apiBase> <validToken>
  */
@@ -199,7 +199,7 @@ async function main() {
 
   // ---------- R5 年限动态（改 founded_year 后应跟着变） ----------
   console.log('-- R5 年限动态性 --')
-  const adminTok = (await api('/api/auth/login', null, 'POST', { email: 'admin@lightisle.studio', password: 'Admin@123456' })).data.token
+  const adminTok = (await api('/api/auth/login', null, 'POST', { email: 'admin@jiaodianfilm.com', password: 'Admin@123456' })).data.token
   await api('/api/admin/company-profile', adminTok, 'PUT', { section_title: '公司介绍', company_name: site.data.company_profile.company_name, founded_year: 2015, intro_text: site.data.company_profile.intro_text })
   cdp = await openPage(`${frontend}/`)
   await cdp.evaluate(`document.getElementById('about').scrollIntoView()`)

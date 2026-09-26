@@ -35,7 +35,7 @@ let ok = false
 for (let i = 0; i < 120; i++) { await new Promise(r => setTimeout(r, 250)); ok = await c.ev(`!!document.querySelector('input[type=email]')`).catch(() => false); if (ok) break }
 if (!ok) { console.log('login page not ready, path=', await c.ev('location.pathname').catch(() => '?')); }
 else {
-  await c.ev(`(()=>{const e=document.querySelector('input[type=email]');const p=document.querySelector('input[type=password]');const set=(el,v)=>{el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}))};set(e,'admin@lightisle.studio');set(p,'Admin@123456');document.querySelector('form').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));return 1})()`)
+  await c.ev(`(()=>{const e=document.querySelector('input[type=email]');const p=document.querySelector('input[type=password]');const set=(el,v)=>{el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}))};set(e,'admin@jiaodianfilm.com');set(p,'Admin@123456');document.querySelector('form').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));return 1})()`)
   await new Promise(r => setTimeout(r, 3000))
 }
 console.log('after login path=', await c.ev('location.pathname'))

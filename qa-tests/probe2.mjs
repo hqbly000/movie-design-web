@@ -7,7 +7,7 @@ const nav=async(u,w=4000)=>{await c.ev(`location.href='${u}'`);await new Promise
 await c.send('Page.navigate',{url:'http://127.0.0.1:5174/login'});await new Promise(r=>setTimeout(r,1800))
 await c.ev(`localStorage.clear()`)
 await c.send('Page.navigate',{url:'http://127.0.0.1:5174/login'});await new Promise(r=>setTimeout(r,1500))
-await c.ev(`(()=>{const e=document.querySelector('input[type=email]');const p=document.querySelector('input[type=password]');e.value='admin@lightisle.studio';e.dispatchEvent(new Event('input',{bubbles:true}));p.value='Admin@123456';p.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('form').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));return 1})()`)
+await c.ev(`(()=>{const e=document.querySelector('input[type=email]');const p=document.querySelector('input[type=password]');e.value='admin@jiaodianfilm.com';e.dispatchEvent(new Event('input',{bubbles:true}));p.value='Admin@123456';p.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('form').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));return 1})()`)
 await new Promise(r=>setTimeout(r,2500))
 console.log('HONORS',await nav('/honors'))
 console.log('MEMBERS',await nav('/members'))

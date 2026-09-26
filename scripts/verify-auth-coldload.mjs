@@ -70,7 +70,7 @@ for (let i = 1; i <= N; i++) {
     await new Promise((r) => setTimeout(r, 250))
     if (await c.evaluate(`!!document.querySelector('input[type=email]')`).catch(() => false)) break
   }
-  const loginOk = await c.evaluate(`(()=>{const e=document.querySelector('input[type=email]');const p=document.querySelector('input[type=password]');if(!e||!p)return 0;const s=(el,v)=>{el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}))};s(e,'admin@lightisle.studio');s(p,'Admin@123456');document.querySelector('form').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));return 1})()`)
+  const loginOk = await c.evaluate(`(()=>{const e=document.querySelector('input[type=email]');const p=document.querySelector('input[type=password]');if(!e||!p)return 0;const s=(el,v)=>{el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}))};s(e,'admin@jiaodianfilm.com');s(p,'Admin@123456');document.querySelector('form').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));return 1})()`)
   await new Promise((r) => setTimeout(r, 2400))
 
   const afterLogin = await c.evaluate(`JSON.stringify({path: location.pathname, token: !!localStorage.getItem('li_token') || Object.keys(localStorage).some(k=>/token/i.test(k))})`)

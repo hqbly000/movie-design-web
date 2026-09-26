@@ -79,7 +79,7 @@ function openEdit(m: Member): void {
 }
 
 function initials(name: string): string {
-  return name ? name.slice(0, 1) : '光'
+  return name ? name.slice(0, 1) : '交'
 }
 
 function roleLabel(role: string): string {

@@ -5,7 +5,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { ApiError } from '@/api/request'
 import { useAuthStore } from '@/stores/auth'
 import { ErrorCode } from '@/types/api'
-import BrandMark from '@/components/BrandMark.vue'
 import AppButton from '@/components/AppButton.vue'
 import AppIcon from '@/components/AppIcon.vue'
 
@@ -40,7 +39,7 @@ async function submit(): Promise<void> {
 }
 
 onMounted(() => {
-  document.title = '登录 · 光屿摄影管理后台'
+  document.title = '登录 · 交点影视管理后台'
 })
 </script>
 
@@ -49,9 +48,14 @@ onMounted(() => {
     <div class="w-full max-w-[400px] bg-ad-surface rounded-modal shadow-card-soft border border-ad-border px-8 py-9">
       <!-- 品牌区 -->
       <div class="flex flex-col items-center text-center">
-        <BrandMark :size="52" />
-        <h1 class="text-[20px] font-semibold text-ad-text mt-3.5">光屿摄影</h1>
-        <p class="text-[12px] text-ad-text-3 mt-1">管理后台 · 内部使用</p>
+        <img
+          src="/logo-on-light.png"
+          alt="交点影视"
+          class="h-11 w-auto"
+          width="1200"
+          height="259"
+        />
+        <p class="text-[12px] text-ad-text-3 mt-2">管理后台 · 内部使用</p>
       </div>
 
       <div class="h-px bg-ad-border my-7" />

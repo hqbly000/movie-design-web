@@ -5,7 +5,7 @@ set "PATH=%SystemRoot%\System32;%PATH%"
 title LightIsle Dev Launcher
 
 rem ============================================================
-rem  光屿摄影 LIGHT ISLE STUDIO · 一键启动开发环境
+rem  交点影视 JIAO DIAN FILM AND TELEVISION · 一键启动开发环境
 rem  本脚本位于 scripts\ 下，自动向上定位项目根目录
 rem  backend :8000   frontend :5173   admin :5174
 rem ============================================================
@@ -13,7 +13,7 @@ rem ============================================================
 for %%i in ("%~dp0..") do set "ROOT=%%~fi"
 
 echo ============================================================
-echo   光屿摄影 LIGHT ISLE STUDIO · 开发环境
+echo   交点影视 JIAO DIAN FILM AND TELEVISION · 开发环境
 echo   backend :8000    frontend :5173    admin :5174
 echo   根目录: %ROOT%
 echo ============================================================

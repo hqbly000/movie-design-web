@@ -54,7 +54,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="光屿摄影 LIGHT ISLE STUDIO · 后端 API",
+    title="交点影视 JIAO DIAN FILM AND TELEVISION · 后端 API",
     version="1.0.0",
     description="官网 + 管理后台 + 分享页的统一后端（FastAPI + MySQL）",
     lifespan=lifespan,

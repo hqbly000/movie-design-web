@@ -63,7 +63,7 @@ const PROBE = `(() => {
   });
 })()`
 
-let c = await loginAs('admin@lightisle.studio', 'Admin@123456', 1440, 900)
+let c = await loginAs('admin@jiaodianfilm.com', 'Admin@123456', 1440, 900)
 for (const r of ['/videos', '/distributions']) {
   await go(c, r)
   const d = JSON.parse(await c.evaluate(PROBE))

@@ -1,5 +1,5 @@
 /**
- * 光屿摄影 · 管理后台 CDP 端到端校验（QA 严过关独立编写）
+ * 交点影视 · 管理后台 CDP 端到端校验（QA 严过关独立编写）
  * 覆盖 R19–R27 关键点。
  * 用法：node admin_qa.mjs <cdpPort> <adminBase> <apiBase>
  */
@@ -89,7 +89,7 @@ async function main() {
 
   // ---------- R19/R21 登录 + 侧栏 9 项 ----------
   console.log('-- 登录 / 侧栏 --')
-  let { cdp, r } = await login('admin@lightisle.studio', 'Admin@123456')
+  let { cdp, r } = await login('admin@jiaodianfilm.com', 'Admin@123456')
   console.log('login ->', JSON.stringify(r))
   check('R19 登录成功进入工作台', r.url === '/dashboard', r.url)
   const shell = JSON.parse(await cdp.evaluate(`(() => {
@@ -200,7 +200,7 @@ async function main() {
 
   // ---------- viewer 权限 ----------
   console.log('-- viewer 权限 --')
-  ;({ cdp } = await login('viewer@lightisle.studio', 'Viewer@123456'))
+  ;({ cdp } = await login('viewer@jiaodianfilm.com', 'Viewer@123456'))
   const vw = JSON.parse(await cdp.evaluate(`location.href='/videos'`)) || {}
   await new Promise((x) => setTimeout(x, 2200))
   const view = JSON.parse(await cdp.evaluate(`(() => {
@@ -222,7 +222,7 @@ async function main() {
 
   // ---------- editor 权限 ----------
   console.log('-- editor 权限 --')
-  ;({ cdp } = await login('editor@lightisle.studio', 'Editor@123456'))
+  ;({ cdp } = await login('editor@jiaodianfilm.com', 'Editor@123456'))
   const eNav = JSON.parse(await cdp.evaluate(`JSON.stringify([...document.querySelectorAll('aside nav a')].map(a => a.innerText.trim()))`))
   await cdp.evaluate(`location.href='/members'`); await new Promise((x) => setTimeout(x, 1800))
   const eGuard = await cdp.evaluate(`location.pathname`)
@@ -233,7 +233,7 @@ async function main() {
 
   // ---------- 移动端 390 ----------
   console.log('-- 移动端 390 --')
-  ;({ cdp } = await login('admin@lightisle.studio', 'Admin@123456', 390, 780))
+  ;({ cdp } = await login('admin@jiaodianfilm.com', 'Admin@123456', 390, 780))
   const mob = JSON.parse(await cdp.evaluate(`(() => {
     const T = document.body.innerText;
     const tabs = [...document.querySelectorAll('nav a, nav button')].filter(e => /工作台|视频库|合集|留言|我的/.test(e.innerText));

@@ -5,12 +5,12 @@ set "PATH=%SystemRoot%\System32;%PATH%"
 title LightIsle Dev Stopper
 
 rem ============================================================
-rem  光屿摄影 · 一键停止开发环境（backend / frontend / admin）
+rem  交点影视 · 一键停止开发环境（backend / frontend / admin）
 rem  先按窗口标题结束（连 --reload 子进程一起杀），
 rem  再兜底检查端口上是否还有残留监听。
 rem ============================================================
 
-echo 光屿摄影 · 停止开发环境
+echo 交点影视 · 停止开发环境
 echo.
 
 echo [1/2] 按窗口标题结束...

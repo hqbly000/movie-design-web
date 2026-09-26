@@ -1,1 +1,0 @@
-import{a4 as o}from"./index-DkvlRfTP.js";let r=0;const u=o("toast",{state:()=>({items:[]}),actions:{push(s,t,i=2600){const e=++r;this.items.push({id:e,kind:s,text:t}),window.setTimeout(()=>this.remove(e),i)},success(s){this.push("success",s)},error(s){this.push("error",s)},info(s){this.push("info",s)},remove(s){this.items=this.items.filter(t=>t.id!==s)}}});export{u};

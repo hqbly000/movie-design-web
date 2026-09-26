@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 光屿摄影 · 数据库初始化（建库建表 + 种子数据）
+# 交点影视 · 数据库初始化（建库建表 + 种子数据）
 # 目标实例存在他人业务库（ctm / itrial_* 等），本脚本只操作 lightisle
 set -euo pipefail
 

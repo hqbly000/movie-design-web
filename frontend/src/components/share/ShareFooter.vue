@@ -4,7 +4,6 @@
  * logo + 标语「以光影，铭记时光」+ 联系方式 + 版权与备案（两行）。
  */
 import { computed } from 'vue'
-import AppIcon from '@/components/common/AppIcon.vue'
 import { useSiteStore } from '@/stores/site'
 
 const site = useSiteStore()
@@ -12,7 +11,7 @@ const site = useSiteStore()
 const slogan = computed(() => site.siteSettings.brand_slogan ?? '以光影，铭记时光')
 
 const copyright = computed(
-  () => site.siteSettings.copyright ?? 'Copyright 2026 光屿影像文化传媒有限公司 版权所有'
+  () => site.siteSettings.copyright ?? 'Copyright 2026 交点影视 版权所有'
 )
 
 const filing = computed(() =>
@@ -31,14 +30,13 @@ const contactLine = computed(() =>
 <template>
   <footer class="mt-14 border-t border-border-hairline bg-[#0A0A0A]">
     <div class="mx-auto w-full max-w-[520px] px-6 py-8">
-      <div class="flex items-center gap-3">
-        <AppIcon name="aperture" :size="22" class="text-accent-gold" />
-        <span
-          class="font-serif text-[16px] font-semibold text-txt-primary"
-          style="letter-spacing: 5px"
-          >光屿摄影</span
-        >
-      </div>
+      <img
+        src="/images/logo-on-dark.png"
+        alt="交点影视"
+        class="h-6 w-auto"
+        width="1200"
+        height="259"
+      />
       <p class="mt-3 font-sans text-[13px] text-white/70">{{ slogan }}</p>
       <p v-if="contactLine" class="mt-2 font-sans text-[12px] text-white/50">{{
         contactLine

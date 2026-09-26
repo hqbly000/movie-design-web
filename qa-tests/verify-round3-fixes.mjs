@@ -83,7 +83,7 @@ async function makeShareToken() {
   const auth = await fetch(`${apiBase}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'admin@lightisle.studio', password: 'Admin@123456' })
+    body: JSON.stringify({ email: 'admin@jiaodianfilm.com', password: 'Admin@123456' })
   }).then((r) => r.json())
   const token = auth?.data?.token
   if (!token) throw new Error('login failed')

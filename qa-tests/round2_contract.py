@@ -26,7 +26,7 @@ def rec(name: str, expected: str, got: str, ok: bool) -> None:
     print(f"  [{'PASS' if ok else 'FAIL'}] {name} | 期望={expected} | 实际={got}")
 
 
-def tok(email="admin@lightisle.studio", pwd="Admin@123456") -> str:
+def tok(email="admin@jiaodianfilm.com", pwd="Admin@123456") -> str:
     r = requests.post(f"{BASE}/api/auth/login", json={"email": email, "password": pwd}, timeout=15)
     return r.json()["data"]["token"]
 

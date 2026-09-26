@@ -8,7 +8,7 @@ process.env.NO_PROXY = '*'
 const j = async (r) => ({ status: r.status, body: await r.json() })
 const login = await j(await fetch(`${API}/api/auth/login`, {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ email: 'admin@lightisle.studio', password: 'Admin@123456' })
+  body: JSON.stringify({ email: 'admin@jiaodianfilm.com', password: 'Admin@123456' })
 }))
 const tok = login.body?.data?.token
 if (!tok) { console.error('login failed', JSON.stringify(login)); process.exit(1) }

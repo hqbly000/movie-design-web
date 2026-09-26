@@ -1,0 +1,2188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>二级页设计稿 · /works/:id 板块作品页 + /about 公司介绍页</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ===================== 与 frontend/tailwind.config.js 同源 tokens ===================== */
+      :root {
+        --bg-base: #0a0a0a;
+        --surface: #14120f;
+        --surface-input: #0f0e0c;
+        --hairline: #1f1f1f;
+        --text-primary: #fafafa;
+        --accent-orange: #ff6a00;
+        --accent-gold: #c49a4a;
+        --accent-gold-light: #e8c77a;
+        --hl-gold: #f0d9a0;
+        --ivory: #f4f0e8;
+        --font-serif: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
+        --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+        --font-latin: 'Cormorant', 'Times New Roman', serif;
+        --pad: 120px;
+        --img: 'http://124.223.29.189/uploads/cover/';
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #050505;
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      img {
+        display: block;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* ===================== 稿纸外壳（非页面本体） ===================== */
+      .jump {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        padding: 10px 20px;
+        background: rgba(5, 5, 5, 0.94);
+        border-bottom: 1px solid var(--hairline);
+        font-size: 12px;
+        letter-spacing: 1px;
+        backdrop-filter: blur(8px);
+      }
+      .jump i {
+        font-style: normal;
+        color: rgba(255, 255, 255, 0.4);
+      }
+      .jump a {
+        padding: 5px 12px;
+        border: 1px solid rgba(196, 154, 74, 0.45);
+        border-radius: 8px;
+        color: var(--accent-gold-light);
+      }
+      .jump a:hover {
+        background: rgba(196, 154, 74, 0.14);
+      }
+      .stage {
+        width: 1440px;
+        margin: 56px auto 0;
+      }
+      .group + .group {
+        margin-top: 64px;
+      }
+      .tag {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 11px 18px;
+        background: rgba(10, 10, 10, 0.95);
+        border-bottom: 1px solid var(--hairline);
+        font-size: 12px;
+        letter-spacing: 3px;
+        color: var(--accent-gold);
+      }
+      .tag b {
+        font-weight: 700;
+      }
+      .tag span {
+        color: rgba(255, 255, 255, 0.42);
+        letter-spacing: 1px;
+      }
+      .tag .f {
+        font-family: var(--font-latin);
+        font-style: normal;
+        font-size: 11px;
+        letter-spacing: 0.6px;
+        padding: 2px 7px;
+        border-radius: 5px;
+        background: rgba(196, 154, 74, 0.13);
+        border: 1px solid rgba(196, 154, 74, 0.3);
+        color: var(--hl-gold);
+      }
+      .page {
+        position: relative;
+        background: var(--bg-base);
+        overflow: hidden;
+      }
+
+      /* ===================== 通用零件 ===================== */
+      .ly {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 0 var(--pad);
+      }
+      .kicker {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-family: var(--font-latin);
+        font-size: 13px;
+        letter-spacing: 5px;
+        color: var(--accent-gold);
+        text-transform: uppercase;
+      }
+      .kicker::before {
+        content: '';
+        width: 28px;
+        height: 1px;
+        background: var(--accent-gold);
+      }
+      .rule {
+        width: 44px;
+        height: 1px;
+        background: var(--accent-gold);
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        height: 46px;
+        padding: 0 28px;
+        border-radius: 10px;
+        font-size: 14px;
+        letter-spacing: 2px;
+        cursor: pointer;
+        transition: all 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      .btn.gold {
+        border: 1px solid rgba(196, 154, 74, 0.7);
+        color: var(--hl-gold);
+        background: transparent;
+      }
+      .btn.gold:hover {
+        background: rgba(196, 154, 74, 0.16);
+        border-color: var(--accent-gold-light);
+      }
+      .btn.ivory {
+        background: var(--ivory);
+        color: #1a1a1a;
+        border: 1px solid var(--ivory);
+      }
+      .btn.ivory:hover {
+        background: #fff;
+      }
+      .btn.ghost {
+        border: 1px solid rgba(244, 240, 232, 0.35);
+        color: var(--ivory);
+      }
+      .btn.ghost:hover {
+        border-color: var(--ivory);
+      }
+
+      /* ===================== 顶部导航（二级页共用） ===================== */
+      .nav {
+        position: absolute;
+        inset: 0 0 auto 0;
+        z-index: 40;
+        padding: 0 var(--pad);
+        height: 96px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(to bottom, rgba(5, 5, 5, 0.72), transparent);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .brand .ap {
+        width: 26px;
+        height: 26px;
+        border: 1.6px solid var(--accent-gold);
+        border-radius: 50%;
+        position: relative;
+      }
+      .brand .ap::after {
+        content: '';
+        position: absolute;
+        inset: 8px;
+        border-left: 1.6px solid var(--accent-gold);
+        border-right: 1.6px solid var(--accent-gold);
+        transform: rotate(30deg);
+      }
+      .brand .zh {
+        font-family: var(--font-serif);
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: 6px;
+      }
+      .brand .en {
+        display: block;
+        margin-top: 3px;
+        font-family: var(--font-latin);
+        font-size: 10px;
+        letter-spacing: 4px;
+        color: var(--accent-gold);
+      }
+      .menu {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        font-size: 15px;
+      }
+      .menu a {
+        color: rgba(255, 255, 255, 0.72);
+        transition: color 180ms;
+        position: relative;
+        padding: 6px 0;
+      }
+      .menu a:hover {
+        color: #fff;
+      }
+      .menu a.on {
+        color: #fff;
+      }
+      .menu a.on::before {
+        content: '';
+        position: absolute;
+        left: -11px;
+        top: 50%;
+        width: 5px;
+        height: 5px;
+        margin-top: -2px;
+        border-radius: 50%;
+        background: var(--accent-gold);
+      }
+      /* 下拉：业务板块 6 项 */
+      .dd {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .dd > a::after {
+        content: '';
+        display: inline-block;
+        margin-left: 6px;
+        width: 6px;
+        height: 6px;
+        border-right: 1px solid currentColor;
+        border-bottom: 1px solid currentColor;
+        transform: rotate(45deg) translateY(-2px);
+        opacity: 0.6;
+      }
+      .dd .panel {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        width: 208px;
+        padding: 10px;
+        transform: translate(-50%, 12px);
+        background: rgba(14, 13, 11, 0.97);
+        border: 1px solid var(--hairline);
+        border-radius: 12px;
+        box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.8);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      .dd:hover .panel {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, 4px);
+      }
+      .dd .panel a {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 12px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+      }
+      .dd .panel a em {
+        font-family: var(--font-latin);
+        font-style: normal;
+        font-size: 11px;
+        letter-spacing: 1px;
+        color: rgba(196, 154, 74, 0.7);
+      }
+      .dd .panel a:hover {
+        background: rgba(196, 154, 74, 0.12);
+        color: #fff;
+      }
+      .dd .panel a.on {
+        color: var(--hl-gold);
+      }
+      .crumbs {
+        position: absolute;
+        left: var(--pad);
+        top: 96px;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.45);
+      }
+      .crumbs a:hover {
+        color: var(--accent-gold-light);
+      }
+      .crumbs i {
+        font-style: normal;
+        opacity: 0.4;
+      }
+
+      /* ===================== 屏 1 · 板块页 Hero ===================== */
+      @keyframes kb {
+        from {
+          transform: scale(1);
+        }
+        to {
+          transform: scale(1.075);
+        }
+      }
+      .w-hero {
+        position: relative;
+        height: 660px;
+        overflow: hidden;
+      }
+      .w-hero .bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        animation: kb 22s ease-in-out infinite alternate;
+      }
+      .w-hero .veil {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          rgba(10, 10, 10, 0.62) 0%,
+          rgba(10, 10, 10, 0.18) 38%,
+          rgba(10, 10, 10, 0.78) 82%,
+          #0a0a0a 100%
+        );
+      }
+      .w-hero .glow {
+        position: absolute;
+        right: -140px;
+        bottom: -220px;
+        width: 720px;
+        height: 560px;
+        pointer-events: none;
+        background: radial-gradient(ellipse at center, rgba(232, 199, 122, 0.1), transparent 66%);
+        filter: blur(14px);
+      }
+      .w-hero .inner {
+        position: absolute;
+        left: var(--pad);
+        right: var(--pad);
+        bottom: 74px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 60px;
+      }
+      .w-hero h1 {
+        margin: 20px 0 0;
+        font-family: var(--font-serif);
+        font-weight: 400;
+        font-size: 72px;
+        line-height: 1.08;
+        letter-spacing: 10px;
+      }
+      .w-hero .sub {
+        margin: 18px 0 0;
+        font-size: 17px;
+        letter-spacing: 3px;
+        color: rgba(255, 255, 255, 0.82);
+      }
+      .w-hero .facts {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        margin-top: 34px;
+        padding-top: 22px;
+        border-top: 1px solid rgba(255, 255, 255, 0.14);
+        font-size: 13px;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .w-hero .facts b {
+        font-family: var(--font-serif);
+        font-weight: 500;
+        font-size: 19px;
+        color: var(--hl-gold);
+        margin-right: 7px;
+      }
+      .w-hero .facts span {
+        display: flex;
+        align-items: baseline;
+      }
+      .w-hero .index {
+        flex-shrink: 0;
+        text-align: right;
+        font-family: var(--font-latin);
+        font-size: 12px;
+        letter-spacing: 3px;
+        color: rgba(255, 255, 255, 0.42);
+        line-height: 2;
+      }
+      .w-hero .index b {
+        display: block;
+        font-family: var(--font-serif);
+        font-weight: 300;
+        font-size: 54px;
+        letter-spacing: 2px;
+        color: rgba(255, 255, 255, 0.16);
+        line-height: 1;
+      }
+      /* 五板块点位导航 */
+      .dots {
+        position: absolute;
+        right: 40px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-end;
+      }
+      .dots a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 11px;
+        letter-spacing: 2px;
+        color: transparent;
+        transition: color 200ms;
+      }
+      .dots a::after {
+        content: '';
+        width: 18px;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.35);
+        transition: all 200ms;
+      }
+      .dots a:hover {
+        color: rgba(255, 255, 255, 0.8);
+      }
+      .dots a:hover::after {
+        width: 30px;
+        background: #fff;
+      }
+      .dots a.on {
+        color: var(--hl-gold);
+      }
+      .dots a.on::after {
+        width: 34px;
+        background: var(--accent-gold);
+        height: 2px;
+      }
+
+      /* ===================== 分节头（编号系统） ===================== */
+      .sec {
+        padding: 96px 0;
+      }
+      .sec + .sec {
+        border-top: 1px solid var(--hairline);
+      }
+      .sec-head {
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        align-items: start;
+        gap: 0;
+      }
+      .sec-head .no {
+        font-family: var(--font-latin);
+        font-size: 15px;
+        letter-spacing: 2px;
+        color: rgba(196, 154, 74, 0.55);
+        padding-top: 6px;
+      }
+      .sec-head h2 {
+        margin: 0;
+        font-family: var(--font-serif);
+        font-weight: 400;
+        font-size: 34px;
+        letter-spacing: 5px;
+      }
+      .sec-head p {
+        margin: 14px 0 0;
+        font-size: 14px;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      /* 引言：两段长文 */
+      .prose {
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        gap: 0;
+        margin-top: 40px;
+      }
+      .prose .txt {
+        max-width: 70ch;
+      }
+      .prose .txt p {
+        margin: 0 0 26px;
+        font-size: 17px;
+        line-height: 33px;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .prose .txt p:last-child {
+        margin-bottom: 0;
+      }
+      .prose .txt .lead {
+        font-family: var(--font-serif);
+        font-size: 22px;
+        line-height: 40px;
+        color: var(--ivory);
+      }
+
+      /* ===================== 作品网格 ===================== */
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(14px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .works {
+        margin-top: 48px;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 28px;
+      }
+      .card {
+        position: relative;
+        grid-column: span 2;
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--surface);
+        cursor: pointer;
+        transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1),
+          box-shadow 320ms;
+      }
+      /* 入场动画只在 JS 加上 .in 后才生效；无 JS / 观察器未触发时卡片始终可见 */
+      .card.in {
+        animation: fadeUp 500ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+      }
+      .card.feat {
+        grid-column: span 4;
+      }
+      /* 恰好 3 部：左侧大图跨两行，右侧两张竖叠，整块不留空格 */
+      .works.t3 {
+        grid-template-rows: auto auto;
+      }
+      .works.t3 .card {
+        display: flex;
+        flex-direction: column;
+      }
+      .works.t3 .card.feat {
+        grid-row: span 2;
+      }
+      /* 所有格子的封面都撑满卡片，避免侧列出现空洞底色 */
+      .works.t3 .card .shot {
+        flex: 1;
+        aspect-ratio: auto;
+        min-height: 0;
+      }
+      .works.t3 .card.feat .meta {
+        padding: 20px 24px 24px;
+      }
+      .works.t3 .card.feat .meta .t {
+        font-size: 18px;
+      }
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.9);
+      }
+      .card .shot {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+      }
+      .card.feat .shot {
+        aspect-ratio: 16 / 9;
+      }
+      .card .shot img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 620ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      .card:hover .shot img {
+        transform: scale(1.06);
+      }
+      .card .shot::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.55));
+        opacity: 0.7;
+        transition: opacity 300ms;
+      }
+      .card:hover .shot::after {
+        opacity: 1;
+      }
+      .card .play {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 3;
+        width: 62px;
+        height: 62px;
+        margin: -31px 0 0 -31px;
+        border: 1px solid rgba(244, 240, 232, 0.75);
+        border-radius: 50%;
+        background: rgba(10, 10, 10, 0.32);
+        backdrop-filter: blur(3px);
+        opacity: 0;
+        transform: scale(0.86);
+        transition: all 300ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      .card .play::after {
+        content: '';
+        position: absolute;
+        left: 24px;
+        top: 19px;
+        border-left: 15px solid var(--ivory);
+        border-top: 10px solid transparent;
+        border-bottom: 10px solid transparent;
+      }
+      .card:hover .play {
+        opacity: 1;
+        transform: scale(1);
+      }
+      .card .yr {
+        position: absolute;
+        right: 16px;
+        top: 16px;
+        z-index: 3;
+        font-family: var(--font-latin);
+        font-size: 13px;
+        letter-spacing: 2px;
+        color: rgba(255, 255, 255, 0.72);
+      }
+      .card .meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 20px 20px;
+      }
+      .card .meta .idx {
+        font-family: var(--font-latin);
+        font-size: 12px;
+        color: rgba(196, 154, 74, 0.8);
+        letter-spacing: 1px;
+      }
+      .card .meta .t {
+        font-size: 16px;
+        letter-spacing: 1px;
+        color: var(--ivory);
+      }
+      .card .meta .tag2 {
+        margin-left: auto;
+        font-size: 11px;
+        letter-spacing: 1px;
+        padding: 3px 9px;
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.5);
+        border: 1px solid var(--hairline);
+      }
+      .card::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        transition: border-color 300ms;
+        pointer-events: none;
+      }
+      .card:hover::after {
+        border-color: rgba(196, 154, 74, 0.55);
+      }
+
+      /* ===================== 拍摄要点 ===================== */
+      .notes {
+        margin-top: 44px;
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        gap: 0;
+      }
+      .notes ol {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border-top: 1px solid var(--hairline);
+      }
+      .notes li {
+        display: grid;
+        grid-template-columns: 132px 1fr;
+        gap: 24px;
+        padding: 22px 0;
+        border-bottom: 1px solid var(--hairline);
+        font-size: 15px;
+        line-height: 26px;
+      }
+      .notes li .k {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--accent-gold);
+        letter-spacing: 2px;
+        font-size: 14px;
+      }
+      .notes li .k::before {
+        content: '';
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--accent-gold);
+        flex-shrink: 0;
+      }
+      .notes li .v {
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      /* ===================== CTA 条 ===================== */
+      .cta {
+        padding: 84px 0;
+        background: var(--surface);
+        border-top: 1px solid var(--hairline);
+      }
+      .cta .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 60px;
+      }
+      .cta h3 {
+        margin: 16px 0 0;
+        font-family: var(--font-serif);
+        font-weight: 400;
+        font-size: 32px;
+        letter-spacing: 4px;
+      }
+      .cta p {
+        margin: 14px 0 0;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.5);
+        letter-spacing: 1px;
+      }
+      .cta .act {
+        display: flex;
+        align-items: center;
+        gap: 34px;
+        flex-shrink: 0;
+      }
+      .cta .tel {
+        text-align: right;
+      }
+      .cta .tel b {
+        display: block;
+        font-family: var(--font-latin);
+        font-weight: 500;
+        font-size: 26px;
+        letter-spacing: 2px;
+        color: var(--hl-gold);
+      }
+      .cta .tel i {
+        font-style: normal;
+        font-size: 12px;
+        letter-spacing: 2px;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      /* ===================== 上下板块切换 ===================== */
+      .adj {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+      .adj a {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        height: 300px;
+        padding: 0 var(--pad) 40px;
+        overflow: hidden;
+      }
+      .adj a + a {
+        border-left: 1px solid var(--hairline);
+      }
+      .adj img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.3;
+        filter: saturate(0.7);
+        transition: all 520ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      .adj a:hover img {
+        opacity: 0.52;
+        transform: scale(1.05);
+      }
+      .adj .lab {
+        position: relative;
+        z-index: 2;
+        font-family: var(--font-latin);
+        font-size: 12px;
+        letter-spacing: 3px;
+        color: var(--accent-gold);
+      }
+      .adj .nm {
+        position: relative;
+        z-index: 2;
+        margin-top: 12px;
+        font-family: var(--font-serif);
+        font-size: 30px;
+        letter-spacing: 6px;
+        color: var(--ivory);
+      }
+      .adj a.next {
+        text-align: right;
+      }
+
+      /* ===================== 页脚 ===================== */
+      .foot {
+        padding: 60px 0 44px;
+        border-top: 1px solid var(--hairline);
+        background: var(--bg-base);
+      }
+      .foot .row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 60px;
+      }
+      .foot .navs {
+        display: flex;
+        gap: 56px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .foot .navs a:hover {
+        color: var(--hl-gold);
+      }
+      .foot .contact {
+        font-size: 13px;
+        line-height: 24px;
+        color: rgba(255, 255, 255, 0.45);
+        text-align: right;
+        letter-spacing: 1px;
+      }
+      .foot .legal {
+        margin-top: 44px;
+        padding-top: 22px;
+        border-top: 1px solid var(--hairline);
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.28);
+        letter-spacing: 1px;
+      }
+
+      /* ===================== 屏 2 · /about ===================== */
+      @keyframes strokeIn {
+        from {
+          stroke-dashoffset: 1200;
+        }
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+      .a-hero {
+        position: relative;
+        height: 620px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+      }
+      .a-hero .bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.28;
+        filter: saturate(0.72);
+        animation: kb 26s ease-in-out infinite alternate;
+      }
+      .a-hero .veil {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse at 30% 60%,
+          rgba(10, 10, 10, 0.42),
+          #0a0a0a 88%
+        );
+      }
+      .a-hero .lamp {
+        position: absolute;
+        top: -240px;
+        left: -180px;
+        width: 900px;
+        height: 700px;
+        pointer-events: none;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(196, 154, 74, 0.19),
+          rgba(196, 154, 74, 0.05) 46%,
+          transparent 72%
+        );
+        filter: blur(10px);
+      }
+      .a-hero .inner {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+      }
+      .ghost {
+        position: absolute;
+        z-index: 2;
+        right: 104px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-family: var(--font-serif);
+        font-weight: 300;
+        font-size: 252px;
+        line-height: 1;
+        letter-spacing: 20px;
+        color: transparent;
+        -webkit-text-stroke: 1px rgba(232, 199, 122, 0.34);
+        pointer-events: none;
+      }
+      .a-hero h1 {
+        margin: 22px 0 0;
+        font-family: var(--font-serif);
+        font-weight: 400;
+        font-size: 60px;
+        letter-spacing: 8px;
+      }
+      .a-hero .lead {
+        margin: 26px 0 0;
+        max-width: 44ch;
+        font-size: 17px;
+        line-height: 32px;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      /* 数据条 */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border-top: 1px solid var(--hairline);
+        border-bottom: 1px solid var(--hairline);
+      }
+      .stats div {
+        padding: 40px 0 42px;
+        text-align: center;
+        position: relative;
+      }
+      .stats div + div::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 1px;
+        height: 52px;
+        background: var(--hairline);
+      }
+      .stats b {
+        display: block;
+        font-family: var(--font-serif);
+        font-weight: 300;
+        font-size: 46px;
+        line-height: 1;
+        color: var(--hl-gold);
+        letter-spacing: 1px;
+      }
+      .stats b i {
+        font-style: normal;
+        font-family: var(--font-sans);
+        font-size: 15px;
+        margin-left: 6px;
+        color: rgba(196, 154, 74, 0.8);
+        letter-spacing: 2px;
+      }
+      .stats span {
+        display: block;
+        margin-top: 14px;
+        font-size: 13px;
+        letter-spacing: 3px;
+        color: rgba(255, 255, 255, 0.46);
+      }
+
+      /* 里程碑时间线 */
+      .tl {
+        margin-top: 46px;
+        position: relative;
+        padding-left: 24px;
+      }
+      .tl::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 10px;
+        bottom: 10px;
+        width: 1px;
+        background: linear-gradient(
+          to bottom,
+          transparent,
+          rgba(196, 154, 74, 0.45) 12%,
+          rgba(196, 154, 74, 0.45) 88%,
+          transparent
+        );
+      }
+      .tl .row {
+        display: grid;
+        grid-template-columns: 96px 1fr;
+        gap: 28px;
+        position: relative;
+        padding: 20px 0 22px;
+      }
+      .tl .row::before {
+        content: '';
+        position: absolute;
+        left: -27px;
+        top: 32px;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #0a0a0a;
+        border: 1px solid rgba(196, 154, 74, 0.7);
+      }
+      .tl .row.g::before {
+        background: var(--accent-gold);
+        box-shadow: 0 0 0 4px rgba(196, 154, 74, 0.16);
+      }
+      .tl .yr {
+        font-family: var(--font-latin);
+        font-size: 22px;
+        letter-spacing: 2px;
+        color: rgba(232, 199, 122, 0.9);
+        padding-top: 2px;
+      }
+      .tl .tt {
+        font-size: 19px;
+        letter-spacing: 1px;
+        color: var(--ivory);
+        font-family: var(--font-serif);
+      }
+      .tl .dd2 {
+        margin-top: 9px;
+        font-size: 14px;
+        line-height: 25px;
+        color: rgba(255, 255, 255, 0.55);
+        max-width: 62ch;
+      }
+      .tl .hon {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-left: 12px;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        letter-spacing: 1px;
+        color: var(--hl-gold);
+        background: rgba(196, 154, 74, 0.13);
+        border: 1px solid rgba(196, 154, 74, 0.32);
+        vertical-align: 3px;
+      }
+
+      /* 业务版图五卡 */
+      .board {
+        margin-top: 44px;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 16px;
+      }
+      .board a {
+        position: relative;
+        display: block;
+        height: 320px;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      .board a:hover {
+        transform: translateY(-6px);
+      }
+      .board img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 560ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      .board a:hover img {
+        transform: scale(1.08);
+      }
+      .board .v {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.5),
+          rgba(0, 0, 0, 0.18) 45%,
+          rgba(0, 0, 0, 0.78)
+        );
+      }
+      .board .c {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 20px 12px 22px;
+        text-align: center;
+      }
+      .board .c .n {
+        font-family: var(--font-serif);
+        font-size: 18px;
+        letter-spacing: 2px;
+        color: #fff;
+      }
+      .board .c .s {
+        margin-top: 8px;
+        font-size: 10.5px;
+        letter-spacing: 0.5px;
+        color: rgba(255, 255, 255, 0.62);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .board .c .ar {
+        margin-top: 14px;
+        font-family: var(--font-latin);
+        font-size: 12px;
+        letter-spacing: 2px;
+        color: var(--hl-gold);
+        opacity: 0;
+        transform: translateY(6px);
+        transition: all 300ms;
+      }
+      .board a:hover .ar {
+        opacity: 1;
+        transform: none;
+      }
+
+      /* 拍摄流程 stepper */
+      .steps {
+        margin-top: 46px;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0;
+      }
+      .steps .st {
+        position: relative;
+        padding: 0 26px 0 0;
+      }
+      .steps .st::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 13px;
+        right: 0;
+        height: 1px;
+        background: rgba(196, 154, 74, 0.24);
+      }
+      .steps .st .dot {
+        position: relative;
+        z-index: 2;
+        width: 27px;
+        height: 27px;
+        border-radius: 50%;
+        border: 1px solid rgba(196, 154, 74, 0.6);
+        background: var(--bg-base);
+        color: var(--hl-gold);
+        font-family: var(--font-latin);
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .steps .st .h {
+        margin-top: 22px;
+        font-family: var(--font-serif);
+        font-size: 20px;
+        letter-spacing: 3px;
+        color: var(--ivory);
+      }
+      .steps .st .d {
+        margin-top: 12px;
+        font-size: 13.5px;
+        line-height: 24px;
+        color: rgba(255, 255, 255, 0.55);
+        padding-right: 18px;
+      }
+
+      /* 团队 / 设备 */
+      .team {
+        margin-top: 44px;
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 60px;
+        align-items: center;
+      }
+      .team .ph {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .team .ph img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .team .ph::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, transparent 40%, rgba(10, 10, 10, 0.6));
+      }
+      .team .ph .cap {
+        position: absolute;
+        left: 22px;
+        bottom: 18px;
+        z-index: 2;
+        font-family: var(--font-latin);
+        font-size: 12px;
+        letter-spacing: 3px;
+        color: rgba(255, 255, 255, 0.66);
+      }
+      .team .txt p {
+        margin: 0 0 22px;
+        font-size: 16px;
+        line-height: 31px;
+        color: rgba(255, 255, 255, 0.82);
+      }
+      .team .kit {
+        margin-top: 30px;
+        padding-top: 24px;
+        border-top: 1px solid var(--hairline);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .team .kit span {
+        font-size: 12px;
+        letter-spacing: 1px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.55);
+        border: 1px solid var(--hairline);
+        background: var(--surface-input);
+      }
+
+      /* 荣誉简列 */
+      .hons {
+        margin-top: 44px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0 56px;
+      }
+      .hons .h {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        padding: 19px 0;
+        border-bottom: 1px solid var(--hairline);
+        font-size: 15px;
+      }
+      .hons .h .lv {
+        flex-shrink: 0;
+        font-size: 12px;
+        letter-spacing: 1px;
+        color: var(--accent-gold);
+        width: 74px;
+      }
+      .hons .h .t2 {
+        color: var(--ivory);
+      }
+      .hons .h .is {
+        margin-left: auto;
+        flex-shrink: 0;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.4);
+        letter-spacing: 1px;
+      }
+
+      /* ===================== 移动稿 ===================== */
+      .m-wrap {
+        display: flex;
+        gap: 28px;
+        padding: 28px 0 40px;
+        align-items: flex-start;
+      }
+      .m {
+        width: 390px;
+        flex-shrink: 0;
+        background: var(--bg-base);
+        border: 1px solid var(--hairline);
+        border-radius: 18px;
+        overflow: hidden;
+      }
+      .m .bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        font-size: 13px;
+      }
+      .m .bar .bt {
+        font-family: var(--font-serif);
+        letter-spacing: 3px;
+      }
+      .m .bar .bm {
+        width: 20px;
+        height: 14px;
+        border-top: 1.4px solid #fff;
+        border-bottom: 1.4px solid #fff;
+      }
+      .m .hero {
+        position: relative;
+        height: 420px;
+      }
+      .m .hero img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .m .hero .v {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, rgba(10, 10, 10, 0.5), rgba(10, 10, 10, 0.9));
+      }
+      .m .hero .c {
+        position: absolute;
+        left: 20px;
+        right: 20px;
+        bottom: 24px;
+      }
+      .m .hero h4 {
+        margin: 12px 0 0;
+        font-family: var(--font-serif);
+        font-weight: 400;
+        font-size: 30px;
+        letter-spacing: 5px;
+      }
+      .m .hero p {
+        margin: 10px 0 0;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.66);
+        letter-spacing: 1px;
+      }
+      .m .hero .fa {
+        margin-top: 16px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+        letter-spacing: 1px;
+      }
+      .m .body {
+        padding: 26px 20px 30px;
+      }
+      .m .body .k {
+        font-family: var(--font-latin);
+        font-size: 11px;
+        letter-spacing: 3px;
+        color: var(--accent-gold);
+      }
+      .m .body .tx {
+        margin-top: 12px;
+        font-size: 14px;
+        line-height: 26px;
+        color: rgba(255, 255, 255, 0.76);
+      }
+      .m .li {
+        margin-top: 18px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--hairline);
+      }
+      .m .li .im {
+        aspect-ratio: 16 / 9;
+        background: var(--surface);
+      }
+      .m .li .im img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .m .li .cap {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 14px;
+        font-size: 13px;
+        background: var(--surface);
+      }
+      .m .li .cap i {
+        font-style: normal;
+        color: rgba(255, 255, 255, 0.4);
+        font-family: var(--font-latin);
+      }
+      .m .mcta {
+        margin-top: 24px;
+        text-align: center;
+      }
+      .m .mcta .btn {
+        width: 100%;
+        justify-content: center;
+        height: 44px;
+        font-size: 13px;
+      }
+      .m-note {
+        width: 300px;
+        font-size: 13px;
+        line-height: 24px;
+        color: rgba(255, 255, 255, 0.42);
+      }
+      .m-note b {
+        display: block;
+        margin-bottom: 12px;
+        color: var(--accent-gold-light);
+        letter-spacing: 2px;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="jump">
+      <i>光屿摄影 · 二级页设计稿 v1</i>
+      <a href="#g-works">① 板块作品页 /works/:id</a>
+      <a href="#g-about">② 公司介绍页 /about</a>
+      <a href="#g-mobile">③ 移动端 390</a>
+      <i>金色 chip = 需要后台可编辑的新字段</i>
+    </div>
+
+    <div class="stage">
+      <!-- ==================================================================== -->
+      <!-- 屏 1 · 板块作品页                                                      -->
+      <!-- ==================================================================== -->
+      <div class="group" id="g-works">
+        <div class="tag">
+          <b>屏 1 · /works/:id 板块作品页</b>
+          <span>以「人像写真」为例 · 660 高横版 Hero + 编号分节 + 策展式网格</span>
+          <em class="f">subtitle</em>
+          <em class="f">hero_image_url</em>
+          <em class="f">description</em>
+          <em class="f">highlights</em>
+        </div>
+
+        <div class="page">
+          <!-- 导航 -->
+          <div class="nav">
+            <a class="brand" href="#g-works">
+              <span class="ap"></span>
+              <span>
+                <span class="zh">光屿摄影</span>
+                <span class="en">LIGHT ISLE STUDIO</span>
+              </span>
+            </a>
+            <nav class="menu">
+              <a href="#g-works">首页</a>
+              <a href="#g-about">关于我们</a>
+              <a href="#g-about">荣誉资质</a>
+              <span class="dd">
+                <a class="on" href="#g-works">业务板块</a>
+                <span class="panel">
+                  <a class="on" href="#g-works">人像写真 <em>PORTRAIT</em></a>
+                  <a href="#g-works">婚礼纪实 <em>WEDDING</em></a>
+                  <a href="#g-works">商业摄影 <em>COMMERCIAL</em></a>
+                  <a href="#g-works">活动跟拍 <em>EVENT</em></a>
+                  <a href="#g-works">视频短片 <em>VIDEO</em></a>
+                </span>
+              </span>
+              <a href="#g-works">作品展示</a>
+              <a href="#g-works">联系我们</a>
+            </nav>
+          </div>
+          <div class="crumbs">
+            <a href="#g-works">首页</a> <i>/</i> <a href="#g-works">业务板块</a> <i>/</i>
+            <span style="color: rgba(255, 255, 255, 0.72)">人像写真</span>
+          </div>
+
+          <!-- Hero -->
+          <header class="w-hero">
+            <img class="bg" src="http://124.223.29.189/uploads/cover/portrait-natural-light.png" alt="" />
+            <span class="veil"></span>
+            <span class="glow"></span>
+            <div class="dots">
+              <a class="on" href="#g-works">人像写真</a>
+              <a href="#g-works">婚礼纪实</a>
+              <a href="#g-works">商业摄影</a>
+              <a href="#g-works">活动跟拍</a>
+              <a href="#g-works">视频短片</a>
+            </div>
+            <div class="inner">
+              <div>
+                <div class="kicker">PORTRAIT · 人像写真</div>
+                <h1>人像写真</h1>
+                <p class="sub">自然光 · 真实情绪</p>
+                <div class="facts">
+                  <span><b>3</b>部作品</span>
+                  <span><b>9</b>年拍摄经验</span>
+                  <span><b>7</b>个工作日出片</span>
+                </div>
+              </div>
+              <div class="index">
+                <b>01</b>
+                板块 / 05
+              </div>
+            </div>
+          </header>
+
+          <!-- 01 板块简介 -->
+          <section class="sec">
+            <div class="ly">
+              <div class="sec-head">
+                <div class="no">01</div>
+                <div>
+                  <h2>我们怎么拍人像</h2>
+                  <p>板块简介 · 来自后台 description，段落以空行分隔</p>
+                </div>
+              </div>
+              <div class="prose">
+                <div class="no"></div>
+                <div class="txt">
+                  <p class="lead">
+                    人像是我们最日常的题材，也是最难的一次。镜头前的人多半不习惯被注视，
+                    所以拍摄的前二十分钟我们通常不谈构图。
+                  </p>
+                  <p>
+                    先让手有地方放，让呼吸慢下来。等到你忘了相机在的时候，第一张能看的照片通常就出现了。
+                    我们不准备动作库，也不要求你"笑一个"——那会让三十岁的你看起来像十七岁的库存图。
+                  </p>
+                  <p>
+                    光线以窗光与黄金时刻的自然光为主，很少动用大功率灯。我们希望画面里的人五年后回看仍然认得出自己，
+                    不是被修过的那种认得出。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 02 精选作品 -->
+          <section class="sec">
+            <div class="ly">
+              <div class="sec-head">
+                <div class="no">02</div>
+                <div>
+                  <h2>精选作品</h2>
+                  <p>
+                    SELECTED WORKS · 点击卡片进入全屏播放器（复用现有 VideoWorksOverlay）·
+                    恰好 3 部时左大右叠，≥4 部改为一大两小 + 后续三列平铺，不足 3 部等宽平铺
+                  </p>
+                </div>
+              </div>
+              <div class="works t3">
+                <a class="card feat" style="animation-delay: 0ms">
+                  <div class="shot">
+                    <img src="http://124.223.29.189/uploads/cover/portrait-natural-light.png" alt="" />
+                    <span class="play"></span>
+                    <span class="yr">2025</span>
+                  </div>
+                  <div class="meta">
+                    <span class="idx">01</span>
+                    <span class="t">自然光人像 · 窗边</span>
+                    <span class="tag2">portrait</span>
+                  </div>
+                </a>
+                <a class="card" style="animation-delay: 70ms">
+                  <div class="shot">
+                    <img src="http://124.223.29.189/uploads/cover/backlit-portrait-golden-hour.png" alt="" />
+                    <span class="play"></span>
+                    <span class="yr">2025</span>
+                  </div>
+                  <div class="meta">
+                    <span class="idx">02</span>
+                    <span class="t">逆光人像 · 黄金时刻</span>
+                  </div>
+                </a>
+                <a class="card" style="animation-delay: 140ms">
+                  <div class="shot">
+                    <img src="http://124.223.29.189/uploads/cover/travel-foggy-mountain.png" alt="" />
+                    <span class="play"></span>
+                    <span class="yr">2022</span>
+                  </div>
+                  <div class="meta">
+                    <span class="idx">03</span>
+                    <span class="t">旅拍 · 雾中山峦</span>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </section>
+
+          <!-- 03 拍摄要点 -->
+          <section class="sec">
+            <div class="ly">
+              <div class="sec-head">
+                <div class="no">03</div>
+                <div>
+                  <h2>拍摄须知</h2>
+                  <p>来自后台 highlights，每行一条，用竖线分出「标签 | 内容」</p>
+                </div>
+              </div>
+              <div class="notes">
+                <div class="no"></div>
+                <ol>
+                  <li>
+                    <span class="k">档期</span>
+                    <span class="v">常规定在 7–10 天后，周末与节假日需提前三周预约。</span>
+                  </li>
+                  <li>
+                    <span class="k">场地</span>
+                    <span class="v">室内窗边棚拍或城市漫游，可按你想留下的场景二选一，场地费实报实销。</span>
+                  </li>
+                  <li>
+                    <span class="k">妆造</span>
+                    <span class="v">含一次基础妆造与两套服装，服饰自备即可，我们不建议租礼服。</span>
+                  </li>
+                  <li>
+                    <span class="k">交付</span>
+                    <span class="v">精修 9 张，选片在拍摄当日现场完成，7 个工作日内出片。</span>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </section>
+
+          <!-- CTA -->
+          <section class="cta">
+            <div class="ly row">
+              <div>
+                <div class="kicker">BOOKING · 预约拍摄</div>
+                <h3>聊聊你想留住的那一面</h3>
+                <p>留下电话，我们会在 24 小时内由主摄影本人回复，不经客服转手。</p>
+              </div>
+              <div class="act">
+                <div class="tel">
+                  <b>0539-8888888</b>
+                  <i>周一至周日 9:00 - 18:00</i>
+                </div>
+                <a class="btn gold">预约人像拍摄</a>
+              </div>
+            </div>
+          </section>
+
+          <!-- 上下板块 -->
+          <nav class="adj">
+            <a href="#g-works">
+              <img src="http://124.223.29.189/uploads/cover/behind-the-scenes-film-set.png" alt="" />
+              <span class="lab">← 上一个板块 · VIDEO</span>
+              <span class="nm">视频短片</span>
+            </a>
+            <a class="next" href="#g-works">
+              <img src="http://124.223.29.189/uploads/cover/wedding-documentary.png" alt="" />
+              <span class="lab">下一个板块 · WEDDING →</span>
+              <span class="nm">婚礼纪实</span>
+            </a>
+          </nav>
+
+          <!-- 页脚 -->
+          <footer class="foot">
+            <div class="ly">
+              <div class="row">
+                <div>
+                  <a class="brand" href="#g-works">
+                    <span class="ap"></span>
+                    <span>
+                      <span class="zh">光屿摄影</span>
+                      <span class="en">LIGHT ISLE STUDIO</span>
+                    </span>
+                  </a>
+                  <div class="navs" style="margin-top: 28px">
+                    <a href="#g-about">关于我们</a>
+                    <a href="#g-about">荣誉资质</a>
+                    <a href="#g-works">业务板块</a>
+                    <a href="#g-works">作品展示</a>
+                    <a href="#g-works">联系我们</a>
+                  </div>
+                </div>
+                <div class="contact">
+                  0539-8888888<br />
+                  hello@lightisle.photo<br />
+                  江苏省常州市钟楼区运河路 188 号 3 幢
+                </div>
+              </div>
+              <div class="legal">
+                <span>Copyright 2026 光屿影像文化传媒有限公司 版权所有</span>
+                <span>苏ICP备2026000000号-1 · 苏公网安备32040002000000号</span>
+              </div>
+            </div>
+          </footer>
+        </div>
+      </div>
+
+      <!-- ==================================================================== -->
+      <!-- 屏 2 · 公司介绍页                                                      -->
+      <!-- ==================================================================== -->
+      <div class="group" id="g-about">
+        <div class="tag">
+          <b>屏 2 · /about 公司介绍页</b>
+          <span>描边字 Hero + 派生数据条 + 里程碑 + 业务版图导流 + 流程 + 团队</span>
+          <em class="f">hero_image_url</em>
+          <em class="f">long_intro</em>
+          <em class="f">milestones</em>
+          <em class="f">process_steps</em>
+          <em class="f">team_note</em>
+        </div>
+
+        <div class="page">
+          <div class="nav">
+            <a class="brand" href="#g-works">
+              <span class="ap"></span>
+              <span>
+                <span class="zh">光屿摄影</span>
+                <span class="en">LIGHT ISLE STUDIO</span>
+              </span>
+            </a>
+            <nav class="menu">
+              <a href="#g-works">首页</a>
+              <a class="on" href="#g-about">关于我们</a>
+              <a href="#g-about">荣誉资质</a>
+              <span class="dd">
+                <a href="#g-works">业务板块</a>
+                <span class="panel">
+                  <a href="#g-works">人像写真 <em>PORTRAIT</em></a>
+                  <a href="#g-works">婚礼纪实 <em>WEDDING</em></a>
+                  <a href="#g-works">商业摄影 <em>COMMERCIAL</em></a>
+                  <a href="#g-works">活动跟拍 <em>EVENT</em></a>
+                  <a href="#g-works">视频短片 <em>VIDEO</em></a>
+                </span>
+              </span>
+              <a href="#g-works">作品展示</a>
+              <a href="#g-works">联系我们</a>
+            </nav>
+          </div>
+          <div class="crumbs">
+            <a href="#g-works">首页</a> <i>/</i>
+            <span style="color: rgba(255, 255, 255, 0.72)">关于我们</span>
+          </div>
+
+          <header class="a-hero">
+            <img class="bg" src="http://124.223.29.189/uploads/cover/cinematic-wide.png" alt="" />
+            <span class="veil"></span>
+            <span class="lamp"></span>
+            <span class="ghost">光屿</span>
+            <div class="inner ly">
+              <div class="kicker">ABOUT LIGHT ISLE · 关于我们</div>
+              <h1>一间以自然光为母语的工作室</h1>
+              <p class="lead">
+                光屿摄影成立于 2017 年，六个摄影、两个剪辑、一间能放三组灯的自拍影棚。
+                我们相信每一次相遇都值得被认真记录。
+              </p>
+            </div>
+          </header>
+
+          <!-- 派生数据条（无需字段，全部由现有数据算出） -->
+          <div class="ly">
+            <div class="stats">
+              <div><b>9<i>年</i></b><span>自 2017 年</span></div>
+              <div><b>12<i>部</i></b><span>在架影像作品</span></div>
+              <div><b>5<i>类</i></b><span>拍摄题材板块</span></div>
+              <div><b>5<i>项</i></b><span>省市级荣誉</span></div>
+            </div>
+          </div>
+
+          <!-- 01 长文 -->
+          <section class="sec">
+            <div class="ly">
+              <div class="sec-head">
+                <div class="no">01</div>
+                <div>
+                  <h2>我们的九年</h2>
+                  <p>完整长文来自后台 long_intro，首页摘要区仍沿用 intro_text 不动</p>
+                </div>
+              </div>
+              <div class="prose">
+                <div class="no"></div>
+                <div class="txt">
+                  <p class="lead">
+                    从两个人、一台机身、一间借来的 loft 开始，到现在九个人、一间北向窗光墙 6 米宽的影棚。
+                  </p>
+                  <p>
+                    我们拍人像、婚礼、商业产品与活动纪实，也接短片。题材不同，方法是一样的：
+                    先花时间听懂对方想留住什么，再决定光从哪里来。这份「听懂」通常发生在开拍前的那通电话里，
+                    而不是拍摄现场。
+                  </p>
+                  <p>
+                    我们不追热门滤镜，也不做一眼能认出是同一套预设的片子。每次拍摄结束后原始文件归档一份，
+                    因为客户可能会在三年后要一张当年没修过的原图——这件事我们遇到过，而且对方是我们自己。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 02 里程碑 -->
+          <section class="sec">
+            <div class="ly">
+              <div class="sec-head">
+                <div class="no">02</div>
+                <div>
+                  <h2>一条时间线</h2>
+                  <p>
+                    后台 milestones 每行 <code style="color: var(--hl-gold)">年份|标题|说明</code>
+                    · 金点为与 honors 同年联动的高亮
+                  </p>
+                </div>
+              </div>
+              <div class="tl">
+                <div class="row">
+                  <div class="yr">2017</div>
+                  <div>
+                    <div class="tt">光屿成立</div>
+                    <div class="dd2">两个人，一台机身，从给朋友拍的第一组人像开始。</div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="yr">2019</div>
+                  <div>
+                    <div class="tt">第一次全天婚礼跟拍</div>
+                    <div class="dd2">从那以后我们不再接半天的婚礼单——仪式的转折总在下午四点后。</div>
+                  </div>
+                </div>
+                <div class="row g">
+                  <div class="yr">2021</div>
+                  <div>
+                    <div class="tt">
+                      《山里的课堂》获平遥国际摄影大展三等奖
+                      <span class="hon">荣誉 · 三等奖</span>
+                    </div>
+                    <div class="dd2">乡村教育题材组照，第一次有作品替我们说话。</div>
+                  </div>
+                </div>
+                <div class="row g">
+                  <div class="yr">2023</div>
+                  <div>
+                    <div class="tt">
+                      自建影棚落成 · 《窗边的光》入选全国人像摄影双年展
+                      <span class="hon">荣誉 · 入选作品</span>
+                    </div>
+                    <div class="dd2">三组灯、一面 6 米宽的北向窗光墙，是这里最贵的设备。</div>
+                  </div>
+                </div>
+                <div class="row g">
+                  <div class="yr">2024</div>
+                  <div>
+                    <div class="tt">
+                      《誓言》获华东婚礼影像大赛一等奖
+                      <span class="hon">荣誉 · 一等奖</span>
+                    </div>
+                    <div class="dd2">那一年是我们第 200 场婚礼。</div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="yr">2026</div>
+                  <div>
+                    <div class="tt">影像线扩至 8 人</div>
+                    <div class="dd2">增设剪辑与调色，短片开始能独立成片交付。</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 03 业务版图（导流到板块页） -->
+          <section class="sec">
+            <div class="ly">
+              <div class="sec-head">
+                <div class="no">03</div>
+                <div>
+                  <h2>我们拍什么</h2>
+                  <p>五类题材直连 /works/:id · 数据取自 segments，无需新增字段</p>
+                </div>
+              </div>
+              <div class="board">
+                <a href="#g-works">
+                  <img src="http://124.223.29.189/uploads/cover/portrait-natural-light.png" alt="" />
+                  <span class="v"></span>
+                  <span class="c">
+                    <span class="n">人像写真</span>
+                    <span class="s">自然光 · 真实情绪</span>
+                    <span class="ar">3 部作品 →</span>
+                  </span>
+                </a>
+                <a href="#g-works">
+                  <img src="http://124.223.29.189/uploads/cover/wedding-documentary.png" alt="" />
+                  <span class="v"></span>
+                  <span class="c">
+                    <span class="n">婚礼纪实</span>
+                    <span class="s">记录仪式每一刻</span>
+                    <span class="ar">2 部作品 →</span>
+                  </span>
+                </a>
+                <a href="#g-works">
+                  <img src="http://124.223.29.189/uploads/cover/commercial-product.png" alt="" />
+                  <span class="v"></span>
+                  <span class="c">
+                    <span class="n">商业摄影</span>
+                    <span class="s">品牌影像 · 器物之光</span>
+                    <span class="ar">2 部作品 →</span>
+                  </span>
+                </a>
+                <a href="#g-works">
+                  <img src="http://124.223.29.189/uploads/cover/event-concert-stage.png" alt="" />
+                  <span class="v"></span>
+                  <span class="c">
+                    <span class="n">活动跟拍</span>
+                    <span class="s">现场纪实 · 舞台瞬间</span>
+                    <span class="ar">1 部作品 →</span>
+                  </span>
+                </a>
+                <a href="#g-works">
+                  <img src="http://124.223.29.189/uploads/cover/behind-the-scenes-film-set.png" alt="" />
+                  <span class="v"></span>
+                  <span class="c">
+                    <span class="n">视频短片</span>
+                    <span class="s">电影感画面叙事</span>
+                    <span class="ar">2 部作品 →</span>
+                  </span>
+                </a>
+              </div>
+            </div>
+          </section>
+
+          <!-- 04 拍摄流程 -->
+          <section class="sec">
+            <div class="ly">
+              <div class="sec-head">
+                <div class="no">04</div>
+                <div>
+                  <h2>一次拍摄如何进行</h2>
+                  <p>后台 process_steps 每行「步骤名|说明」，条数 3–6 自适应</p>
+                </div>
+              </div>
+              <div class="steps">
+                <div class="st">
+                  <div class="dot">1</div>
+                  <div class="h">沟通</div>
+                  <div class="d">微信或电话聊 20 分钟，说清场合、人数、你想留住哪几个画面。</div>
+                </div>
+                <div class="st">
+                  <div class="dot">2</div>
+                  <div class="h">方案</div>
+                  <div class="d">按题材给档期、场地建议与报价，不做没有依据的套餐推销。</div>
+                </div>
+                <div class="st">
+                  <div class="dot">3</div>
+                  <div class="h">拍摄</div>
+                  <div class="d">团队提前一小时到位，现场以引导代替摆布，你随时可以看回放。</div>
+                </div>
+                <div class="st">
+                  <div class="dot">4</div>
+                  <div class="h">交付</div>
+                  <div class="d">先给精选预览供选片，精修按约定张数与周期出片。</div>
+                </div>
+                <div class="st">
+                  <div class="dot">5</div>
+                  <div class="h">归档</div>
+                  <div class="d">原片保留一年，可随时补修、导出或换尺寸裁切。</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 05 团队与设备 -->
+          <section class="sec">
+            <div class="ly">
+              <div class="sec-head">
+                <div class="no">05</div>
+                <div>
+                  <h2>影棚与团队</h2>
+                  <p>说明文字来自后台 team_note · 下方设备标签暂用前端配置常量</p>
+                </div>
+              </div>
+              <div class="team">
+                <div class="ph">
+                  <img src="http://124.223.29.189/uploads/cover/behind-the-scenes-film-set.png" alt="" />
+                  <span class="cap">CANZHOU · 6M WINDOW-LIGHT WALL</span>
+                </div>
+                <div class="txt">
+                  <p>
+                    六个摄影、两个剪辑、一个制片。我们不留常驻模特，也不做流水线选片——
+                    每个项目由一位主摄影从沟通跟到交付，中途不换人。
+                  </p>
+                  <p>
+                    影棚在常州钟楼区运河路，北向 6 米宽的窗光墙是这里最贵的设备，
+                    比任何一盏灯都更接近我们想要的画面。
+                  </p>
+                  <div class="kit">
+                    <span>Sony A7M4 / A7S3</span>
+                    <span>85mm · 50mm · 35mm 定焦组</span>
+                    <span>Profoto B10X 两组</span>
+                    <span>DJI RS4 稳定器</span>
+                    <span>DaVinci 调色线</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 06 荣誉（复用 honors） -->
+          <section class="sec">
+            <div class="ly">
+              <div class="sec-head">
+                <div class="no">06</div>
+                <div>
+                  <h2>被认可的瞬间</h2>
+                  <p>honors 现有数据直接铺开，不单独做详情页</p>
+                </div>
+              </div>
+              <div class="hons">
+                <div class="h">
+                  <span class="lv">二等奖</span>
+                  <span class="t2">城市影像《流动的夜》</span>
+                  <span class="is">2025 江苏省新闻摄影年赛</span>
+                </div>
+                <div class="h">
+                  <span class="lv">一等奖</span>
+                  <span class="t2">婚礼纪实《誓言》</span>
+                  <span class="is">2024 华东婚礼影像大赛</span>
+                </div>
+                <div class="h">
+                  <span class="lv">入选作品</span>
+                  <span class="t2">人像《窗边的光》</span>
+                  <span class="is">2023 全国人像摄影双年展</span>
+                </div>
+                <div class="h">
+                  <span class="lv">提名</span>
+                  <span class="t2">商业短片《器物之美》</span>
+                  <span class="is">2022 中国商业摄影年鉴</span>
+                </div>
+                <div class="h" style="grid-column: span 2; border-bottom-color: transparent">
+                  <span class="lv">三等奖</span>
+                  <span class="t2">公益纪实《山里的课堂》</span>
+                  <span class="is">2021 平遥国际摄影大展</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="cta">
+            <div class="ly row">
+              <div>
+                <div class="kicker">BOOKING · 预约拍摄</div>
+                <h3>想聊聊你的那场拍摄</h3>
+                <p>留下电话，我们会在 24 小时内由主摄影本人回复，不经客服转手。</p>
+              </div>
+              <div class="act">
+                <div class="tel">
+                  <b>0539-8888888</b>
+                  <i>周一至周日 9:00 - 18:00</i>
+                </div>
+                <a class="btn gold">联系我们</a>
+              </div>
+            </div>
+          </section>
+
+          <footer class="foot">
+            <div class="ly">
+              <div class="legal" style="margin-top: 0; padding-top: 0; border-top: none">
+                <span>Copyright 2026 光屿影像文化传媒有限公司 版权所有</span>
+                <span>苏ICP备2026000000号-1 · 苏公网安备32040002000000号</span>
+              </div>
+            </div>
+          </footer>
+        </div>
+      </div>
+
+      <!-- ==================================================================== -->
+      <!-- 屏 3 · 移动端                                                          -->
+      <!-- ==================================================================== -->
+      <div class="group" id="g-mobile">
+        <div class="tag">
+          <b>屏 3 · 移动端 390</b>
+          <span>板块页与介绍页共用一套窄屏节奏</span>
+        </div>
+        <div class="m-wrap">
+          <div class="m">
+            <div class="bar">
+              <span class="bt">光屿摄影</span>
+              <span class="bm"></span>
+            </div>
+            <div class="hero">
+              <img src="http://124.223.29.189/uploads/cover/portrait-natural-light.png" alt="" />
+              <span class="v"></span>
+              <div class="c">
+                <div class="k" style="font-family: var(--font-latin); font-size: 11px; letter-spacing: 3px; color: var(--accent-gold)">PORTRAIT</div>
+                <h4>人像写真</h4>
+                <p>自然光 · 真实情绪</p>
+                <div class="fa">3 部作品 · 7 个工作日交付</div>
+              </div>
+            </div>
+            <div class="body">
+              <div class="k">01 / 板块简介</div>
+              <div class="tx">
+                人像是我们最日常的题材，也是最难的一次。镜头前的人多半不习惯被注视，
+                所以拍摄的前二十分钟我们通常不谈构图。
+              </div>
+              <div class="li">
+                <div class="im">
+                  <img src="http://124.223.29.189/uploads/cover/backlit-portrait-golden-hour.png" alt="" />
+                </div>
+                <div class="cap"><span>逆光人像 · 黄金时刻</span><i>2025</i></div>
+              </div>
+              <div class="li">
+                <div class="im">
+                  <img src="http://124.223.29.189/uploads/cover/travel-foggy-mountain.png" alt="" />
+                </div>
+                <div class="cap"><span>旅拍 · 雾中山峦</span><i>2022</i></div>
+              </div>
+              <div class="mcta"><a class="btn gold">预约人像拍摄</a></div>
+            </div>
+          </div>
+          <div class="m-note">
+            <b>移动端取舍</b>
+            Hero 压到 420 高、标题 30 字；作品网格退化为单列大图卡；右侧五板块点位导航隐藏，
+            改由页尾「上一 / 下一板块」通栏按钮承担横跳。拍摄须知在移动端把「标签 | 内容」拆成上下两行，
+            避免 132px 定宽挤压正文。里程碑时间线在窄屏下把年份移到标题上方，金点与竖线保持左对齐。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* 卡片入场：进入视口时补一次 fadeUp；观察器不可用则全部直接显示 */
+      const cards = [...document.querySelectorAll('.card')]
+      if (typeof IntersectionObserver === 'function') {
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) => {
+              if (e.isIntersecting) {
+                e.target.classList.add('in')
+                io.unobserve(e.target)
+              }
+            })
+          },
+          { threshold: 0.12 }
+        )
+        cards.forEach((el) => io.observe(el))
+        /* 兜底：1.5s 后仍未触发的（长截图、打印、异常环境）一律显示 */
+        setTimeout(() => cards.forEach((el) => el.classList.add('in')), 1500)
+      }
+    </script>
+  </body>
+</html>

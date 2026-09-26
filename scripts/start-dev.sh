@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 光屿摄影 · 开发环境一键启动（后端 + 官网 + 管理后台）
+# 交点影视 · 开发环境一键启动（后端 + 官网 + 管理后台）
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

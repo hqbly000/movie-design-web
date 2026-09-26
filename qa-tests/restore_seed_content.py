@@ -11,7 +11,7 @@ requests.Session.trust_env = False
 BASE = "http://127.0.0.1:8000"
 
 INTRO = (
-    "光屿摄影成立于 2017 年，是一家专注于人像、婚礼与商业影像的文化传媒机构。"
+    "交点影视成立于 2017 年，是一家专注于人像、婚礼与商业影像的文化传媒机构。"
     "我们相信每一次相遇都值得被认真记录。九年来，团队以自然光与电影感为语言，"
     "为个人与品牌留下经得起时间回望的画面。"
 )
@@ -21,7 +21,7 @@ SLIDES = [
     (3, "/uploads/cover/night-cityscape.png", "城市之上，光在流动", "城市影像 · 夜景纪实", 2),
 ]
 
-tok = requests.post(f"{BASE}/api/auth/login", json={"email": "admin@lightisle.studio", "password": "Admin@123456"}, timeout=10).json()["data"]["token"]
+tok = requests.post(f"{BASE}/api/auth/login", json={"email": "admin@jiaodianfilm.com", "password": "Admin@123456"}, timeout=10).json()["data"]["token"]
 H = {"Authorization": f"Bearer {tok}"}
 
 r1 = requests.put(
@@ -31,7 +31,7 @@ r1 = requests.put(
 ).json()
 r2 = requests.put(
     f"{BASE}/api/admin/company-profile",
-    json={"section_title": "公司介绍", "company_name": "光屿影像文化传媒有限公司", "founded_year": 2017, "intro_text": INTRO},
+    json={"section_title": "公司介绍", "company_name": "交点影视", "founded_year": 2017, "intro_text": INTRO},
     headers=H, timeout=10,
 ).json()
 print("hero put ->", r1.get("code"), r1.get("message"))

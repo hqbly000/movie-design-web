@@ -1,1 +1,0 @@
-import{A as n,E as e}from"./index-DkvlRfTP.js";function a(r,s="加载失败"){if(r instanceof n)switch(r.code){case e.PARAM:return"请求参数有误，请刷新页面后重试";case e.UNAUTHORIZED:return"登录状态已失效，请重新登录";case e.FORBIDDEN:return"当前角色没有该操作权限";case e.SERVER:return"服务暂时不可用，请稍后重试";default:return r.message||s}return r instanceof Error&&r.message?r.message:s}export{a as f};

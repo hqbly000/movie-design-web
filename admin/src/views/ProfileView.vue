@@ -15,7 +15,7 @@ usePageHeader('我的', '账号信息与功能入口')
 
 const items = computed(() => NAV_ITEMS.filter((i) => !i.adminOnly || auth.isAdmin))
 const roleLabel = computed(() => (auth.role ? ROLE_LABELS[auth.role] : ''))
-const initials = computed(() => (auth.displayName || '光').slice(0, 1))
+const initials = computed(() => (auth.displayName || '交').slice(0, 1))
 
 async function onLogout(): Promise<void> {
   await auth.logout()

@@ -43,14 +43,13 @@ useEventListener(window, 'keydown', (ev: KeyboardEvent) => {
         aria-label="导航菜单"
       >
         <div class="ly-container flex h-[68px] items-center justify-between">
-          <div class="flex items-center gap-3">
-            <AppIcon name="aperture" :size="26" class="text-accent-gold" />
-            <span
-              class="font-serif text-[17px] font-semibold text-txt-primary"
-              style="letter-spacing: 6px"
-              >光屿摄影</span
-            >
-          </div>
+          <img
+            src="/images/logo-on-dark.png"
+            alt="交点影视"
+            class="h-7 w-auto"
+            width="1200"
+            height="259"
+          />
           <button
             type="button"
             class="flex h-11 w-11 items-center justify-center text-white"
@@ -78,7 +77,7 @@ useEventListener(window, 'keydown', (ev: KeyboardEvent) => {
 
         <div class="mt-auto px-6 pb-10">
           <p class="font-latin text-[10px] text-white/40" style="letter-spacing: 4px">
-            LIGHT ISLE STUDIO
+            JIAO DIAN FILM AND TELEVISION
           </p>
         </div>
       </div>

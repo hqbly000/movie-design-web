@@ -6,7 +6,6 @@
  * 移动端版权与备案分两行。
  */
 import { computed } from 'vue'
-import AppIcon from '@/components/common/AppIcon.vue'
 import { useSiteStore } from '@/stores/site'
 import { FOOTER_NAV_ITEMS, scrollToId } from '@/utils/scroll'
 
@@ -16,7 +15,7 @@ const site = useSiteStore()
 const copyright = computed(
   () =>
     site.siteSettings.copyright ??
-    'Copyright 2026 光屿影像文化传媒有限公司 版权所有'
+    'Copyright 2026 交点影视 版权所有'
 )
 
 /** 备案信息拼接（ICP + 公安备案）。 */
@@ -35,16 +34,17 @@ const filing = computed(() => {
       <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <button
           type="button"
-          class="flex items-center gap-3"
+          class="flex items-center"
           aria-label="回到顶部"
           @click="scrollToId('hero')"
         >
-          <AppIcon name="aperture" :size="22" class="text-accent-gold" />
-          <span
-            class="font-serif text-[18px] font-semibold text-txt-primary"
-            style="letter-spacing: 5px"
-            >光屿摄影</span
-          >
+          <img
+            src="/images/logo-on-dark.png"
+            alt="交点影视"
+            class="h-7 w-auto"
+            width="1200"
+            height="259"
+          />
         </button>
 
         <nav class="flex flex-wrap gap-x-7 gap-y-3" aria-label="页脚导航">

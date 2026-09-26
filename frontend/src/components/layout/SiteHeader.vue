@@ -61,23 +61,17 @@ onMounted(syncScrollState)
       <!-- 品牌 -->
       <button
         type="button"
-        class="flex items-center gap-3 text-left"
-        aria-label="光屿摄影 首页"
+        class="flex items-center text-left"
+        aria-label="交点影视 首页"
         @click="goHome"
       >
-        <AppIcon name="aperture" :size="26" class="text-accent-gold" />
-        <span class="flex flex-col leading-none">
-          <span
-            class="font-serif text-[17px] font-semibold text-txt-primary lg:text-[22px]"
-            style="letter-spacing: 6px"
-            >光屿摄影</span
-          >
-          <span
-            class="mt-1 font-latin text-[9px] text-accent-gold lg:text-[10px]"
-            style="letter-spacing: 4px"
-            >LIGHT ISLE STUDIO</span
-          >
-        </span>
+        <img
+          src="/images/logo-on-dark.png"
+          alt="交点影视 JIAO DIAN FILM AND TELEVISION"
+          class="h-8 w-auto lg:h-10"
+          width="1200"
+          height="259"
+        />
       </button>
 
       <!-- 桌面导航 -->

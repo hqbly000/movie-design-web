@@ -42,7 +42,7 @@ defineProps<{
             v-reveal="160"
             class="font-sans text-[18px] font-medium tracking-[1px] text-ivory lg:text-[20px]"
           >
-            {{ profile?.company_name || '光屿影像文化传媒有限公司' }}
+            {{ profile?.company_name || '交点影视' }}
           </p>
           <p
             v-reveal="240"

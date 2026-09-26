@@ -9,10 +9,10 @@ import type { Honor, SegmentVideos, SiteConfig, SiteSettings, VideoItem } from '
 const SETTINGS: SiteSettings = {
   icp_no: '苏ICP备2026000000号-1',
   police_no: '苏公网安备32040002000000号',
-  copyright: 'Copyright 2026 光屿影像文化传媒有限公司 版权所有',
+  copyright: 'Copyright 2026 交点影视 版权所有',
   phone: '0539-8888888',
   address: '江苏省常州市钟楼区运河路 188 号 3 幢',
-  email: 'hello@lightisle.photo',
+  email: 'hello@jiaodianfilm.com',
   work_hours: '周一至周日 9:00 - 18:00',
   brand_slogan: '以光影，铭记时光'
 }
@@ -87,10 +87,10 @@ export const FALLBACK_SITE: SiteConfig = {
   ],
   company_profile: {
     section_title: '公司介绍',
-    company_name: '光屿影像文化传媒有限公司',
+    company_name: '交点影视',
     founded_year: 2017,
     intro_text:
-      '光屿摄影成立于 2017 年，是一家专注于人像、婚礼与商业影像的文化传媒机构。我们相信每一次相遇都值得被认真记录。九年来，团队以自然光与电影感为语言，为个人与品牌留下经得起时间回望的画面。'
+      '交点影视成立于 2017 年，是一家专注于人像、婚礼与商业影像的文化传媒机构。我们相信每一次相遇都值得被认真记录。九年来，团队以自然光与电影感为语言，为个人与品牌留下经得起时间回望的画面。'
   },
   segments: [
     {

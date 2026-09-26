@@ -1,5 +1,5 @@
 /**
- * 光屿摄影官网 · CDP 端到端渲染校验。
+ * 焦点影视官网 · CDP 端到端渲染校验。
  * 在真实 Chromium 中导航、滚动、点击（含打开全屏作品页），断言关键内容与 R1–R28 要点。
  * 用法：node cdp_verify.mjs <cdpPort> <frontendBase> <apiBase>
  */
@@ -276,7 +276,7 @@ function expiredJs() {
   return JSON.stringify({
     expired: T().includes('链接已失效'),
     desc: T().includes('该预览链接已到期或被关闭，请联系摄影师重新获取'),
-    brand: T().includes('光屿摄影'),
+    brand: T().includes('焦点影视'),
     noSelfService: !T().includes('重新申请'),
     title: document.title
   });
@@ -307,7 +307,7 @@ async function main() {
   home.close()
   console.log('HOME', JSON.stringify(h, null, 1))
 
-  check('首页 SPA 渲染成功（标题正确）', /光屿摄影/.test(h.title), h.title)
+  check('首页 SPA 渲染成功（标题正确）', /焦点影视/.test(h.title), h.title)
   check('R2/R3 首屏轮播图数量 = hero_slides 条数（API）', h.heroImgs === siteData.data.hero_slides.length, `imgs=${h.heroImgs} api=${siteData.data.hero_slides.length}`)
   check('R3 三组标语均在 DOM（各图各带标语）', new Set(h.slogans.filter(Boolean)).size >= 3, JSON.stringify(h.slogans))
   check('R4 首屏无任何 CTA 按钮', h.heroHasCTA === false)

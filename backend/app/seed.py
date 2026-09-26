@@ -82,9 +82,9 @@ def _count(db: Session, model: type) -> int:
 def _seed_users(db: Session) -> dict[str, User]:
     """种子 3 个账号（admin/editor/viewer）。"""
     wanted = [
-        ("光屿管理员", "admin@lightisle.studio", "Admin@123456", "admin"),
-        ("光屿编辑", "editor@lightisle.studio", "Editor@123456", "editor"),
-        ("光屿访客", "viewer@lightisle.studio", "Viewer@123456", "viewer"),
+        ("交点管理员", "admin@jiaodianfilm.com", "Admin@123456", "admin"),
+        ("交点编辑", "editor@jiaodianfilm.com", "Editor@123456", "editor"),
+        ("交点访客", "viewer@jiaodianfilm.com", "Viewer@123456", "viewer"),
     ]
     result: dict[str, User] = {}
     for name, email, password, role in wanted:
@@ -197,14 +197,14 @@ def _seed_company_profile(db: Session) -> None:
     if _count(db, CompanyProfile) > 0:
         return
     intro = (
-        "光屿摄影成立于 2017 年，是一家专注于人像、婚礼与商业影像的文化传媒机构。"
+        "交点影视成立于 2017 年，是一家专注于人像、婚礼与商业影像的文化传媒机构。"
         "我们相信每一次相遇都值得被认真记录。九年来，团队以自然光与电影感为语言，"
         "为个人与品牌留下经得起时间回望的画面。"
     )
     db.add(
         CompanyProfile(
             section_title="公司介绍",
-            company_name="光屿影像文化传媒有限公司",
+            company_name="交点影视",
             founded_year=2017,
             intro_text=intro,
         )
@@ -447,10 +447,10 @@ def _seed_settings(db: Session) -> None:
     defaults: dict[str, str] = {
         "icp_no": "苏ICP备2026000000号-1",
         "police_no": "苏公网安备32040002000000号",
-        "copyright": "Copyright 2026 光屿影像文化传媒有限公司 版权所有",
+        "copyright": "Copyright 2026 交点影视 版权所有",
         "phone": "0539-8888888",
         "address": "江苏省常州市钟楼区运河路 188 号 3 幢",
-        "email": "hello@lightisle.photo",
+        "email": "hello@jiaodianfilm.com",
         "work_hours": "周一至周日 9:00 - 18:00",
         "brand_slogan": "以光影，铭记时光",
     }

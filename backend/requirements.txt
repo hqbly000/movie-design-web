@@ -1,4 +1,4 @@
-# 光屿摄影 LIGHT ISLE STUDIO · 后端依赖（FastAPI + MySQL）
+# 交点影视 JIAO DIAN FILM AND TELEVISION · 后端依赖（FastAPI + MySQL）
 # 安装：pip install -r requirements.txt
 fastapi==0.141.1
 uvicorn[standard]==0.53.0

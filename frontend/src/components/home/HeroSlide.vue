@@ -86,7 +86,7 @@ function imageStyle(): Record<string, string> {
       <div class="ly-container flex h-full flex-col">
         <div :key="animKey" class="pt-[310px] lg:pt-[320px]">
           <div class="animate-fade-up">
-            <SectionKicker text="LIGHT ISLE STUDIO · 光屿影像" :size="14" line />
+            <SectionKicker text="JIAO DIAN FILM AND TELEVISION" :size="14" line />
           </div>
           <h1
             class="mt-5 animate-fade-up font-serif font-light text-white lg:mt-6"

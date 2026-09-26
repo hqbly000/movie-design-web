@@ -3,7 +3,6 @@
  * ShareExpired —— 链接失效页（R18 / §3.4）。
  * 中央「链接已失效」+ 说明 + 下方品牌 logo；**不提供自助重新申请入口**。
  */
-import AppIcon from '@/components/common/AppIcon.vue'
 </script>
 
 <template>
@@ -14,13 +13,12 @@ import AppIcon from '@/components/common/AppIcon.vue'
     <p class="font-sans text-[13px] leading-6 text-white/70">
       该预览链接已到期或被关闭，请联系摄影师重新获取
     </p>
-    <div class="mt-6 flex items-center gap-3">
-      <AppIcon name="aperture" :size="26" class="text-accent-gold" />
-      <span
-        class="font-serif text-[16px] font-semibold text-white/80"
-        style="letter-spacing: 5px"
-        >光屿摄影</span
-      >
-    </div>
+    <img
+      src="/images/logo-on-dark.png"
+      alt="交点影视"
+      class="mt-6 h-7 w-auto"
+      width="1200"
+      height="259"
+    />
   </div>
 </template>

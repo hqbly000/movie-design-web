@@ -1,4 +1,4 @@
-"""光屿摄影 · 后端独立验收（对抗性测试套件）。
+"""交点影视 · 后端独立验收（对抗性测试套件）。
 
 本脚本由 QA（严过关）独立编写，用于「证伪」后端实现。
 只调用 HTTP 接口与直连数据库读/改测试数据，不修改任何业务源码。
@@ -24,9 +24,9 @@ SECRET = "lightisle-dev-secret-please-change-in-production"
 DB_KW = dict(host="10.66.237.199", port=3306, user="root", password="12345678", database="lightisle")
 
 ACCOUNTS = {
-    "admin": ("admin@lightisle.studio", "Admin@123456"),
-    "editor": ("editor@lightisle.studio", "Editor@123456"),
-    "viewer": ("viewer@lightisle.studio", "Viewer@123456"),
+    "admin": ("admin@jiaodianfilm.com", "Admin@123456"),
+    "editor": ("editor@jiaodianfilm.com", "Editor@123456"),
+    "viewer": ("viewer@jiaodianfilm.com", "Viewer@123456"),
 }
 
 RESULTS: list[dict] = []
@@ -639,7 +639,7 @@ def group_seed_integrity() -> None:
     rec(g, "hero_slides 标语未被测试污染", expect_slogans, slogans, slogans == expect_slogans)
     _, cp, _ = call("GET", "/api/admin/company-profile", token=admin)
     name = cp["data"]["company_name"]
-    rec(g, "company_name 未被测试污染", "光屿影像文化传媒有限公司", name, name == "光屿影像文化传媒有限公司")
+    rec(g, "company_name 未被测试污染", "交点影视", name, name == "交点影视")
     _, sg, _ = call("GET", "/api/admin/segments", token=admin)
     names = [s["name"] for s in sg["data"]]
     expect_seg = ["人像写真", "婚礼纪实", "商业摄影", "活动跟拍", "视频短片"]

@@ -28,7 +28,7 @@ async function login(email, pwd) {
 const go = async (c, r, ms = 2600) => { await c.ev(`location.href='${r}'`); await new Promise(x => setTimeout(x, ms)) }
 
 // ---------- ① 板块编辑弹框 ----------
-let c = await login('admin@lightisle.studio', 'Admin@123456')
+let c = await login('admin@jiaodianfilm.com', 'Admin@123456')
 await go(c, '/segments')
 const seg = JSON.parse(await c.ev(`(async () => {
   const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -65,7 +65,7 @@ console.log('② 选择视频弹框:', JSON.stringify(pick, null, 1))
 c.close()
 
 // ---------- ③ viewer 按钮禁用态 ----------
-c = await login('viewer@lightisle.studio', 'Viewer@123456')
+c = await login('viewer@jiaodianfilm.com', 'Viewer@123456')
 await go(c, '/videos')
 const vw = JSON.parse(await c.ev(`(async () => {
   const btns = [...document.querySelectorAll('#page-actions button')].map(b => ({ t: b.innerText.trim(), disabled: b.disabled, cls: b.className, pe: getComputedStyle(b).pointerEvents, aria: b.getAttribute('aria-disabled') }));
@@ -77,7 +77,7 @@ console.log('③ viewer /videos:', JSON.stringify(vw))
 c.close()
 
 // ---------- ④ /leads 原始报错 ----------
-c = await login('admin@lightisle.studio', 'Admin@123456')
+c = await login('admin@jiaodianfilm.com', 'Admin@123456')
 await go(c, '/leads')
 const leads = JSON.parse(await c.ev(`JSON.stringify({ text: document.querySelector('main').innerText.replace(/\\n+/g,' | ').slice(0, 300), errs: [...document.querySelectorAll('.ad-field-error')].map(e => e.innerText.trim()) })`))
 console.log('④ /leads:', JSON.stringify(leads, null, 1))

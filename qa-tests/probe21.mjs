@@ -20,7 +20,7 @@ await new Promise(r => setTimeout(r, 1500))
 await c.ev(`localStorage.clear()`)
 await c.send('Page.navigate', { url: `${BASE}/login` })
 for (let i = 0; i < 120; i++) { await new Promise(r => setTimeout(r, 250)); if (await c.ev(`!!document.querySelector('input[type=email]')`).catch(() => false)) break }
-await c.ev(`(()=>{const e=document.querySelector('input[type=email]');const p=document.querySelector('input[type=password]');const set=(el,v)=>{el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}))};set(e,'admin@lightisle.studio');set(p,'Admin@123456');document.querySelector('form').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));return 1})()`)
+await c.ev(`(()=>{const e=document.querySelector('input[type=email]');const p=document.querySelector('input[type=password]');const set=(el,v)=>{el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}))};set(e,'admin@jiaodianfilm.com');set(p,'Admin@123456');document.querySelector('form').dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));return 1})()`)
 await new Promise(r => setTimeout(r, 2600))
 
 for (const route of ['/distributions', '/videos', '/leads']) {

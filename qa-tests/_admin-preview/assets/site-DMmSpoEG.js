@@ -1,1 +1,0 @@
-import{G as e}from"./index-DkvlRfTP.js";function n(){return e.get("/api/admin/hero-slides")}function r(i){return e.put("/api/admin/hero-slides",{slides:i})}function o(){return e.get("/api/admin/company-profile")}function t(i){return e.put("/api/admin/company-profile",i)}export{o as a,t as b,n as g,r as s};

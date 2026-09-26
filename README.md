@@ -1,6 +1,6 @@
-# 光屿摄影 LIGHT ISLE STUDIO · 项目工程
+# 交点影视 JIAO DIAN FILM AND TELEVISION · 项目工程
 
-摄影工作室官网 + 管理后台 + API 服务。三个独立工程平级，各自构建部署。
+交点影视官网 + 管理后台 + API 服务。三个独立工程平级，各自构建部署。
 
 依据文档：
 - `C:\Users\admin\WorkBuddy\2026-09-21-23-26-10\设计方案.md`（开发交付版 v1.0，R1–R28 需求对照）
@@ -134,9 +134,9 @@ collections 3 + items 7 / distributions 3 / leads 4 / site_settings 8）。
 
 | 角色 | 账号 | 密码 | 权限 |
 |---|---|---|---|
-| 管理员 | `admin@lightisle.studio` | `Admin@123456` | 全部权限，含成员与角色管理 |
-| 编辑 | `editor@lightisle.studio` | `Editor@123456` | 内容维护 + 生成分发链接，不能改成员 |
-| 只读 | `viewer@lightisle.studio` | `Viewer@123456` | 仅查看内容与预约留言 |
+| 管理员 | `admin@jiaodianfilm.com` | `Admin@123456` | 全部权限，含成员与角色管理 |
+| 编辑 | `editor@jiaodianfilm.com` | `Editor@123456` | 内容维护 + 生成分发链接，不能改成员 |
+| 只读 | `viewer@jiaodianfilm.com` | `Viewer@123456` | 仅查看内容与预约留言 |
 
 > 上线前请立即在「账号与权限」中修改密码或重建账号。
 
@@ -176,6 +176,14 @@ cd admin    && npm run build    # → admin/dist
 连带第二种表现：浏览器里留着未过期 token 时，`/` 与 `/login` 都被守卫重定向去 dashboard，
 dashboard 又打不开 → **整页白屏，连登录页都进不去**（自救：清掉 localStorage 的 `lightisle_admin_token`）。
 处置：整体重传 `admin/dist`；并新增部署后强制校验，见 `docs/DEPLOY.md` §三。
+
+**品牌迁移（2026-09-26，光屿摄影 → 交点影视）**：官网 / 后台 / 分享页品牌文案与 logo、
+favicon、种子数据、接口标题全部换为「交点影视 JIAO DIAN FILM AND TELEVISION」；
+登录邮箱域名同步换为 `@jiaodianfilm.com`（密码不变）。本地 dev 库与**生产库均已执行**
+`scripts/rebrand-jiaodian.sql`，生产前后端与两个 dist 已同步部署并验证
+（产物完整性 44/44 + 6/6，新旧邮箱登录行为符合预期）。
+生产数据库变更前备份：服务器 `/root/backups/lightisle-pre-rebrand-*.sql`；
+旧 dist 备份：`/srv/lightisle/{frontend,admin}/dist.bak-20260926-*`。
 
 ### 常用验证命令
 

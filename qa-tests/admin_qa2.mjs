@@ -1,5 +1,5 @@
 /**
- * 光屿摄影 · 管理后台 CDP 端到端校验（QA 严过关 · 第二轮修正版）
+ * 交点影视 · 管理后台 CDP 端到端校验（QA 严过关 · 第二轮修正版）
  * 说明：因 P0（Teleport 目标 #page-actions 在视图挂载时不在 document 中）导致 6 个页面崩溃，
  *      本脚本注入「预置 #page-actions」的诊断垫片以便验证其余实现；垫片不影响任何源码，
  *      结论中会明确标注哪些断言是在垫片下取得的。
@@ -104,7 +104,7 @@ async function main() {
 
   // ---------- R19/R21 ----------
   console.log('-- R19/R21 登录 + 侧栏 --')
-  let cdp = await loginAs('admin@lightisle.studio', 'Admin@123456')
+  let cdp = await loginAs('admin@jiaodianfilm.com', 'Admin@123456')
   const shell = JSON.parse(await cdp.evaluate(`(() => {
     const navTexts = [...document.querySelectorAll('aside nav a')].map(a => a.innerText.trim());
     return JSON.stringify({ path: location.pathname, bg: getComputedStyle(document.body).backgroundColor, navCount: navTexts.length, navTexts, title: (document.querySelector('main h1')?.innerText || document.querySelector('header h1')?.innerText || '').trim() });
@@ -262,7 +262,7 @@ async function main() {
 
   // ---------- viewer ----------
   console.log('-- viewer 权限 --')
-  cdp = await loginAs('viewer@lightisle.studio', 'Viewer@123456')
+  cdp = await loginAs('viewer@jiaodianfilm.com', 'Viewer@123456')
   await go(cdp, '/videos')
   const view = JSON.parse(await cdp.evaluate(`(async () => {
     const actBtns = ${ACTION_BTNS};
@@ -280,7 +280,7 @@ async function main() {
 
   // ---------- editor ----------
   console.log('-- editor 权限 --')
-  cdp = await loginAs('editor@lightisle.studio', 'Editor@123456')
+  cdp = await loginAs('editor@jiaodianfilm.com', 'Editor@123456')
   const eNav = JSON.parse(await cdp.evaluate(`JSON.stringify([...document.querySelectorAll('aside nav a')].map(a => a.innerText.trim()))`))
   await go(cdp, '/members', 1800)
   const eGuard = await cdp.evaluate('location.pathname')
@@ -294,7 +294,7 @@ async function main() {
 
   // ---------- 移动端 390 ----------
   console.log('-- R27 移动端 390 --')
-  cdp = await loginAs('admin@lightisle.studio', 'Admin@123456', 390, 780)
+  cdp = await loginAs('admin@jiaodianfilm.com', 'Admin@123456', 390, 780)
   const mob = JSON.parse(await cdp.evaluate(`(() => {
     const aside = document.querySelector('aside');
     const bar = document.querySelector('nav[aria-label*="移动"], footer nav, .ad-tabbar') || [...document.querySelectorAll('nav, footer')].find(n => /工作台|视频库|合集|留言|我的/.test(n.innerText) && n.getBoundingClientRect().top > innerHeight - 140);

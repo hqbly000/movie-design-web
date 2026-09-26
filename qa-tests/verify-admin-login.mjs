@@ -28,7 +28,7 @@ if (!origin) {
   process.exit(2)
 }
 
-const EMAIL = process.env.ADMIN_EMAIL || 'admin@lightisle.studio'
+const EMAIL = process.env.ADMIN_EMAIL || 'admin@jiaodianfilm.com'
 const PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@123456'
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 

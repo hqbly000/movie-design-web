@@ -34,7 +34,7 @@ let pass = 0, fail = 0
 const chk = (l, ok, d = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + l + (d ? ' :: ' + d : '')); ok ? pass++ : fail++ }
 
 // ---------- 1) 顶栏按钮定位：与 TopBar 的右内边距基准对齐 ----------
-let c = await loginAs('admin@lightisle.studio', 'Admin@123456', 1440, 900)
+let c = await loginAs('admin@jiaodianfilm.com', 'Admin@123456', 1440, 900)
 await go(c, '/videos')
 const geom = JSON.parse(await c.evaluate(`(() => {
   const pa = document.querySelector('#page-actions');
@@ -65,7 +65,7 @@ chk('按钮尺寸为桌面 ad-btn（高 36）', geom.btnH === 36, `w=${geom.btnW
 
 // ---------- 2) 移动端底部 Tab 与触摸目标明细 ----------
 c.close()
-c = await loginAs('admin@lightisle.studio', 'Admin@123456', 390, 780)
+c = await loginAs('admin@jiaodianfilm.com', 'Admin@123456', 390, 780)
 const DETAIL = `(() => {
   const vis = e => { const r = e.getBoundingClientRect(); return e.offsetParent !== null && r.width > 0 && r.height > 0 };
   // 底部 Tab：可见、位于视口底部 140px 内、且含 4+ 个导航项
