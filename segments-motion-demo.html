@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>业务板块五列 · 滚动进场动效 Demo</title>
+<style>
+  :root{
+    --bg-base:#0a0a0a;
+    --surface:#14120f;
+    --accent-gold:#c49a4a;
+    --accent-gold-light:#e8c77a;
+    --ivory:#f4f0e8;
+    --font-serif:'Noto Serif SC','Source Han Serif SC','Songti SC','STSong',serif;
+    --font-sans:'Noto Sans SC','Source Han Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+    --dur:620ms;
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg-base);color:#fafafa;
+    font-family:var(--font-sans);font-weight:400;-webkit-font-smoothing:antialiased;
+  }
+  .doc{padding:56px 24px 32px;max-width:1440px;margin:0 auto}
+  .doc h1{font-family:var(--font-serif);font-size:30px;font-weight:400;margin:0 0 12px;letter-spacing:1px}
+  .doc p{margin:0 0 8px;font-size:14px;line-height:24px;color:rgba(255,255,255,.62)}
+  .doc .gold{color:var(--accent-gold)}
+  .doc .dim{color:rgba(255,255,255,.38);font-size:13px}
+  .params{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 8px}
+  .params span{
+    font-size:12px;color:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.14);
+    padding:4px 10px;border-radius:2px;
+  }
+
+  /* ===== 演示区块骨架 ===== */
+  .band{margin-top:48px}
+  .band-head{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:14px 24px;background:var(--surface);border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .band-head h2{
+    font-family:var(--font-serif);font-size:17px;font-weight:400;margin:0;letter-spacing:1px;
+  }
+  .band-head .tag{font-size:12px;color:rgba(255,255,255,.45);margin-left:12px}
+  .band-head button{
+    font-family:inherit;font-size:13px;color:var(--accent-gold-light);background:transparent;
+    border:1px solid rgba(232,199,122,.45);padding:6px 16px;border-radius:2px;cursor:pointer;
+    letter-spacing:2px;transition:background-color .18s ease,border-color .18s ease;
+  }
+  .band-head button:hover{background:rgba(196,154,74,.1);border-color:var(--accent-gold-light)}
+
+  /* ===== 五列图带 ===== */
+  .row{
+    display:flex;width:100%;height:560px;overflow:hidden;   /* 关键：裁切合入期的溢出 */
+    background:var(--bg-base);
+  }
+  .col{
+    position:relative;flex-basis:0%;flex-shrink:1;cursor:pointer;overflow:hidden;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;transition:flex-grow 220ms var(--ease);
+  }
+  .col img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    transition:transform .5s ease;user-select:none;-webkit-user-drag:none;
+  }
+  .col:hover img{transform:scale(1.04)}
+  .col .shade{
+    position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(to bottom,rgba(0,0,0,.56) 0%,rgba(0,0,0,.24) 50%,rgba(0,0,0,.6) 100%);
+  }
+  .col .body{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:14px;padding:0 24px}
+  .col .name{font-family:var(--font-serif);font-size:24px;letter-spacing:4px}
+  .col .sub{font-size:13px;color:rgba(255,255,255,.7)}
+  .col .btn{
+    margin-top:8px;font-size:14px;letter-spacing:3px;padding:13px 34px;border-radius:2px;
+    border:1px solid transparent;background:transparent;color:var(--ivory);
+    border-color:rgba(244,240,232,.55);cursor:pointer;font-family:inherit;
+  }
+  .col.is-first .btn{background:var(--ivory);color:#1a1a1a;border-color:var(--ivory)}
+
+  /* 图片缺失时的同色占位，避免 demo 出现空洞 */
+  .col.no-img{background:#171512}
+  .col.no-img img{display:none}
+
+  /* ===== 进场动效本体（可直接移植到 Vue 项目） ===== */
+  [data-reveal]{
+    opacity:.28;
+    transform:translate3d(var(--tx,0px),var(--ty,0px),0);
+    transition:opacity var(--dur) var(--ease) var(--delay,0ms),
+               transform var(--dur) var(--ease) var(--delay,0ms);
+    will-change:opacity,transform;
+  }
+  [data-reveal].is-visible{opacity:1;transform:translate3d(0,0,0)}
+
+  @media (prefers-reduced-motion: reduce){
+    [data-reveal]{opacity:1;transform:none;transition:none}
+    .doc .note-reduce{color:var(--accent-gold-light)}
+  }
+
+  /* ===== 移动端：纵向图带（与线上一致），位移取消，只留淡入 ===== */
+  @media (max-width: 767px){
+    .doc{padding:32px 16px 24px}
+    .row{flex-direction:column;height:auto}
+    .col{height:96px;flex-basis:auto!important;flex-grow:0!important;flex-direction:row;justify-content:space-between;padding:0 24px;text-align:left}
+    .col .body{flex-direction:row;align-items:center;gap:12px;padding:0}
+    .col .name{font-size:18px;letter-spacing:3px}
+    .col .sub,.col .btn{display:none}
+    .col .shade{background:linear-gradient(90deg,rgba(0,0,0,.72),rgba(0,0,0,.32))}
+    [data-reveal]{transform:none}   /* 移动端不做位移 */
+  }
+
+  details{margin-top:56px;border:1px solid rgba(255,255,255,.1);border-radius:2px;background:var(--surface)}
+  summary{cursor:pointer;padding:14px 20px;font-size:14px;color:var(--accent-gold-light);letter-spacing:1px}
+  details pre{
+    margin:0;padding:0 20px 20px;overflow-x:auto;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:20px;
+    color:rgba(255,255,255,.78);
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+  <h1>业务板块五列 · 滚动进场动效 Demo</h1>
+  <p>对应 <span class="gold">frontend/src/components/home/Segments.vue</span>（桌面五列手风琴、560 高、首列 360 + 其余 4×270）。</p>
+  <p>下面三条图带用同一份素材与同一套列布局，唯一差别是<span class="gold">进场方式</span>：第一条是现状，后两条是两种方案。滚动到图带即可播放，也可以用右侧「重放」再放一次。</p>
+  <div class="params">
+    <span>触发 15% / 底部提前 8%</span>
+    <span>时长 620ms</span>
+    <span>缓动 cubic-bezier(.22,.61,.36,1)</span>
+    <span>错峰 +70ms</span>
+    <span>只动 transform + opacity</span>
+    <span>只触发一次</span>
+  </div>
+  <p class="dim">素材取自 backend/uploads/cover/。若图片未显示（出现同色色块），说明本文件不是从仓库根目录打开的，请把 demo 放到项目根目录再打开。</p>
+
+  <!-- ① 现状 -->
+  <section class="band">
+    <div class="band-head">
+      <h2>① 现状 · 硬出现<span class="tag">无任何进场处理，滚动到时直接出现</span></h2>
+      <span class="tag">此处没有可重放的动效</span>
+    </div>
+    <div class="row" data-band="still">
+      <div class="col is-first" style="flex-grow:36">
+        <img src="./backend/uploads/cover/portrait-natural-light.png" alt="人像写真" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">人像写真</span><span class="sub">自然光 · 真实情绪</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+      <div class="col" style="flex-grow:27">
+        <img src="./backend/uploads/cover/wedding-documentary.png" alt="婚礼纪实" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">婚礼纪实</span><span class="sub">记录仪式每一刻</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+      <div class="col" style="flex-grow:27">
+        <img src="./backend/uploads/cover/commercial-product.png" alt="商业摄影" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">商业摄影</span><span class="sub">品牌影像 · 器物之光</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+      <div class="col" style="flex-grow:27">
+        <img src="./backend/uploads/cover/event-concert-stage.png" alt="活动跟拍" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">活动跟拍</span><span class="sub">现场纪实 · 舞台瞬间</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+      <div class="col" style="flex-grow:27">
+        <img src="./backend/uploads/cover/behind-the-scenes-film-set.png" alt="视频短片" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">视频短片</span><span class="sub">电影感画面叙事</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ② 方案 A -->
+  <section class="band">
+    <div class="band-head">
+      <h2>方案 A · 五列错峰合入<span class="tag">列1/列2 自左，列4/列5 自右，中间列自下方浮起；依次 +70ms</span></h2>
+      <button type="button" data-replay="a">重放</button>
+    </div>
+    <div class="row" data-band="a">
+      <div class="col is-first" data-reveal style="flex-grow:36;--tx:-420px;--delay:0ms">
+        <img src="./backend/uploads/cover/portrait-natural-light.png" alt="人像写真" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">人像写真</span><span class="sub">自然光 · 真实情绪</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+      <div class="col" data-reveal style="flex-grow:27;--tx:-260px;--delay:70ms">
+        <img src="./backend/uploads/cover/wedding-documentary.png" alt="婚礼纪实" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">婚礼纪实</span><span class="sub">记录仪式每一刻</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+      <div class="col" data-reveal style="flex-grow:27;--ty:120px;--delay:140ms">
+        <img src="./backend/uploads/cover/commercial-product.png" alt="商业摄影" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">商业摄影</span><span class="sub">品牌影像 · 器物之光</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+      <div class="col" data-reveal style="flex-grow:27;--tx:260px;--delay:210ms">
+        <img src="./backend/uploads/cover/event-concert-stage.png" alt="活动跟拍" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">活动跟拍</span><span class="sub">现场纪实 · 舞台瞬间</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+      <div class="col" data-reveal style="flex-grow:27;--tx:420px;--delay:280ms">
+        <img src="./backend/uploads/cover/behind-the-scenes-film-set.png" alt="视频短片" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">视频短片</span><span class="sub">电影感画面叙事</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 方案 B -->
+  <section class="band">
+    <div class="band-head">
+      <h2>方案 B · 左右两组整带合拢<span class="tag">左两列同量左移、右两列同量右移（保持列间关系），中间列自下方浮起；整带更齐</span></h2>
+      <button type="button" data-replay="b">重放</button>
+    </div>
+    <div class="row" data-band="b">
+      <div class="col is-first" data-reveal style="flex-grow:36;--tx:-460px;--delay:0ms">
+        <img src="./backend/uploads/cover/portrait-natural-light.png" alt="人像写真" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">人像写真</span><span class="sub">自然光 · 真实情绪</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+      <div class="col" data-reveal style="flex-grow:27;--tx:-460px;--delay:0ms">
+        <img src="./backend/uploads/cover/wedding-documentary.png" alt="婚礼纪实" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">婚礼纪实</span><span class="sub">记录仪式每一刻</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+      <div class="col" data-reveal style="flex-grow:27;--ty:120px;--delay:120ms">
+        <img src="./backend/uploads/cover/commercial-product.png" alt="商业摄影" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">商业摄影</span><span class="sub">品牌影像 · 器物之光</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+      <div class="col" data-reveal style="flex-grow:27;--tx:460px;--delay:0ms">
+        <img src="./backend/uploads/cover/event-concert-stage.png" alt="活动跟拍" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">活动跟拍</span><span class="sub">现场纪实 · 舞台瞬间</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+      <div class="col" data-reveal style="flex-grow:27;--tx:460px;--delay:0ms">
+        <img src="./backend/uploads/cover/behind-the-scenes-film-set.png" alt="视频短片" />
+        <span class="shade"></span>
+        <span class="body"><span class="name">视频短片</span><span class="sub">电影感画面叙事</span><button type="button" class="btn">查看作品</button></span>
+      </div>
+    </div>
+  </section>
+
+  <p class="dim note-reduce" style="margin-top:24px">系统开启「减少动态效果」时，以上三条图带都会直接就位、不做过渡 —— 这是刻意保留的降级。</p>
+
+  <details>
+    <summary>移植到 Vue 项目的最小改动（CSS + 指令）</summary>
+    <pre>
+/* style.css —— 在 .ly-reveal 旁追加方向变体 */
+.ly-reveal-x{
+  opacity:.28;
+  transform:translate3d(var(--reveal-x,0),var(--reveal-y,0),0);
+  transition:opacity 620ms cubic-bezier(.22,.61,.36,1),
+             transform 620ms cubic-bezier(.22,.61,.36,1);
+  transition-delay:var(--reveal-delay,0ms);
+  will-change:opacity,transform;
+}
+.ly-reveal-x.is-visible{opacity:1;transform:translate3d(0,0,0)}
+@media (prefers-reduced-motion:reduce){
+  .ly-reveal-x{opacity:1;transform:none;transition:none}
+}
+@media (max-width:767px){           /* 移动端纵向图带只保留淡入 */
+  .ly-reveal-x{transform:none}
+}
+
+/* Segments.vue —— 给五列加指令（值 = 该列的起始位移与错峰毫秒） */
+<!-- <SegmentColumn
+  v-reveal-x="{ x: -420, delay: 0 }"
+  ... /> -->
+<!-- 列2 { x:-260, delay:70 } 列3 { y:120, delay:140 }
+     列4 { x: 260, delay:210 } 列5 { x: 420, delay:280 } -->
+
+/* useInView.ts —— 新增 vRevealX 指令 */
+export const vRevealX: Directive<HTMLElement, {x?:number;y?:number;delay?:number}> = {
+  mounted(el, binding){
+    const { x = 0, y = 0, delay = 0 } = binding.value ?? {}
+    el.classList.add('ly-reveal-x')
+    el.style.setProperty('--reveal-x', `${x}px`)
+    el.style.setProperty('--reveal-y', `${y}px`)
+    el.style.setProperty('--reveal-delay', `${delay}ms`)
+    if (typeof IntersectionObserver === 'undefined'){
+      el.classList.add('is-visible'); return
+    }
+    const io = new IntersectionObserver(([e]) => {
+      if (e?.isIntersecting){ el.classList.add('is-visible'); io.disconnect() }
+    }, { threshold:0.15, rootMargin:'0px 0px -8% 0px' })
+    io.observe(el)
+    ;(el as HTMLElement & {__ioX?:IntersectionObserver}).__ioX = io
+  },
+  unmounted(el){
+    const h = el as HTMLElement & {__ioX?:IntersectionObserver}
+    h.__ioX?.disconnect(); delete h.__ioX
+  }
+}
+
+/* main.ts —— 注册 */
+app.directive('reveal-x', vRevealX)
+    </pre>
+  </details>
+</div>
+
+<script>
+(function () {
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  function colsOf(band){ return Array.prototype.slice.call(band.querySelectorAll('[data-reveal]')) }
+
+  function play(band){
+    colsOf(band).forEach(function(c){ c.classList.add('is-visible') })
+  }
+
+  /*
+   * 重放：必须先"无过渡复位"，再恢复过渡重新触发。
+   * 若只做 remove → 回流 → 加回，过渡会从当前值反向弹回原位，肉眼看不到变化。
+   */
+  function replay(band, btn){
+    if (btn && btn.dataset.busy) return
+    var list = colsOf(band)
+    if (!list.length) return
+
+    list.forEach(function(c){
+      c.style.transition = 'none'          // ① 掐掉过渡，复位立刻生效
+      c.classList.remove('is-visible')
+    })
+    void band.offsetWidth                  // ② 提交复位后的样式
+
+    requestAnimationFrame(function(){
+      list.forEach(function(c){ c.style.transition = '' })   // ③ 恢复过渡
+      void band.offsetWidth                // ④ 让"过渡已恢复"先落地
+      play(band)                           // ⑤ 再触发，才会真正走满 620ms
+    })
+
+    if (btn){
+      var label = btn.textContent
+      btn.dataset.busy = '1'
+      btn.textContent = '重放中'
+      window.setTimeout(function(){
+        btn.textContent = label
+        delete btn.dataset.busy
+      }, 950)
+    }
+  }
+
+  function arm(band){
+    if (!('IntersectionObserver' in window)) { play(band); return }
+    var io = new IntersectionObserver(function(entries){
+      if (entries[0] && entries[0].isIntersecting){ play(band); io.disconnect() }
+    }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' })
+    io.observe(band)
+  }
+
+  document.querySelectorAll('[data-band]').forEach(function(band){
+    if (band.getAttribute('data-band') === 'still') return   // 现状：不做任何处理
+    arm(band)
+  })
+
+  document.querySelectorAll('[data-replay]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var band = document.querySelector('[data-band="' + btn.getAttribute('data-replay') + '"]')
+      if (band) replay(band, btn)
+    })
+  })
+
+  // 图片缺失时退回同色占位，保证 demo 不出现破图
+  document.querySelectorAll('.col img').forEach(function(img){
+    img.addEventListener('error', function(){
+      var col = img.closest('.col')
+      if (col) col.classList.add('no-img')
+    })
+  })
+
+  if (reduce) {
+    document.querySelectorAll('[data-band]').forEach(play)
+  }
+})();
+</script>
+</body>
+</html>

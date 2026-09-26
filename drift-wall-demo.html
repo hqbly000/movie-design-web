@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DriftWall 影像漂移墙 · Demo</title>
+<style>
+  :root{
+    --bg-base:#0a0a0a;
+    --surface:#14120f;
+    --accent-gold:#c49a4a;
+    --accent-gold-light:#e8c77a;
+    --ivory:#f4f0e8;
+    --font-serif:'Noto Serif SC','Source Han Serif SC','Songti SC','STSong',serif;
+    --font-sans:'Noto Sans SC','Source Han Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg-base);color:#fafafa;
+    font-family:var(--font-sans);-webkit-font-smoothing:antialiased;
+  }
+  .doc{padding:48px 24px 24px;max-width:1440px;margin:0 auto}
+  .doc-head{display:flex;align-items:center;gap:14px}
+  .doc-head img{width:34px;height:34px;object-fit:contain}
+  .doc h1{font-family:var(--font-serif);font-size:28px;font-weight:400;margin:0;letter-spacing:2px}
+  .doc .tag{
+    font-size:11px;letter-spacing:3px;color:var(--accent-gold);
+    border:1px solid rgba(196,154,74,.45);padding:3px 10px;border-radius:2px;white-space:nowrap;
+  }
+  .doc p{margin:12px 0 0;font-size:14px;line-height:24px;color:rgba(255,255,255,.6)}
+  .doc p .gold{color:var(--accent-gold-light)}
+  .doc p .dim{color:rgba(255,255,255,.38);font-size:13px}
+
+  /* ===== 参数面板 ===== */
+  .panel{
+    max-width:1440px;margin:22px auto 0;padding:18px 22px;
+    background:var(--surface);border:1px solid rgba(255,255,255,.07);border-radius:4px;
+  }
+  .panel summary{
+    cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;
+    font-family:var(--font-serif);font-size:15px;letter-spacing:2px;color:var(--ivory);
+    user-select:none;
+  }
+  .panel summary::-webkit-details-marker{display:none}
+  .panel summary::before{content:'▾';color:var(--accent-gold);font-size:12px}
+  .panel:not([open]) summary::before{content:'▸'}
+  .panel summary .hint{font-family:var(--font-sans);font-size:12px;color:rgba(255,255,255,.38);letter-spacing:0}
+  .panel-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px 22px;margin-top:16px;
+  }
+  .ctl{display:flex;flex-direction:column;gap:5px}
+  .ctl .row1{display:flex;justify-content:space-between;align-items:baseline}
+  .ctl label{font-size:12px;color:rgba(255,255,255,.62);letter-spacing:.5px}
+  .ctl label code{color:rgba(232,199,122,.85);font-family:ui-monospace,Consolas,monospace;font-size:11px;margin-left:4px}
+  .ctl output{font-size:12px;color:var(--accent-gold-light);font-family:ui-monospace,Consolas,monospace}
+  .ctl input[type=range]{
+    width:100%;height:18px;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;
+  }
+  .ctl input[type=range]::-webkit-slider-runnable-track{
+    height:2px;background:rgba(255,255,255,.16);border-radius:1px;
+  }
+  .ctl input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;
+    background:var(--accent-gold-light);margin-top:-5px;border:none;
+  }
+  .ctl input[type=range]::-moz-range-track{height:2px;background:rgba(255,255,255,.16);border-radius:1px}
+  .ctl input[type=range]::-moz-range-thumb{
+    width:12px;height:12px;border-radius:50%;background:var(--accent-gold-light);border:none;
+  }
+  .panel-foot{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07)}
+  .seg{display:flex;border:1px solid rgba(232,199,122,.4);border-radius:2px;overflow:hidden}
+  .seg button{
+    font-family:inherit;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,.65);
+    background:transparent;border:none;padding:6px 14px;cursor:pointer;
+  }
+  .seg button.on{background:rgba(196,154,74,.18);color:var(--accent-gold-light)}
+  .chk{
+    display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,.62);
+    cursor:pointer;user-select:none;letter-spacing:.5px;
+  }
+  .chk input{accent-color:var(--accent-gold);width:14px;height:14px;cursor:pointer}
+  .clr{display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,.62)}
+  .clr input{width:26px;height:20px;padding:0;border:1px solid rgba(255,255,255,.2);border-radius:2px;background:transparent;cursor:pointer}
+  .btn-reset{
+    margin-left:auto;font-family:inherit;font-size:12px;letter-spacing:2px;color:var(--accent-gold-light);
+    background:transparent;border:1px solid rgba(232,199,122,.45);padding:6px 16px;border-radius:2px;cursor:pointer;
+    transition:background-color .18s ease,border-color .18s ease;
+  }
+  .btn-reset:hover{background:rgba(196,154,74,.1);border-color:var(--accent-gold-light)}
+
+  /* ===== 墙体舞台 ===== */
+  .stage-wrap{position:relative;max-width:1440px;margin:18px auto 0;padding:0 24px}
+  .stage{
+    position:relative;height:clamp(480px,64vh,660px);
+    border:1px solid rgba(255,255,255,.07);border-radius:4px;overflow:hidden;background:var(--bg-base);
+  }
+
+  /* ===== DriftWall（移植自 React Bits，JS + CSS 变体） ===== */
+  .drift-wall{
+    position:relative;width:100%;height:100%;overflow:hidden;
+    perspective:var(--dw-perspective,1200px);perspective-origin:50% 50%;
+    --dw-tile-w:200px;--dw-tile-h:132px;--dw-gap:18px;--dw-radius:14px;
+    --dw-lift:64px;--dw-dim:0.55;--dw-gray:0;--dw-overlay:#0a0a0a;--dw-edge:40%;
+    -webkit-mask-image:
+      radial-gradient(ellipse 78% 82% at 50% 46%, #000 var(--dw-edge), transparent 100%),
+      linear-gradient(to top, #000 var(--dw-edge), transparent 100%);
+    -webkit-mask-composite:source-in;
+    mask-image:
+      radial-gradient(ellipse 78% 82% at 50% 46%, #000 var(--dw-edge), transparent 100%),
+      linear-gradient(to top, #000 var(--dw-edge), transparent 100%);
+    mask-composite:intersect;
+  }
+  .drift-wall__plane{
+    position:absolute;top:50%;left:50%;display:flex;flex-direction:row;
+    transform-style:preserve-3d;cursor:pointer;transform-origin:50% 50%;will-change:transform;
+  }
+  .drift-wall__col{
+    position:relative;width:calc(var(--dw-tile-w) + var(--dw-gap));
+    transform-style:preserve-3d;
+  }
+  .drift-wall__track{
+    display:flex;flex-direction:column;will-change:transform;transform-style:preserve-3d;
+  }
+  .drift-wall__tile{
+    position:relative;display:block;width:100%;height:calc(var(--dw-tile-h) + var(--dw-gap));
+    flex:0 0 auto;outline:none;transform-style:preserve-3d;
+  }
+  .drift-wall__inner{
+    position:absolute;inset:calc(var(--dw-gap) / 2);display:block;
+    border-radius:var(--dw-radius);overflow:hidden;background:#0b0b12;
+    opacity:var(--dw-dim);transform:translateZ(0);pointer-events:none;
+    transition:
+      transform .42s cubic-bezier(.22,1,.36,1),
+      opacity .42s cubic-bezier(.22,1,.36,1),
+      box-shadow .42s cubic-bezier(.22,1,.36,1);
+  }
+  .drift-wall__tile img{
+    width:100%;height:100%;object-fit:cover;display:block;
+    filter:grayscale(var(--dw-gray)) saturate(.92);
+    transition:filter .42s cubic-bezier(.22,1,.36,1);
+    user-select:none;-webkit-user-drag:none;
+  }
+  .drift-wall__overlay{
+    position:absolute;inset:0;background:var(--dw-overlay);opacity:.42;
+    pointer-events:none;transition:opacity .42s cubic-bezier(.22,1,.36,1);
+  }
+  .drift-wall__caption{
+    position:absolute;inset:auto 0 0 0;padding:26px 12px 10px;
+    background:linear-gradient(transparent,rgba(0,0,0,.74));
+    opacity:0;transform:translateY(6px);pointer-events:none;
+    transition:opacity .42s cubic-bezier(.22,1,.36,1),transform .42s cubic-bezier(.22,1,.36,1);
+  }
+  .drift-wall__caption .t{
+    font-family:var(--font-serif);font-size:13px;letter-spacing:2px;color:var(--accent-gold-light);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .drift-wall__caption .s{font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.66);margin-top:2px}
+  .drift-wall__inner.is-noimg .drift-wall__caption{opacity:1;transform:none}
+  .drift-wall__inner.is-noimg{background:linear-gradient(160deg,#17150f,#0b0b12)}
+  .drift-wall__tile.is-active .drift-wall__inner,
+  .drift-wall__tile:focus-visible .drift-wall__inner{
+    opacity:1;transform:translateZ(var(--dw-lift));
+    box-shadow:0 24px 60px -18px rgba(0,0,0,.7);
+  }
+  .drift-wall__tile.is-active img,
+  .drift-wall__tile:focus-visible img{filter:grayscale(0) saturate(1.05)}
+  .drift-wall__tile.is-active .drift-wall__overlay,
+  .drift-wall__tile:focus-visible .drift-wall__overlay{opacity:0}
+  .drift-wall__tile.is-active .drift-wall__caption,
+  .drift-wall__tile:focus-visible .drift-wall__caption{opacity:1;transform:none}
+  .drift-wall__tile:focus-visible .drift-wall__inner{
+    box-shadow:0 24px 60px -18px rgba(0,0,0,.7),0 0 0 2px rgba(244,240,232,.9);
+  }
+  @media (prefers-reduced-motion: reduce){
+    .drift-wall__plane,.drift-wall__track{will-change:auto}
+  }
+
+  /* ===== 中央标语（盖在墙上，不参与遮罩） ===== */
+  .slogan{
+    position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:14px;pointer-events:none;text-align:center;
+  }
+  .slogan .en{font-size:11px;letter-spacing:6px;color:rgba(244,240,232,.5);margin:0}
+  .slogan h2{
+    font-family:var(--font-serif);font-size:clamp(28px,4vw,42px);font-weight:400;
+    letter-spacing:10px;color:var(--ivory);margin:0;text-shadow:0 4px 30px rgba(0,0,0,.85);
+  }
+  .slogan .sub{font-size:13px;letter-spacing:4px;color:rgba(244,240,232,.72);margin:0;text-shadow:0 2px 16px rgba(0,0,0,.8)}
+  .slogan .line{width:56px;height:1px;background:linear-gradient(90deg,transparent,var(--accent-gold),transparent)}
+
+  .foot{
+    max-width:1440px;margin:18px auto 40px;padding:0 24px;
+    font-size:12px;line-height:22px;color:rgba(255,255,255,.36);
+  }
+  .foot .gold{color:rgba(232,199,122,.7)}
+</style>
+</head>
+<body>
+
+<header class="doc">
+  <div class="doc-head">
+    <img src="frontend/public/images/logo-on-dark.png" alt="交点影视" />
+    <h1>DriftWall 影像漂移墙</h1>
+    <span class="tag">REACT BITS · VANILLA 移植</span>
+  </div>
+  <p>
+    3D 漂移影像墙：多列图块绕主方向交替漂移，鼠标视差倾斜、悬停抬升并暂停该列，边缘自然消隐。
+    图片取自官网 <span class="gold">backend/uploads/cover</span>，文案取自官网兜底数据。
+    <span class="dim">下方面板可实时调节全部 props。</span>
+  </p>
+</header>
+
+<details class="panel" id="panel" open>
+  <summary>参数面板 <span class="hint">对应 DriftWall 的 props</span></summary>
+  <div class="panel-grid" id="panel-grid"></div>
+  <div class="panel-foot">
+    <div class="seg" id="seg-direction">
+      <button data-v="up" class="on">向上 up</button>
+      <button data-v="down">向下 down</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="ck-pause" /> pauseOnHover 悬停整墙暂停</label>
+    <label class="chk"><input type="checkbox" id="ck-gray" /> grayscale 静默去色</label>
+    <label class="chk"><input type="checkbox" id="ck-slogan" checked /> 显示中央标语</label>
+    <div class="clr">overlayColor <input type="color" id="clr-overlay" value="#0a0a0a" /></div>
+    <button class="btn-reset" id="btn-reset">还原默认参数</button>
+  </div>
+</details>
+
+<div class="stage-wrap">
+  <div class="stage">
+    <div class="drift-wall" id="wall" role="group" aria-label="漂移影像墙"></div>
+    <div class="slogan" id="slogan">
+      <p class="en">DRIFTING WALL OF LIGHT</p>
+      <h2>以光影，铭记时光</h2>
+      <div class="line"></div>
+      <p class="sub">人像写真 · 婚礼纪实 · 商业摄影</p>
+    </div>
+  </div>
+</div>
+
+<footer class="foot">
+  图片来自 <span class="gold">backend/uploads/cover/</span>（与 demo 同仓库，双击本文件即可打开；若移动文件请保持相对路径）。
+  组件来源：React Bits <span class="gold">DriftWall</span>（JavaScript + CSS 变体），本页为无构建依赖的原生 JS 移植。
+  官网 frontend 为 Vue 3，集成时可将 buildWall / 动画循环封装为组件挂载到首屏 hero。
+</footer>
+
+<script>
+/* ========= 官网图片（backend/uploads/cover）+ 官网兜底文案 ========= */
+const ITEMS = [
+  { image: 'backend/uploads/cover/cinematic-wide.png',            title: '以光影，铭记时光', sub: '电影感宽幅' },
+  { image: 'backend/uploads/cover/portrait-natural-light.png',    title: '自然光人像',       sub: '窗边 · 真实情绪' },
+  { image: 'backend/uploads/cover/wedding-documentary.png',       title: '婚礼纪实',         sub: '誓言' },
+  { image: 'backend/uploads/cover/night-cityscape.png',           title: '城市之上，光在流动', sub: '夜景纪实' },
+  { image: 'backend/uploads/cover/backlit-portrait-golden-hour.png', title: '逆光人像',      sub: '黄金时刻' },
+  { image: 'backend/uploads/cover/commercial-product.png',        title: '商业产品',         sub: '器物之光' },
+  { image: 'backend/uploads/cover/event-concert-stage.png',       title: '活动跟拍',         sub: '演唱会现场' },
+  { image: 'backend/uploads/cover/still-life-ceramic.png',        title: '静物摄影',         sub: '陶与光' },
+  { image: 'backend/uploads/cover/travel-foggy-mountain.png',     title: '旅拍',             sub: '雾中山峦' },
+  { image: 'backend/uploads/cover/wedding-detail-hands.png',      title: '婚礼细节',         sub: '交换戒指' },
+  { image: 'backend/uploads/cover/behind-the-scenes-film-set.png', title: '视频短片',        sub: '片场纪实' },
+  // 第二轮铺开，让每列图更多、重复感更低
+  { image: 'backend/uploads/cover/travel-foggy-mountain.png',     title: '旅拍',             sub: '雾中山峦' },
+  { image: 'backend/uploads/cover/wedding-documentary.png',       title: '婚礼纪实',         sub: '誓言' },
+  { image: 'backend/uploads/cover/portrait-natural-light.png',    title: '自然光人像',       sub: '窗边 · 真实情绪' },
+  { image: 'backend/uploads/cover/event-concert-stage.png',       title: '活动跟拍',         sub: '演唱会现场' },
+  { image: 'backend/uploads/cover/night-cityscape.png',           title: '城市之上，光在流动', sub: '夜景纪实' },
+  { image: 'backend/uploads/cover/still-life-ceramic.png',        title: '静物摄影',         sub: '陶与光' },
+  { image: 'backend/uploads/cover/cinematic-wide.png',            title: '以光影，铭记时光', sub: '电影感宽幅' },
+  { image: 'backend/uploads/cover/backlit-portrait-golden-hour.png', title: '逆光人像',      sub: '黄金时刻' },
+  { image: 'backend/uploads/cover/behind-the-scenes-film-set.png', title: '视频短片',        sub: '片场纪实' },
+  { image: 'backend/uploads/cover/wedding-detail-hands.png',      title: '婚礼细节',         sub: '交换戒指' },
+  { image: 'backend/uploads/cover/commercial-product.png',        title: '商业产品',         sub: '器物之光' }
+];
+
+const DEFAULTS = {
+  columns: 5, tileWidth: 200, tileHeight: 132, gap: 18, radius: 14,
+  tilt: 40, turn: 0, roll: 0, perspective: 600, depth: 120,
+  speed: 42, direction: 'up', variance: 0.45, parallax: 0.6,
+  pauseOnHover: false, lift: 104, fade: 0.6, dim: 0.55,
+  grayscale: false, overlayColor: '#0a0a0a'
+};
+const cfg = { ...DEFAULTS };
+
+const wall = document.getElementById('wall');
+const plane = document.createElement('div');
+plane.className = 'drift-wall__plane';
+wall.appendChild(plane);
+
+let trackEls = [];
+let offsets = [];
+let velocities = [];
+let copyHeights = [];
+let activeTile = null;
+let hoveredCol = -1;
+let wallHovered = false;
+const pointer = { x: 0, y: 0 };
+const pointerDamped = { x: 0, y: 0 };
+let lastTs = null;
+let rafId = null;
+let reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const columnFactor = (index, variance) => {
+  const pseudo = ((index * 0.6180339887 + 0.35) % 1) * 2 - 1;
+  return 1 + variance * pseudo;
+};
+const baseVelocities = () => {
+  const dirSign = cfg.direction === 'up' ? 1 : -1;
+  return Array.from({ length: cfg.columns }, (_, c) =>
+    cfg.speed * columnFactor(c, cfg.variance) * dirSign * (c % 2 === 0 ? 1 : -1)
+  );
+};
+
+/* ========= 构建墙体 ========= */
+function buildWall(preserve) {
+  const prevOffsets = preserve ? offsets.slice() : null;
+  plane.innerHTML = '';
+  trackEls = [];
+
+  const unit = cfg.tileHeight + cfg.gap;
+  const cols = Array.from({ length: cfg.columns }, () => []);
+  ITEMS.forEach((item, i) => cols[i % cfg.columns].push(item));
+  const containerHeight = wall.clientHeight || 600;
+
+  cols.forEach((col, c) => {
+    const colEl = document.createElement('div');
+    colEl.className = 'drift-wall__col';
+    const track = document.createElement('div');
+    track.className = 'drift-wall__track';
+
+    const copyHeight = Math.max(unit, col.length * unit);
+    const copies = Math.max(2, Math.ceil((containerHeight * 1.6) / copyHeight) + 1);
+    copyHeights[c] = copyHeight;
+
+    for (let copy = 0; copy < copies; copy++) {
+      col.forEach((item, i) => {
+        const id = `${c}-${copy}-${i}`;
+        const tile = document.createElement('div');
+        tile.className = 'drift-wall__tile';
+        tile.dataset.tileId = id;
+        tile.dataset.col = c;
+        tile.tabIndex = 0;
+        tile.setAttribute('role', 'button');
+        tile.setAttribute('aria-label', item.title);
+
+        const inner = document.createElement('span');
+        inner.className = 'drift-wall__inner';
+
+        const img = document.createElement('img');
+        img.src = item.image;
+        img.alt = item.title;
+        img.decoding = 'async';
+        img.draggable = false;
+        img.addEventListener('error', () => inner.classList.add('is-noimg'));
+
+        const overlay = document.createElement('span');
+        overlay.className = 'drift-wall__overlay';
+        overlay.setAttribute('aria-hidden', 'true');
+
+        const caption = document.createElement('span');
+        caption.className = 'drift-wall__caption';
+        const t = document.createElement('span'); t.className = 't'; t.textContent = item.title;
+        const s = document.createElement('span'); s.className = 's'; s.textContent = item.sub;
+        caption.append(t, s);
+
+        inner.append(img, overlay, caption);
+        tile.appendChild(inner);
+        track.appendChild(tile);
+      });
+    }
+
+    colEl.appendChild(track);
+    plane.appendChild(colEl);
+    trackEls[c] = track;
+    track.style.transform = `translate3d(0, ${-(offsets[c] ?? 0)}px, 0)`;
+  });
+
+  offsets = cols.map((_, c) => {
+    const kept = preserve && prevOffsets && prevOffsets.length === cfg.columns ? prevOffsets[c] : null;
+    return kept ?? copyHeights[c] * ((c * 0.37) % 1);
+  });
+  velocities = Array.from({ length: cfg.columns }, () => 0);
+}
+
+/* ========= 动画循环 ========= */
+function applyPlaneTransform(px, py) {
+  plane.style.transform =
+    `translate(-50%, -50%) scale(1.18) ` +
+    `rotateX(${cfg.tilt + py}deg) rotateY(${cfg.turn + px}deg) rotateZ(${cfg.roll}deg) ` +
+    `translateZ(${-cfg.depth}px)`;
+}
+
+function animate(ts) {
+  if (lastTs === null) lastTs = ts;
+  const dt = Math.min(0.05, Math.max(0, ts - lastTs) / 1000);
+  lastTs = ts;
+
+  const maxTilt = cfg.parallax * 8;
+  const targetX = pointer.x * maxTilt;
+  const targetY = -pointer.y * maxTilt;
+  const damp = 1 - Math.exp(-dt / 0.12);
+  pointerDamped.x += (targetX - pointerDamped.x) * damp;
+  pointerDamped.y += (targetY - pointerDamped.y) * damp;
+  applyPlaneTransform(pointerDamped.x, pointerDamped.y);
+
+  const base = baseVelocities();
+  for (let c = 0; c < trackEls.length; c++) {
+    const paused = wallHovered && cfg.pauseOnHover;
+    const factor = paused || hoveredCol === c ? 0 : 1;
+    const target = base[c] * factor;
+    const ease = 1 - Math.exp(-dt / (target === 0 ? 0.16 : 0.28));
+    velocities[c] += (target - velocities[c]) * ease;
+    let next = (offsets[c] ?? 0) + velocities[c] * dt;
+    next = ((next % copyHeights[c]) + copyHeights[c]) % copyHeights[c];
+    offsets[c] = next;
+    trackEls[c].style.transform = `translate3d(0, ${-next}px, 0)`;
+  }
+  rafId = requestAnimationFrame(animate);
+}
+
+function startLoop() {
+  if (rafId !== null || reduced) { applyPlaneTransform(0, 0); return; }
+  lastTs = null;
+  rafId = requestAnimationFrame(animate);
+}
+function stopLoop() {
+  if (rafId !== null) cancelAnimationFrame(rafId);
+  rafId = null;
+  lastTs = null;
+}
+
+/* ========= 指针交互 ========= */
+function activate(tile, col) {
+  if (activeTile === tile) return;
+  if (activeTile) activeTile.classList.remove('is-active');
+  activeTile = tile;
+  tile.classList.add('is-active');
+  hoveredCol = col;
+}
+function release() {
+  if (activeTile) activeTile.classList.remove('is-active');
+  activeTile = null;
+  hoveredCol = -1;
+}
+
+wall.addEventListener('pointermove', e => {
+  const rect = wall.getBoundingClientRect();
+  if (cfg.parallax > 0 && !reduced) {
+    pointer.x = (e.clientX - rect.left) / rect.width - 0.5;
+    pointer.y = (e.clientY - rect.top) / rect.height - 0.5;
+  }
+  const hit = document.elementFromPoint(e.clientX, e.clientY);
+  const tile = hit && hit.closest ? hit.closest('[data-tile-id]') : null;
+  if (tile) activate(tile, Number(tile.dataset.col));
+});
+wall.addEventListener('pointerleave', () => {
+  wallHovered = false;
+  pointer.x = 0; pointer.y = 0;
+  release();
+});
+wall.addEventListener('pointerenter', () => { wallHovered = true; });
+wall.addEventListener('focusin', e => {
+  const tile = e.target.closest && e.target.closest('[data-tile-id]');
+  if (tile) activate(tile, Number(tile.dataset.col));
+});
+wall.addEventListener('focusout', () => release());
+
+/* ========= CSS 变量同步 ========= */
+function syncVars() {
+  const s = wall.style;
+  s.setProperty('--dw-tile-w', cfg.tileWidth + 'px');
+  s.setProperty('--dw-tile-h', cfg.tileHeight + 'px');
+  s.setProperty('--dw-gap', cfg.gap + 'px');
+  s.setProperty('--dw-radius', cfg.radius + 'px');
+  s.setProperty('--dw-perspective', cfg.perspective + 'px');
+  s.setProperty('--dw-lift', cfg.lift + 'px');
+  s.setProperty('--dw-dim', cfg.dim);
+  s.setProperty('--dw-gray', cfg.grayscale ? 1 : 0);
+  s.setProperty('--dw-overlay', cfg.overlayColor);
+  s.setProperty('--dw-edge', Math.max(0, (1 - cfg.fade) * 100) + '%');
+}
+
+/* ========= 参数面板 ========= */
+const SLIDERS = [
+  { key: 'columns',     label: '列数',         prop: 'columns',     min: 3,    max: 9,    step: 1,   rebuild: true },
+  { key: 'tileWidth',   label: '瓦片宽',       prop: 'tileWidth',   min: 120,  max: 320,  step: 2 },
+  { key: 'tileHeight',  label: '瓦片高',       prop: 'tileHeight',  min: 80,   max: 240,  step: 2 },
+  { key: 'gap',         label: '间距',         prop: 'gap',         min: 6,    max: 40,   step: 1 },
+  { key: 'radius',      label: '圆角',         prop: 'radius',      min: 0,    max: 24,   step: 1 },
+  { key: 'speed',       label: '漂移速度',     prop: 'speed',       min: 0,    max: 120,  step: 1 },
+  { key: 'variance',    label: '列速差异',     prop: 'variance',    min: 0,    max: 1,    step: 0.05 },
+  { key: 'tilt',        label: '俯仰',         prop: 'tilt',        min: 0,    max: 60,   step: 1 },
+  { key: 'turn',        label: '偏航',         prop: 'turn',        min: -40,  max: 40,   step: 1 },
+  { key: 'roll',        label: '横滚',         prop: 'roll',        min: -30,  max: 30,   step: 1 },
+  { key: 'perspective', label: '透视距离',     prop: 'perspective', min: 400,  max: 2000, step: 20 },
+  { key: 'depth',       label: '纵深',         prop: 'depth',       min: 0,    max: 400,  step: 5 },
+  { key: 'parallax',    label: '视差强度',     prop: 'parallax',    min: 0,    max: 1.5,  step: 0.05 },
+  { key: 'lift',        label: '悬浮抬升',     prop: 'lift',        min: 0,    max: 200,  step: 2 },
+  { key: 'dim',         label: '静默暗度',     prop: 'dim',         min: 0,    max: 1,    step: 0.05 },
+  { key: 'fade',        label: '边缘消隐',     prop: 'fade',        min: 0,    max: 1,    step: 0.05 }
+];
+
+const grid = document.getElementById('panel-grid');
+const sliderEls = {};
+SLIDERS.forEach(sl => {
+  const box = document.createElement('div');
+  box.className = 'ctl';
+  const row1 = document.createElement('div'); row1.className = 'row1';
+  const label = document.createElement('label');
+  label.innerHTML = `${sl.label}<code>${sl.prop}</code>`;
+  const output = document.createElement('output');
+  output.textContent = cfg[sl.key];
+  row1.append(label, output);
+  const input = document.createElement('input');
+  input.type = 'range';
+  input.min = sl.min; input.max = sl.max; input.step = sl.step;
+  input.value = cfg[sl.key];
+  input.addEventListener('input', () => {
+    cfg[sl.key] = Number(input.value);
+    output.textContent = input.value;
+    if (sl.rebuild) buildWall(true);
+    else {
+      syncVars();
+      if (['speed', 'variance'].includes(sl.key)) velocities = Array.from({ length: cfg.columns }, () => 0);
+      if (reduced) applyPlaneTransform(0, 0);
+    }
+  });
+  box.append(row1, input);
+  grid.appendChild(box);
+  sliderEls[sl.key] = { input, output };
+});
+
+const segDirection = document.getElementById('seg-direction');
+segDirection.addEventListener('click', e => {
+  const btn = e.target.closest('button'); if (!btn) return;
+  cfg.direction = btn.dataset.v;
+  segDirection.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === btn));
+  velocities = Array.from({ length: cfg.columns }, () => 0);
+});
+
+document.getElementById('ck-pause').addEventListener('change', e => { cfg.pauseOnHover = e.target.checked; });
+document.getElementById('ck-gray').addEventListener('change', e => { cfg.grayscale = e.target.checked; syncVars(); });
+document.getElementById('ck-slogan').addEventListener('change', e => {
+  document.getElementById('slogan').style.display = e.target.checked ? '' : 'none';
+});
+document.getElementById('clr-overlay').addEventListener('input', e => {
+  cfg.overlayColor = e.target.value; syncVars();
+});
+document.getElementById('btn-reset').addEventListener('click', () => {
+  Object.assign(cfg, DEFAULTS);
+  SLIDERS.forEach(sl => {
+    sliderEls[sl.key].input.value = cfg[sl.key];
+    sliderEls[sl.key].output.textContent = cfg[sl.key];
+  });
+  segDirection.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === cfg.direction));
+  document.getElementById('ck-pause').checked = false;
+  document.getElementById('ck-gray').checked = false;
+  document.getElementById('ck-slogan').checked = true;
+  document.getElementById('slogan').style.display = '';
+  document.getElementById('clr-overlay').value = DEFAULTS.overlayColor;
+  syncVars();
+  buildWall(true);
+  if (reduced) applyPlaneTransform(0, 0);
+});
+
+/* ========= 尺寸 / 减弱动态 ========= */
+let resizeTimer = null;
+new ResizeObserver(() => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => buildWall(true), 160);
+}).observe(wall);
+
+window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', e => {
+  reduced = e.matches;
+  if (reduced) stopLoop(); else startLoop();
+});
+
+/* ========= 启动 ========= */
+syncVars();
+buildWall(false);
+startLoop();
+</script>
+</body>
+</html>

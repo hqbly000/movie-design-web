@@ -230,6 +230,29 @@
     opacity: 1;
     transform: translateY(0);
   }
+
+  /* 方案A · 五列错峰合入（segments-motion-demo.html）：起始位移与错峰延迟
+     由 v-reveal-x 注入 --reveal-x/--reveal-y/--reveal-delay。
+     桌面列根的内联 transition（手风琴 flex-grow）会整体覆盖类内过渡，
+     因此桌面端的 opacity/transform 过渡在 SegmentColumn 的内联样式中合并声明，
+     类内过渡供移动端根（无内联样式）使用。 */
+  .ly-reveal-x {
+    opacity: 0.28;
+    transform: translate3d(var(--reveal-x, 0px), var(--reveal-y, 0px), 0);
+    transition: opacity 620ms cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0ms),
+      transform 620ms cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0ms);
+    will-change: opacity, transform;
+  }
+  .ly-reveal-x.is-visible {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  /* 移动端纵向图带不做位移，只保留淡入 */
+  @media (max-width: 767px) {
+    .ly-reveal-x {
+      transform: none;
+    }
+  }
 }
 
 /* 锚点滚动时为固定 Header 预留间距（§2.1） */

@@ -9,7 +9,7 @@
  * 「探索详情」按钮打开公司详情遮罩（CompanyDetailOverlay）。
  */
 import SectionKicker from '@/components/common/SectionKicker.vue'
-import AppButton from '@/components/common/AppButton.vue'
+import SpecularButton from '@/components/common/SpecularButton.vue'
 import YearEmblem from '@/components/home/YearEmblem.vue'
 import { useUiStore } from '@/stores/ui'
 import type { CompanyProfile } from '@/types/site'
@@ -63,11 +63,9 @@ const ui = useUiStore()
           <YearEmblem :founded-year="profile?.founded_year ?? 2017" />
         </div>
 
-        <!-- 主按钮（金描边，全站唯一）：打开公司详情遮罩 -->
+        <!-- 主按钮（边缘流光样式，与业务板块统一）：打开公司详情遮罩 -->
         <div v-reveal="320" class="pt-2 lg:col-start-1 lg:row-start-2">
-          <AppButton variant="gold-outline" @click="ui.openCompany()">
-            探索详情
-          </AppButton>
+          <SpecularButton @click="ui.openCompany()">探索详情</SpecularButton>
         </div>
       </div>
     </div>

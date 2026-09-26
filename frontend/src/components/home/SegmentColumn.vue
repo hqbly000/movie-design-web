@@ -51,7 +51,13 @@ const columnStyle = computed<Record<string, string>>(() => ({
   flexGrow: String(props.grow),
   flexShrink: '1',
   flexBasis: '0%',
-  transition: 'flex-grow 220ms cubic-bezier(0.22, 0.61, 0.36, 1)'
+  // 内联 transition 会整体覆盖 .ly-reveal-x 的类内过渡，因此把手风琴（flex-grow 220ms）
+  // 与进场（opacity/transform 620ms，延迟由 v-reveal-x 注入的 --reveal-delay 控制）合并声明
+  transition: [
+    'flex-grow 220ms cubic-bezier(0.22, 0.61, 0.36, 1) 0ms',
+    'opacity 620ms cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0ms)',
+    'transform 620ms cubic-bezier(0.22, 0.61, 0.36, 1) var(--reveal-delay, 0ms)'
+  ].join(', ')
 }))
 
 /** 移动端图带的内容类型标注（gallery/article）。 */
