@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import Enum, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Enum, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.mysql import BIGINT, TINYINT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,6 +23,8 @@ class Segment(Base):
         nullable=False,
         default="video",
     )
+    # article 类型为正文（空行分段）；video / gallery 类型可作为板块简介展示
+    body: Mapped[str | None] = mapped_column(Text, nullable=True)
     sort: Mapped[int] = mapped_column(TINYINT, nullable=False, default=0, unique=True)
 
     items: Mapped[list["SegmentItem"]] = relationship(

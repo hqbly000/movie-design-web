@@ -108,12 +108,14 @@ export interface CompanyProfile {
   company_name: string
   founded_year: number
   intro_text: string | null
+  long_intro: string | null
 }
 export interface CompanyProfileIn {
   section_title: string
   company_name: string
   founded_year: number
   intro_text: string | null
+  long_intro: string | null
 }
 
 /* ---------- 业务板块 ---------- */
@@ -123,6 +125,7 @@ export interface Segment {
   preview_image_id: number | null
   preview_image_url: string | null
   content_type: SegmentContentType
+  body: string | null
   sort: number
   item_ids: number[]
   item_count: number
@@ -131,6 +134,7 @@ export interface SegmentUpdateIn {
   name: string
   preview_image_url: string | null
   content_type: SegmentContentType
+  body?: string | null
   item_ids: number[]
   item_type?: SegmentItemType | null
 }

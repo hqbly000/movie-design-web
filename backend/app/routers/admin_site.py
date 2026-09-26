@@ -114,6 +114,7 @@ def get_company_profile(
             "company_name": company.company_name,
             "founded_year": company.founded_year,
             "intro_text": company.intro_text,
+            "long_intro": company.long_intro,
         }
     )
 
@@ -136,6 +137,7 @@ def save_company_profile(
     company.company_name = payload.company_name
     company.founded_year = payload.founded_year
     company.intro_text = payload.intro_text
+    company.long_intro = payload.long_intro
     company.updated_by = current_user.id
 
     db.commit()
@@ -157,6 +159,7 @@ def _segment_to_dict(db: Session, segment: Segment) -> dict[str, Any]:
         "preview_image_id": segment.preview_image_id,
         "preview_image_url": segment.preview_image_url,
         "content_type": segment.content_type,
+        "body": segment.body,
         "sort": segment.sort,
         "item_ids": [item.target_id for item in items],
         "item_count": len(items),
@@ -213,6 +216,7 @@ def update_segment(
 
     segment.name = payload.name
     segment.content_type = payload.content_type
+    segment.body = payload.body
     if payload.preview_image_url is not None:
         segment.preview_image_url = payload.preview_image_url
         asset_id = db.scalar(select(Asset.id).where(Asset.url == payload.preview_image_url))

@@ -14,6 +14,7 @@ class CompanyProfileOut(BaseModel):
     company_name: str
     founded_year: int
     intro_text: str | None = None
+    long_intro: str | None = None
 
 
 class CompanyProfileIn(BaseModel):
@@ -23,3 +24,4 @@ class CompanyProfileIn(BaseModel):
     company_name: str = Field(min_length=1, max_length=64)
     founded_year: int = Field(ge=1900, le=2100)
     intro_text: str | None = Field(default=None, max_length=2000)
+    long_intro: str | None = Field(default=None, max_length=16000)

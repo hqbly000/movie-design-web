@@ -35,7 +35,7 @@ jiaodian/
 | `/admin` | 同上（明亮 Apple/Meta 系统风） | 5174 | `admin/src/main.ts` |
 | `/backend` | FastAPI · SQLAlchemy 2.x · PyMySQL · JWT · bcrypt | 8000 | `backend/app/main.py` |
 
-官网路由：`/`（首页长滚动）、`/share/:token`（临时合集分享页）
+官网路由：`/`（首页长滚动）、`/share/:token`（临时合集分享页）。二级页为全屏遮罩体系（不走路由）：业务板块按 `content_type` 呈现视频集 / 图片集 / 图文三种形态，公司介绍「探索详情」打开公司详情页；大文本（`segments.body` / `company_profile.long_intro`）不进 `/site` 聚合缓存，遮罩打开时按需请求。
 
 ---
 
@@ -95,6 +95,13 @@ npm run dev     # http://localhost:5174
 ```bash
 cd backend
 ./.venv/Scripts/python.exe -m app.reset
+```
+
+**存量库升级（二级页功能，2026-09-26）**：业务板块详情（视频集/图片集/图文）+ 公司详情遮罩新增
+`segments.body` 与 `company_profile.long_intro` 两个 TEXT 列，存量库执行一次迁移脚本（可重复执行）：
+
+```bash
+"/d/Dev/VM/mysql-8.0.27-winx64/bin/mysql" -h 10.66.237.199 -P 3306 -u root -p12345678   --default-character-set=utf8mb4 lightisle < scripts/migrate-secondary-pages.sql
 ```
 
 该脚本会**清空 `lightisle` 库的全部 14 张业务表并重新灌入种子数据**，执行前后自动打印逐表条数自检

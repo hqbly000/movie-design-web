@@ -54,11 +54,18 @@ const columnStyle = computed<Record<string, string>>(() => ({
   transition: 'flex-grow 220ms cubic-bezier(0.22, 0.61, 0.36, 1)'
 }))
 
-/** 移动端图带也支持内容类型预留（gallery/article 暂按视频处理）。 */
+/** 移动端图带的内容类型标注（gallery/article）。 */
 const contentTypeHint = computed(() => {
   if (props.segment.content_type === 'gallery') return '图集'
   if (props.segment.content_type === 'article') return '文章'
   return ''
+})
+
+/** 按钮文案按内容类型区分（三种形式各有入口语义）。 */
+const ctaLabel = computed(() => {
+  if (props.segment.content_type === 'gallery') return '浏览图集'
+  if (props.segment.content_type === 'article') return '了解详情'
+  return '查看作品'
 })
 </script>
 
@@ -111,10 +118,10 @@ const contentTypeHint = computed(() => {
       <AppButton
         :variant="isFirst ? 'ivory' : 'ivory-outline'"
         class="mt-2"
-        :aria-label="`查看「${segment.name}」作品`"
+        :aria-label="`查看「${segment.name}」${ctaLabel}`"
         @click.stop="emit('open')"
       >
-        查看作品
+        {{ ctaLabel }}
       </AppButton>
     </span>
   </div>
@@ -124,7 +131,7 @@ const contentTypeHint = computed(() => {
     v-else
     type="button"
     class="relative flex h-24 w-full items-center justify-between overflow-hidden px-6 text-left"
-    :aria-label="`查看「${segment.name}」作品`"
+    :aria-label="`查看「${segment.name}」${contentTypeHint || '作品'}`"
     @click="emit('open')"
   >
     <img

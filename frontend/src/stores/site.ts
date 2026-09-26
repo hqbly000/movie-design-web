@@ -7,9 +7,9 @@
 
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { getSiteConfig, getSegmentVideos } from '@/api/public'
-import { FALLBACK_SITE, fallbackSegmentVideos } from '@/api/fallback'
-import type { Segment, SegmentVideos, SiteConfig, SiteSettings } from '@/types/site'
+import { getCompanyDetail, getSegmentContent, getSiteConfig } from '@/api/public'
+import { FALLBACK_COMPANY_DETAIL, FALLBACK_SITE, fallbackSegmentContent } from '@/api/fallback'
+import type { CompanyDetail, Segment, SegmentContent, SiteConfig, SiteSettings } from '@/types/site'
 
 /** 缓存有效时长（毫秒）。 */
 const CACHE_TTL = 60_000
@@ -26,8 +26,10 @@ export const useSiteStore = defineStore('site', () => {
   /** 是否仍在使用兜底数据。 */
   const usingFallback = ref(true)
 
-  /** 板块作品内存缓存（模块级共用一次会话）。 */
-  const segmentCache = new Map<number, SegmentVideos>()
+  /** 板块详情内容缓存（模块级共用一次会话）。 */
+  const segmentContentCache = new Map<number, SegmentContent>()
+  /** 公司详情长文（null = 尚未拉取）。 */
+  const companyDetail = ref<CompanyDetail | null>(null)
 
   const heroSlides = computed(() => config.value.hero_slides)
   const companyProfile = computed(() => config.value.company_profile)
@@ -60,27 +62,34 @@ export const useSiteStore = defineStore('site', () => {
   }
 
   /**
-   * 加载某板块作品（带缓存，失败回退占位数据）。
+   * 加载某板块详情内容（带缓存，失败回退占位数据）。
    * @param segment 板块对象
    */
-  async function loadSegmentVideos(segment: Segment): Promise<SegmentVideos> {
-    const cached = segmentCache.get(segment.id)
+  async function loadSegmentContent(segment: Segment): Promise<SegmentContent> {
+    const cached = segmentContentCache.get(segment.id)
     if (cached) return cached
 
     try {
-      const data = await getSegmentVideos(segment.id)
-      // 当前后端所有板块 content_type 均为 video（gallery / article 为预留枚举值，
-      // 暂无对应数据与接口），因此统一按 videos 列表归一化处理。
-      const normalized: SegmentVideos = {
-        ...data,
-        videos: data.videos ?? []
-      }
-      segmentCache.set(segment.id, normalized)
-      return normalized
+      const data = await getSegmentContent(segment.id)
+      segmentContentCache.set(segment.id, data)
+      return data
     } catch {
-      const fallback = fallbackSegmentVideos(segment.id, segment.name, segment.content_type)
-      return fallback
+      return fallbackSegmentContent(segment.id, segment.name, segment.content_type)
     }
+  }
+
+  /**
+   * 加载公司详情长文（会话内缓存，失败回退兜底文案）。
+   * @param force 强制刷新
+   */
+  async function loadCompanyDetail(force = false): Promise<CompanyDetail> {
+    if (!force && companyDetail.value) return companyDetail.value
+    try {
+      companyDetail.value = await getCompanyDetail()
+    } catch {
+      companyDetail.value = FALLBACK_COMPANY_DETAIL
+    }
+    return companyDetail.value
   }
 
   return {
@@ -94,7 +103,8 @@ export const useSiteStore = defineStore('site', () => {
     honors,
     siteSettings,
     loadSite,
-    loadSegmentVideos
+    loadSegmentContent,
+    loadCompanyDetail
   }
 })
 

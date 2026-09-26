@@ -62,6 +62,8 @@ export interface SiteConfig {
   segments: Segment[]
   honors: Honor[]
   site_settings: SiteSettings
+  /** 已发布视频总数（公司详情统计条派生用）。 */
+  video_count: number
 }
 
 /** 视频作品项。 */
@@ -75,12 +77,39 @@ export interface VideoItem {
   sort?: number
 }
 
-/** 某板块作品列表响应。 */
+/** 某板块作品列表响应（GET /segments/{id}/videos，保留兼容）。 */
 export interface SegmentVideos {
   segment_id: number
   name: string
   content_type: SegmentContentType
   videos: VideoItem[]
+}
+
+/** 板块详情图片项（assets）。 */
+export interface SegmentImage {
+  id: number
+  url: string
+  width: number | null
+  height: number | null
+}
+
+/**
+ * 板块详情内容（GET /segments/{id}/content，遮罩打开时按需拉取）。
+ * 按 content_type 填充：video → videos，gallery → images；body 对
+ * article 为正文、对 video/gallery 为可选简介。
+ */
+export interface SegmentContent {
+  segment_id: number
+  name: string
+  content_type: SegmentContentType
+  body: string | null
+  videos: VideoItem[]
+  images: SegmentImage[]
+}
+
+/** 公司详情长文（GET /company/detail，按需拉取，不进聚合缓存）。 */
+export interface CompanyDetail {
+  long_intro: string | null
 }
 
 /** 预约表单提交载荷（POST /api/public/leads）。 */

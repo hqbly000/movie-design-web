@@ -21,6 +21,8 @@ class CompanyProfile(Base):
     company_name: Mapped[str] = mapped_column(String(64), nullable=False)
     founded_year: Mapped[int] = mapped_column(SMALLINT, nullable=False, default=2017)
     intro_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # 公司详情遮罩长文（首页摘要区仍用 intro_text）
+    long_intro: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_by: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,

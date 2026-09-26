@@ -100,7 +100,8 @@ CREATE TABLE `company_profile` (
   `section_title` VARCHAR(32)  NOT NULL DEFAULT '公司介绍',
   `company_name`  VARCHAR(64)  NOT NULL COMMENT '公司全称',
   `founded_year`  SMALLINT     NOT NULL DEFAULT 2017 COMMENT '成立年份（R5，展示年限=当年-此值，前端计算）',
-  `intro_text`    TEXT         NULL COMMENT '介绍正文',
+  `intro_text`    TEXT         NULL COMMENT '介绍正文（首页摘要）',
+  `long_intro`    TEXT         NULL COMMENT '公司详情遮罩长文（空行分段）',
   `updated_by`    BIGINT UNSIGNED NULL,
   `updated_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
@@ -115,6 +116,7 @@ CREATE TABLE `segments` (
   `preview_image_url` VARCHAR(255) NULL COMMENT '快照 URL',
   `content_type`      ENUM('video','gallery','article') NOT NULL DEFAULT 'video'
                       COMMENT '内部属性，客户端不可见（R26）',
+  `body`              TEXT         NULL COMMENT 'article 正文 / video·gallery 板块简介（空行分段）',
   `sort`              TINYINT      NOT NULL DEFAULT 0 COMMENT '0~4 → 官网五列顺序',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_segment_sort` (`sort`)

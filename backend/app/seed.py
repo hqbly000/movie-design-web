@@ -201,12 +201,22 @@ def _seed_company_profile(db: Session) -> None:
         "我们相信每一次相遇都值得被认真记录。九年来，团队以自然光与电影感为语言，"
         "为个人与品牌留下经得起时间回望的画面。"
     )
+    long_intro = (
+        "交点影视成立于 2017 年，从两个人、一台机身、一间借来的工作室开始，"
+        "到今天拥有自己的影棚，和一支覆盖摄影、剪辑、调色的完整团队。\n\n"
+        "我们拍人像、婚礼、商业与活动影像，也拍短片。题材不同，方法是一样的："
+        "先花时间听懂对方想留住什么，再决定光从哪里来。这份「听懂」通常发生在"
+        "开拍前的那通电话里，而不是拍摄现场。\n\n"
+        "我们不追热门滤镜，也不做一眼能认出是同一套预设的片子。每一次拍摄结束后，"
+        "原始文件都会归档一份——因为你可能会在三年后，想要一张当年没修过的原图。"
+    )
     db.add(
         CompanyProfile(
             section_title="公司介绍",
             company_name="交点影视",
             founded_year=2017,
             intro_text=intro,
+            long_intro=long_intro,
         )
     )
     db.commit()
@@ -221,6 +231,29 @@ def _seed_segments(db: Session, assets: dict[str, Asset]) -> dict[str, Segment]:
         ("event", "活动跟拍", "event-concert-stage.png"),
         ("video", "视频短片", "behind-the-scenes-film-set.png"),
     ]
+    bodies = {
+        "portrait": (
+            "人像是我们最日常的题材，也是最难的一次。镜头前的人多半不习惯被注视，"
+            "所以开拍的前二十分钟我们通常不谈构图——先让手有地方放，让呼吸慢下来，"
+            "等你忘了相机在的时候，第一张能看的照片就出现了。"
+        ),
+        "wedding": (
+            "仪式的转折总在下午四点后，所以我们只接全天跟拍。从晨间的准备到最后的送客，"
+            "我们以纪实的位置待在故事旁边，不打断、不摆布，把这一天完整交还给你们。"
+        ),
+        "commercial": (
+            "品牌影像是器物之光。我们先理解产品被制造的理由，再决定光从哪里来——"
+            "棚拍控光呈现材质细节，场景实拍交代使用情境，让画面替产品说出第一句话。"
+        ),
+        "event": (
+            "现场纪实没有彩排。我们提前与主办方对流程与机位，双机位覆盖舞台与观众席，"
+            "捕捉那些注定只发生一次的瞬间，并在 48 小时内交付精选快剪。"
+        ),
+        "video": (
+            "短片是交点的母语。从脚本、拍摄到调色与声音设计，我们以电影感的画面叙事"
+            "承接品牌片、活动快剪与个人短片，让十五秒也能有起承转合。"
+        ),
+    }
     result: dict[str, Segment] = {}
     for sort, (key, name, filename) in enumerate(wanted):
         segment = db.execute(select(Segment).where(Segment.sort == sort)).scalar_one_or_none()
@@ -232,10 +265,13 @@ def _seed_segments(db: Session, assets: dict[str, Asset]) -> dict[str, Segment]:
                 preview_image_id=asset.id if asset else None,
                 preview_image_url=url,
                 content_type="video",
+                body=bodies.get(key),
                 sort=sort,
             )
             db.add(segment)
             db.flush()
+        elif not (segment.body or "").strip():
+            segment.body = bodies.get(key)
         result[key] = segment
     db.commit()
     return result

@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>二级页原型 V2 · 通用遮罩体系（一套壳 + 三种内容体 + 公司详情）</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ===================== 与 frontend/tailwind.config.js 同源 tokens ===================== */
+      :root {
+        --bg-base: #0a0a0a;
+        --surface: #14120f;
+        --hairline: #1f1f1f;
+        --text-primary: #fafafa;
+        --accent-gold: #c49a4a;
+        --accent-gold-light: #e8c77a;
+        --hl-gold: #f0d9a0;
+        --ivory: #f4f0e8;
+        --font-serif: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
+        --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+        --font-latin: 'Cormorant', 'Times New Roman', serif;
+        --pad: 120px;
+        --img: 'http://124.223.29.189/uploads/cover/';
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #050505;
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      img {
+        display: block;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* ===================== 稿纸外壳（非页面本体） ===================== */
+      .jump {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        padding: 10px 20px;
+        background: rgba(5, 5, 5, 0.94);
+        border-bottom: 1px solid var(--hairline);
+        font-size: 12px;
+        letter-spacing: 1px;
+        backdrop-filter: blur(8px);
+      }
+      .jump i {
+        font-style: normal;
+        color: rgba(255, 255, 255, 0.4);
+      }
+      .jump a {
+        padding: 5px 12px;
+        border: 1px solid rgba(196, 154, 74, 0.45);
+        border-radius: 8px;
+        color: var(--accent-gold-light);
+      }
+      .jump a:hover {
+        background: rgba(196, 154, 74, 0.14);
+      }
+      .stage {
+        width: 1440px;
+        margin: 56px auto 0;
+      }
+      .group + .group {
+        margin-top: 64px;
+      }
+      .tag {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 11px 18px;
+        background: rgba(10, 10, 10, 0.95);
+        border-bottom: 1px solid var(--hairline);
+        font-size: 12px;
+        letter-spacing: 3px;
+        color: var(--accent-gold);
+      }
+      .tag b {
+        font-weight: 700;
+      }
+      .tag span {
+        color: rgba(255, 255, 255, 0.42);
+        letter-spacing: 1px;
+      }
+      .tag .f {
+        font-family: var(--font-latin);
+        font-style: normal;
+        font-size: 11px;
+        letter-spacing: 0.6px;
+        padding: 2px 7px;
+        border-radius: 5px;
+        background: rgba(196, 154, 74, 0.13);
+        border: 1px solid rgba(196, 154, 74, 0.3);
+        color: var(--hl-gold);
+      }
+      .tag .f.new {
+        background: rgba(255, 106, 0, 0.12);
+        border-color: rgba(255, 106, 0, 0.4);
+        color: #ffb37a;
+      }
+      .page {
+        position: relative;
+        background: #050505;
+        overflow: hidden;
+      }
+
+      /* ===================== 通用零件 ===================== */
+      .ly {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 0 var(--pad);
+      }
+      .kicker {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-family: var(--font-latin);
+        font-size: 13px;
+        letter-spacing: 5px;
+        color: var(--accent-gold);
+        text-transform: uppercase;
+      }
+      .kicker::before {
+        content: '';
+        width: 28px;
+        height: 1px;
+        background: var(--accent-gold);
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        height: 46px;
+        padding: 0 28px;
+        border-radius: 10px;
+        font-size: 14px;
+        letter-spacing: 2px;
+        cursor: pointer;
+        transition: all 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      .btn.gold {
+        border: 1px solid rgba(196, 154, 74, 0.7);
+        color: var(--hl-gold);
+        background: transparent;
+      }
+      .btn.gold:hover {
+        background: rgba(196, 154, 74, 0.16);
+        border-color: var(--accent-gold-light);
+      }
+
+      /* ===================== 遮罩壳（DetailOverlay，三种内容体 + 公司页共用） ===================== */
+      /* 真实实现：fixed inset-0 #050505 + overflow-y-auto，Teleport 到 body，
+         打开时 body 滚动锁定，Esc / 右上角关闭后还原滚动位置。 */
+      .ov-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 24px;
+        padding-top: 44px;
+      }
+      .ov-kicker {
+        font-size: 12px;
+        letter-spacing: 4px;
+        color: var(--accent-gold);
+      }
+      .ov-title-row {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        margin-top: 10px;
+      }
+      .ov-title {
+        margin: 0;
+        font-family: var(--font-serif);
+        font-size: 32px;
+        font-weight: 500;
+        letter-spacing: 3px;
+        line-height: 1.2;
+      }
+      .ov-chip {
+        font-size: 11px;
+        letter-spacing: 2px;
+        color: var(--hl-gold);
+        border: 1px solid rgba(196, 154, 74, 0.45);
+        border-radius: 999px;
+        padding: 3px 12px;
+        white-space: nowrap;
+      }
+      .ov-meta {
+        margin-top: 10px;
+        font-size: 12px;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.4);
+      }
+      .ov-close {
+        flex-shrink: 0;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: transparent;
+        color: #fff;
+        cursor: pointer;
+        transition: background 200ms;
+      }
+      .ov-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .ov-close svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        stroke-width: 1.6;
+        fill: none;
+      }
+      .ov-body {
+        padding: 34px 0 56px;
+      }
+      .ov-hint {
+        padding: 0 0 40px;
+        font-size: 11px;
+        letter-spacing: 2px;
+        color: rgba(255, 255, 255, 0.35);
+        text-align: center;
+      }
+
+      /* 相邻板块（通用收尾，三种内容体一致） */
+      .adj {
+        margin-top: 56px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border: 1px solid var(--hairline);
+      }
+      .adj a {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 18px 22px;
+        overflow: hidden;
+        transition: border-color 200ms;
+      }
+      .adj a + a {
+        border-left: 1px solid var(--hairline);
+      }
+      .adj a:hover {
+        border-color: rgba(196, 154, 74, 0.5);
+      }
+      .adj img {
+        width: 128px;
+        height: 72px;
+        object-fit: cover;
+        border-radius: 2px;
+        flex-shrink: 0;
+      }
+      .adj .lab {
+        font-size: 11px;
+        letter-spacing: 2px;
+        color: rgba(255, 255, 255, 0.45);
+      }
+      .adj .nm {
+        margin-top: 6px;
+        font-family: var(--font-serif);
+        font-size: 17px;
+        letter-spacing: 2px;
+        color: var(--ivory);
+      }
+      .adj .next {
+        justify-content: flex-end;
+        text-align: right;
+      }
+
+      /* ===================== 内容体一 · 视频集 ===================== */
+      .v-intro {
+        max-width: 74ch;
+        margin: 0 0 30px;
+        font-size: 15px;
+        line-height: 1.95;
+        color: rgba(255, 255, 255, 0.78);
+      }
+      .v-stage {
+        position: relative;
+        display: flex;
+        justify-content: center;
+      }
+      .v-frame {
+        position: relative;
+        z-index: 2;
+        width: 900px;
+        max-width: 100%;
+        aspect-ratio: 16 / 9;
+        background: #100d0a;
+        border: 1px solid rgba(196, 154, 74, 0.3);
+        border-radius: 2px;
+        box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.9);
+        overflow: hidden;
+      }
+      .v-frame > img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .v-cover-ui {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.62), transparent 42%, rgba(0, 0, 0, 0.35));
+      }
+      .v-cover-top {
+        display: flex;
+        justify-content: space-between;
+        padding: 16px 18px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      .v-cover-top i {
+        font-style: normal;
+        font-size: 10px;
+        letter-spacing: 2px;
+        color: rgba(255, 255, 255, 0.55);
+      }
+      .v-play {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 64px;
+        height: 64px;
+        border-radius: 999px;
+        border: 1px solid rgba(244, 240, 232, 0.55);
+        background: rgba(5, 5, 5, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .v-play::after {
+        content: '';
+        display: block;
+        margin-left: 4px;
+        border-style: solid;
+        border-width: 9px 0 9px 15px;
+        border-color: transparent transparent transparent var(--ivory);
+      }
+      .v-cover-bottom {
+        padding: 14px 18px 16px;
+      }
+      .v-progress {
+        height: 3px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.22);
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
+      .v-progress i {
+        display: block;
+        width: 34%;
+        height: 100%;
+        background: var(--accent-gold);
+      }
+      .v-ctrl {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.72);
+        font-family: var(--font-latin);
+        letter-spacing: 1px;
+      }
+      .v-side {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 300px;
+        height: 169px;
+        border-radius: 2px;
+        overflow: hidden;
+        opacity: 0.5;
+        filter: blur(2px);
+        pointer-events: none;
+      }
+      .v-side img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .v-side.prev {
+        left: -52px;
+      }
+      .v-side.next {
+        right: -52px;
+      }
+      .v-foot {
+        margin-top: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+      .v-count {
+        font-family: var(--font-latin);
+        font-size: 12px;
+        letter-spacing: 3px;
+        color: var(--accent-gold);
+      }
+      .v-nav {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .v-arrow {
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: transparent;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 200ms;
+      }
+      .v-arrow:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .v-arrow svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        stroke-width: 1.6;
+        fill: none;
+      }
+      .v-thumbs {
+        display: flex;
+        gap: 10px;
+      }
+      .v-thumbs .t {
+        position: relative;
+        width: 96px;
+        height: 54px;
+        border-radius: 2px;
+        overflow: hidden;
+        border: 1px solid transparent;
+        padding: 0;
+        cursor: pointer;
+        background: #1a1712;
+      }
+      .v-thumbs .t img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.6;
+      }
+      .v-thumbs .t:hover {
+        border-color: rgba(255, 255, 255, 0.4);
+      }
+      .v-thumbs .t.on {
+        border-color: var(--accent-gold);
+      }
+      .v-thumbs .t.on img {
+        opacity: 1;
+      }
+
+      /* ===================== 内容体二 · 图片集 ===================== */
+      .g-intro {
+        max-width: 74ch;
+        margin: 0 0 30px;
+        font-size: 15px;
+        line-height: 1.95;
+        color: rgba(255, 255, 255, 0.78);
+      }
+      .g-grid {
+        columns: 3;
+        column-gap: 14px;
+      }
+      .g-item {
+        position: relative;
+        display: block;
+        width: 100%;
+        margin: 0 0 14px;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 2px;
+        overflow: hidden;
+        cursor: zoom-in;
+        background: var(--surface);
+        break-inside: avoid;
+      }
+      .g-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 500ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      .g-item:hover img {
+        transform: scale(1.035);
+      }
+      .g-item .cap {
+        position: absolute;
+        inset: auto 0 0 0;
+        padding: 26px 14px 12px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent);
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        opacity: 0;
+        transition: opacity 220ms;
+      }
+      .g-item:hover .cap {
+        opacity: 1;
+      }
+      .g-item .cap span {
+        font-size: 12px;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.92);
+      }
+      .g-item .cap i {
+        font-style: normal;
+        font-family: var(--font-latin);
+        font-size: 12px;
+        color: var(--hl-gold);
+      }
+
+      /* 灯箱（点击大图） */
+      .lb {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 18px;
+        background: rgba(3, 3, 3, 0.96);
+      }
+      .lb.open {
+        display: flex;
+      }
+      .lb img {
+        max-width: 82vw;
+        max-height: 80vh;
+        border-radius: 2px;
+        border: 1px solid rgba(196, 154, 74, 0.25);
+      }
+      .lb .lb-bar {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+      }
+      .lb .lb-count {
+        font-family: var(--font-latin);
+        font-size: 13px;
+        letter-spacing: 3px;
+        color: var(--accent-gold);
+      }
+      .lb .lb-cap {
+        font-size: 12px;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .lb .lb-close {
+        position: absolute;
+        top: 28px;
+        right: 36px;
+      }
+      .lb-close,
+      .lb-arrow {
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: transparent;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+      .lb-close:hover,
+      .lb-arrow:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .lb-close svg,
+      .lb-arrow svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        stroke-width: 1.6;
+        fill: none;
+      }
+
+      /* ===================== 内容体三 · 描述介绍（正文轻格式） ===================== */
+      .prose {
+        max-width: 76ch;
+      }
+      .prose p {
+        margin: 0 0 22px;
+        font-size: 16px;
+        line-height: 2.05;
+        color: rgba(255, 255, 255, 0.78);
+      }
+      .prose p.lead {
+        font-size: 20px;
+        line-height: 1.9;
+        color: var(--ivory);
+      }
+      .prose ul {
+        margin: 0 0 22px;
+        padding: 0;
+        list-style: none;
+      }
+      .prose ul li {
+        position: relative;
+        padding-left: 22px;
+        margin-bottom: 10px;
+        font-size: 15px;
+        line-height: 1.9;
+        color: rgba(255, 255, 255, 0.75);
+      }
+      .prose ul li::before {
+        content: '';
+        position: absolute;
+        left: 2px;
+        top: 0.95em;
+        width: 10px;
+        height: 1px;
+        background: var(--accent-gold);
+      }
+      .prose .kv {
+        display: grid;
+        grid-template-columns: 132px 1fr;
+        gap: 0 18px;
+        padding: 13px 0;
+        border-bottom: 1px solid var(--hairline);
+      }
+      .prose .kv:first-of-type {
+        border-top: 1px solid var(--hairline);
+      }
+      .prose .kv .k {
+        font-size: 13px;
+        letter-spacing: 3px;
+        color: var(--accent-gold);
+        padding-top: 2px;
+      }
+      .prose .kv .v {
+        font-size: 15px;
+        line-height: 1.85;
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      /* ===================== 公司详情页 ===================== */
+      .c-brand-en {
+        margin-top: 12px;
+        font-family: var(--font-latin);
+        font-size: 13px;
+        letter-spacing: 6px;
+        color: rgba(244, 240, 232, 0.4);
+      }
+      .c-lead {
+        max-width: 70ch;
+        margin: 18px 0 0;
+        font-size: 17px;
+        line-height: 1.95;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .c-stats {
+        margin-top: 44px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border-top: 1px solid var(--hairline);
+        border-bottom: 1px solid var(--hairline);
+      }
+      .c-stats > div {
+        padding: 26px 28px;
+      }
+      .c-stats > div + div {
+        border-left: 1px solid var(--hairline);
+      }
+      .c-stats b {
+        font-family: var(--font-latin);
+        font-weight: 400;
+        font-size: 46px;
+        line-height: 1;
+        color: var(--accent-gold);
+      }
+      .c-stats i {
+        font-style: normal;
+        font-size: 14px;
+        color: var(--hl-gold);
+        margin-left: 4px;
+      }
+      .c-stats span {
+        display: block;
+        margin-top: 10px;
+        font-size: 12px;
+        letter-spacing: 2px;
+        color: rgba(255, 255, 255, 0.45);
+      }
+      .c-sec {
+        margin-top: 64px;
+      }
+      .c-sec-head {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        margin-bottom: 26px;
+      }
+      .c-sec-head h2 {
+        margin: 0;
+        font-family: var(--font-serif);
+        font-size: 24px;
+        font-weight: 500;
+        letter-spacing: 2px;
+      }
+      .c-sec-head span {
+        font-size: 12px;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.38);
+      }
+      /* 业务版图：五卡直连各板块遮罩 */
+      .board {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px;
+      }
+      .board a {
+        position: relative;
+        display: block;
+        aspect-ratio: 3 / 4;
+        border-radius: 2px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+      }
+      .board img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 500ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      .board a:hover img {
+        transform: scale(1.05);
+      }
+      .board .veil {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 40%, rgba(0, 0, 0, 0.78));
+      }
+      .board .txt {
+        position: absolute;
+        inset: auto 16px 16px;
+      }
+      .board .nm {
+        font-family: var(--font-serif);
+        font-size: 18px;
+        letter-spacing: 2px;
+        color: var(--ivory);
+      }
+      .board .ct {
+        margin-top: 6px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.62);
+      }
+      .board .ct b {
+        font-family: var(--font-latin);
+        font-weight: 400;
+        color: var(--hl-gold);
+      }
+      .c-cta {
+        margin-top: 72px;
+        border-top: 1px solid var(--hairline);
+        padding: 46px 0 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 40px;
+      }
+      .c-cta h3 {
+        margin: 12px 0 0;
+        font-family: var(--font-serif);
+        font-size: 26px;
+        font-weight: 500;
+        letter-spacing: 2px;
+      }
+      .c-cta p {
+        margin: 10px 0 0;
+        font-size: 13px;
+        line-height: 1.8;
+        color: rgba(255, 255, 255, 0.55);
+        max-width: 52ch;
+      }
+      .c-cta .act {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        flex-shrink: 0;
+      }
+      .c-cta .tel b {
+        display: block;
+        font-family: var(--font-latin);
+        font-weight: 400;
+        font-size: 26px;
+        letter-spacing: 1px;
+        color: var(--ivory);
+      }
+      .c-cta .tel i {
+        font-style: normal;
+        font-size: 11px;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.45);
+      }
+
+      /* ===================== 移动稿 ===================== */
+      .m-wrap {
+        display: flex;
+        gap: 34px;
+        padding: 40px 20px 46px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .m {
+        width: 390px;
+        background: var(--bg-base);
+        border: 1px solid var(--hairline);
+        border-radius: 18px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .m .bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--hairline);
+      }
+      .m .bar .k {
+        font-size: 11px;
+        letter-spacing: 3px;
+        color: var(--accent-gold);
+      }
+      .m .bar .x {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.8);
+      }
+      .m .m-head {
+        padding: 20px 18px 4px;
+      }
+      .m .m-head h4 {
+        margin: 8px 0 0;
+        font-family: var(--font-serif);
+        font-size: 24px;
+        font-weight: 500;
+        letter-spacing: 2px;
+      }
+      .m .m-head .meta {
+        margin-top: 8px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.45);
+      }
+      .m .m-body {
+        padding: 16px 18px 22px;
+      }
+      .m .m-intro {
+        font-size: 13px;
+        line-height: 1.9;
+        color: rgba(255, 255, 255, 0.75);
+        margin-bottom: 16px;
+      }
+      .m .m-img {
+        position: relative;
+        border-radius: 2px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        margin-bottom: 12px;
+      }
+      .m .m-img img {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+      }
+      .m .m-img .cap {
+        position: absolute;
+        inset: auto 0 0 0;
+        padding: 22px 12px 10px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent);
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      .m .m-img .cap i {
+        font-style: normal;
+        font-family: var(--font-latin);
+        color: var(--hl-gold);
+      }
+      .m .m-adj {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 18px;
+      }
+      .m .m-adj a {
+        position: relative;
+        display: block;
+        height: 64px;
+        border-radius: 2px;
+        overflow: hidden;
+        border: 1px solid var(--hairline);
+      }
+      .m .m-adj img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.55;
+      }
+      .m .m-adj span {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-serif);
+        font-size: 13px;
+        letter-spacing: 2px;
+        color: var(--ivory);
+      }
+      /* 移动 · 公司页 */
+      .m .m-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-top: 1px solid var(--hairline);
+        border-bottom: 1px solid var(--hairline);
+        margin: 16px 0;
+      }
+      .m .m-stats > div {
+        padding: 14px 12px;
+      }
+      .m .m-stats > div:nth-child(odd) {
+        border-right: 1px solid var(--hairline);
+      }
+      .m .m-stats > div:nth-child(n + 3) {
+        border-top: 1px solid var(--hairline);
+      }
+      .m .m-stats b {
+        font-family: var(--font-latin);
+        font-weight: 400;
+        font-size: 26px;
+        color: var(--accent-gold);
+      }
+      .m .m-stats i {
+        font-style: normal;
+        font-size: 12px;
+        color: var(--hl-gold);
+      }
+      .m .m-stats span {
+        display: block;
+        margin-top: 4px;
+        font-size: 10px;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.45);
+      }
+      .m .m-board a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--hairline);
+      }
+      .m .m-board img {
+        width: 72px;
+        height: 48px;
+        object-fit: cover;
+        border-radius: 2px;
+      }
+      .m .m-board .nm {
+        font-family: var(--font-serif);
+        font-size: 15px;
+        letter-spacing: 1px;
+        color: var(--ivory);
+      }
+      .m .m-board .ct {
+        margin-top: 3px;
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .m .m-board .ar {
+        margin-left: auto;
+        color: var(--accent-gold);
+        font-size: 14px;
+      }
+      .m .m-cta {
+        margin-top: 18px;
+      }
+      .m .m-cta .btn {
+        width: 100%;
+      }
+      .m-note {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 18px 22px;
+        border: 1px solid var(--hairline);
+        border-radius: 12px;
+        font-size: 13px;
+        line-height: 2;
+        color: rgba(255, 255, 255, 0.62);
+      }
+      .m-note b {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        letter-spacing: 2px;
+        color: var(--hl-gold);
+      }
+
+      /* 入场动效 */
+      .card,
+      .g-item {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      .card.in,
+      .g-item.in {
+        animation: fadeUp 420ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="jump">
+      <i>二级页原型 V2 ·</i>
+      <a href="#g-video">① 视频集</a>
+      <a href="#g-gallery">② 图片集</a>
+      <a href="#g-article">③ 描述介绍</a>
+      <a href="#g-company">④ 公司详情</a>
+      <a href="#g-mobile">⑤ 移动端</a>
+      <i>同一遮罩壳 · Esc 关闭</i>
+    </div>
+
+    <div class="stage">
+      <!-- ==================================================================== -->
+      <!-- 屏 1 · 板块遮罩 · 视频集                                               -->
+      <!-- ==================================================================== -->
+      <div class="group" id="g-video">
+        <div class="tag">
+          <b>屏 1 · 板块遮罩 — 视频集（content_type = video）</b>
+          <span>官网五列点击 → 全屏遮罩覆盖首页（非路由跳转），现有作品页外壳平移复用</span>
+          <em class="f">无新字段</em>
+          <em class="f new">body（可选简介）</em>
+        </div>
+
+        <div class="page">
+          <div class="ly">
+            <!-- 遮罩顶栏 -->
+            <div class="ov-top">
+              <div>
+                <p class="ov-kicker" style="margin: 0">PORTRAIT · 人像写真</p>
+                <div class="ov-title-row">
+                  <h1 class="ov-title">人像写真</h1>
+                  <span class="ov-chip">视频集</span>
+                </div>
+                <p class="ov-meta" style="margin-bottom: 0">3 部视频 · 支持 B 站嵌入播放</p>
+              </div>
+              <button class="ov-close" type="button" aria-label="关闭（Esc）">
+                <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6l-12 12" /></svg>
+              </button>
+            </div>
+
+            <div class="ov-body">
+              <!-- 板块简介（body，可选；后台一个 textarea，空行分段） -->
+              <p class="v-intro">
+                人像是我们最日常的题材，也是最难的一次。镜头前的人多半不习惯被注视，所以开拍的前二十分钟我们通常不谈构图——先让手有地方放，让呼吸慢下来，等你忘了相机在的时候，第一张能看的照片就出现了。
+              </p>
+
+              <!-- 播放器：现有 VideoPlayer 组件原样复用 -->
+              <div class="v-stage">
+                <div class="v-side prev">
+                  <img src="http://124.223.29.189/uploads/cover/behind-the-scenes-film-set.png" alt="" />
+                </div>
+                <div class="v-side next">
+                  <img src="http://124.223.29.189/uploads/cover/wedding-documentary.png" alt="" />
+                </div>
+                <div class="v-frame">
+                  <img src="http://124.223.29.189/uploads/cover/portrait-natural-light.png" alt="" />
+                  <div class="v-cover-ui">
+                    <div class="v-cover-top">
+                      <span>自然光人像 · 窗边</span>
+                      <i>BILIBILI 嵌入播放</i>
+                    </div>
+                    <span class="v-play"></span>
+                    <div class="v-cover-bottom">
+                      <div class="v-progress"><i></i></div>
+                      <div class="v-ctrl"><span>01:12 / 03:05</span><span style="margin-left: auto">2025</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 底栏：序号 + 缩略图条 + 箭头（现有组件平移） -->
+              <div class="v-foot">
+                <span class="v-count">01 / 03</span>
+                <div class="v-nav">
+                  <button class="v-arrow" type="button" aria-label="上一支">
+                    <svg viewBox="0 0 24 24"><path d="M14.5 5.5l-6.5 6.5 6.5 6.5" /></svg>
+                  </button>
+                  <div class="v-thumbs">
+                    <span class="t on"><img src="http://124.223.29.189/uploads/cover/portrait-natural-light.png" alt="" /></span>
+                    <span class="t"><img src="http://124.223.29.189/uploads/cover/backlit-portrait-golden-hour.png" alt="" /></span>
+                    <span class="t"><img src="http://124.223.29.189/uploads/cover/travel-foggy-mountain.png" alt="" /></span>
+                  </div>
+                  <button class="v-arrow" type="button" aria-label="下一支">
+                    <svg viewBox="0 0 24 24"><path d="M9.5 5.5l6.5 6.5-6.5 6.5" /></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 相邻板块（三种内容体通用收尾） -->
+              <nav class="adj">
+                <a href="#g-video">
+                  <img src="http://124.223.29.189/uploads/cover/behind-the-scenes-film-set.png" alt="" />
+                  <span>
+                    <span class="lab">← 上一板块 · FILM</span><br />
+                    <span class="nm">视频短片</span>
+                  </span>
+                </a>
+                <a class="next" href="#g-gallery">
+                  <span>
+                    <span class="lab">下一板块 · WEDDING →</span><br />
+                    <span class="nm">婚礼纪实</span>
+                  </span>
+                  <img src="http://124.223.29.189/uploads/cover/wedding-documentary.png" alt="" />
+                </a>
+              </nav>
+            </div>
+
+            <p class="ov-hint">Esc 关闭 · 关闭后回到首页原滚动位置（不跳变）</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================================================================== -->
+      <!-- 屏 2 · 板块遮罩 · 图片集                                               -->
+      <!-- ==================================================================== -->
+      <div class="group" id="g-gallery">
+        <div class="tag">
+          <b>屏 2 · 板块遮罩 — 图片集（content_type = gallery）</b>
+          <span>清单来自 segment_items → assets（width / height 已存，按实际宽高比错落）· 点击进入灯箱</span>
+          <em class="f">无新字段</em>
+        </div>
+
+        <div class="page">
+          <div class="ly">
+            <div class="ov-top">
+              <div>
+                <p class="ov-kicker" style="margin: 0">WEDDING · 婚礼纪实</p>
+                <div class="ov-title-row">
+                  <h1 class="ov-title">婚礼纪实</h1>
+                  <span class="ov-chip">图片集</span>
+                </div>
+                <p class="ov-meta" style="margin-bottom: 0">8 张图片 · 点击查看大图，方向键翻页</p>
+              </div>
+              <button class="ov-close" type="button" aria-label="关闭（Esc）">
+                <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6l-12 12" /></svg>
+              </button>
+            </div>
+
+            <div class="ov-body">
+              <p class="g-intro">
+                仪式的转折总在下午四点后，所以我们只接全天跟拍。从晨间的准备到最后的送客，我们以纪实的位置待在故事旁边，不打断、不摆布，把这一天完整交还给你们。
+              </p>
+
+              <div class="g-grid">
+                <a class="g-item" style="aspect-ratio: 4 / 3">
+                  <img src="http://124.223.29.189/uploads/cover/wedding-documentary.png" alt="" />
+                  <span class="cap"><span>仪式 · 交换誓言</span><i>2024</i></span>
+                </a>
+                <a class="g-item" style="aspect-ratio: 3 / 4">
+                  <img src="http://124.223.29.189/uploads/cover/wedding-detail-hands.png" alt="" />
+                  <span class="cap"><span>细节 · 交叠的手</span><i>2024</i></span>
+                </a>
+                <a class="g-item" style="aspect-ratio: 1 / 1">
+                  <img src="http://124.223.29.189/uploads/cover/backlit-portrait-golden-hour.png" alt="" />
+                  <span class="cap"><span>外景 · 黄金时刻</span><i>2025</i></span>
+                </a>
+                <a class="g-item" style="aspect-ratio: 3 / 4">
+                  <img src="http://124.223.29.189/uploads/cover/portrait-natural-light.png" alt="" />
+                  <span class="cap"><span>晨间准备 · 窗边</span><i>2025</i></span>
+                </a>
+                <a class="g-item" style="aspect-ratio: 16 / 9">
+                  <img src="http://124.223.29.189/uploads/cover/cinematic-wide.png" alt="" />
+                  <span class="cap"><span>宴会厅 · 全景</span><i>2023</i></span>
+                </a>
+                <a class="g-item" style="aspect-ratio: 4 / 3">
+                  <img src="http://124.223.29.189/uploads/cover/still-life-ceramic.png" alt="" />
+                  <span class="cap"><span>静物 · 桌花与器皿</span><i>2023</i></span>
+                </a>
+                <a class="g-item" style="aspect-ratio: 3 / 2">
+                  <img src="http://124.223.29.189/uploads/cover/travel-foggy-mountain.png" alt="" />
+                  <span class="cap"><span>旅拍婚照 · 雾中山峦</span><i>2022</i></span>
+                </a>
+                <a class="g-item" style="aspect-ratio: 4 / 3">
+                  <img src="http://124.223.29.189/uploads/cover/night-cityscape.png" alt="" />
+                  <span class="cap"><span>夜色 · 送客归途</span><i>2025</i></span>
+                </a>
+              </div>
+
+              <nav class="adj">
+                <a href="#g-video">
+                  <img src="http://124.223.29.189/uploads/cover/portrait-natural-light.png" alt="" />
+                  <span>
+                    <span class="lab">← 上一板块 · PORTRAIT</span><br />
+                    <span class="nm">人像写真</span>
+                  </span>
+                </a>
+                <a class="next" href="#g-article">
+                  <span>
+                    <span class="lab">下一板块 · EVENT →</span><br />
+                    <span class="nm">活动跟拍</span>
+                  </span>
+                  <img src="http://124.223.29.189/uploads/cover/event-concert-stage.png" alt="" />
+                </a>
+              </nav>
+            </div>
+
+            <p class="ov-hint">Esc 关闭 · 灯箱内 ← / → 翻页</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================================================================== -->
+      <!-- 屏 3 · 板块遮罩 · 描述介绍                                             -->
+      <!-- ==================================================================== -->
+      <div class="group" id="g-article">
+        <div class="tag">
+          <b>屏 3 · 板块遮罩 — 描述介绍（content_type = article）</b>
+          <span>正文即 body，后台仅一个 textarea · 轻格式约定见下方说明</span>
+          <em class="f new">body（正文）</em>
+          <em class="f">按需加载 · 不进 /site 聚合缓存</em>
+        </div>
+
+        <div class="page">
+          <div class="ly">
+            <div class="ov-top">
+              <div>
+                <p class="ov-kicker" style="margin: 0">EVENT · 活动跟拍</p>
+                <div class="ov-title-row">
+                  <h1 class="ov-title">活动跟拍</h1>
+                  <span class="ov-chip">图文介绍</span>
+                </div>
+                <p class="ov-meta" style="margin-bottom: 0">约 400 字 · 2 分钟读完</p>
+              </div>
+              <button class="ov-close" type="button" aria-label="关闭（Esc）">
+                <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6l-12 12" /></svg>
+              </button>
+            </div>
+
+            <div class="ov-body">
+              <div class="prose">
+                <p class="lead">
+                  现场纪实没有彩排，所以我们把功夫全放在开拍之前。
+                </p>
+                <p>
+                  每一场活动开始前三天，制片会与主办方过一遍完整流程表，把致辞、颁奖、切蛋糕这些"只发生一次"的节点逐一标出，并为每个节点指定主拍与备份机位。真正的拍摄反而变得安静——我们不需要导演现场，只需要在正确的位置等画面发生。
+                </p>
+                <ul>
+                  <li>提前 1 小时到场，测试舞台灯光与机位通路</li>
+                  <li>双机位配置：一台固定全景，一台游走抓细节</li>
+                  <li>关键环节双保险录制，素材实时双备份</li>
+                </ul>
+                <div class="kv">
+                  <span class="k">交付节奏</span>
+                  <span class="v">活动结束 48 小时内交付 60 秒精选快剪，适合当天朋友圈与视频号传播。</span>
+                </div>
+                <div class="kv">
+                  <span class="k">完整版</span>
+                  <span class="v">3 个工作日内交付，按环节分章归档，便于日后检索回看。</span>
+                </div>
+                <div class="kv">
+                  <span class="k">加拍需求</span>
+                  <span class="v">可加挂航拍或采访机位，建议提前一周沟通确认。</span>
+                </div>
+                <p>
+                  我们不追每一帧都完美，只追该在的瞬间都在。
+                </p>
+              </div>
+
+              <nav class="adj">
+                <a href="#g-gallery">
+                  <img src="http://124.223.29.189/uploads/cover/wedding-documentary.png" alt="" />
+                  <span>
+                    <span class="lab">← 上一板块 · WEDDING</span><br />
+                    <span class="nm">婚礼纪实</span>
+                  </span>
+                </a>
+                <a class="next" href="#g-video">
+                  <span>
+                    <span class="lab">下一板块 · FILM →</span><br />
+                    <span class="nm">视频短片</span>
+                  </span>
+                  <img src="http://124.223.29.189/uploads/cover/behind-the-scenes-film-set.png" alt="" />
+                </a>
+              </nav>
+            </div>
+
+            <p class="ov-hint">Esc 关闭 · 返回首页不丢滚动位置</p>
+          </div>
+        </div>
+
+        <!-- 轻格式约定说明（管理端 textarea 的全部语法，就这三条） -->
+        <div class="m-note" style="margin-top: 20px">
+          <b>body / long_intro 轻格式约定（后台 textarea 纯文本即可）</b>
+          空行 = 分段，首段自动渲染为引言（加大、象牙白）；行首 <code>- </code> = 列表条目；
+          行首「标签｜内容」= 要点行（金色标签 + 分隔线），如上屏「交付节奏」三条。
+          其余一律按普通段落排版，不引入富文本编辑器。查询效率：两个大文本字段不进
+          <code>/site</code> 聚合接口与 60s 缓存，遮罩打开时按需请求详情接口，前端会话内缓存。
+        </div>
+      </div>
+
+      <!-- ==================================================================== -->
+      <!-- 屏 4 · 公司详情遮罩（探索详情入口）                                      -->
+      <!-- ==================================================================== -->
+      <div class="group" id="g-company">
+        <div class="tag">
+          <b>屏 4 · 公司详情遮罩（公司介绍「探索详情」按钮 →）</b>
+          <span>同一遮罩壳 · 统计条全部由现有数据派生，不新增字段</span>
+          <em class="f new">long_intro（长文）</em>
+          <em class="f">按需加载 · 不进 /site 聚合缓存</em>
+        </div>
+
+        <div class="page">
+          <div class="ly">
+            <div class="ov-top">
+              <div>
+                <p class="ov-kicker" style="margin: 0">ABOUT · 关于我们</p>
+                <h1 class="ov-title" style="margin-top: 14px">交点影视</h1>
+                <p class="c-brand-en">JIAO DIAN FILM AND TELEVISION</p>
+                <p class="c-lead">
+                  交点影视成立于 2017 年，是一家专注于人像、婚礼与商业影像的文化传媒机构。我们相信每一次相遇都值得被认真记录。
+                </p>
+              </div>
+              <button class="ov-close" type="button" aria-label="关闭（Esc）">
+                <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6l-12 12" /></svg>
+              </button>
+            </div>
+
+            <!-- 派生数据条：0 新字段（年限 = 当年 − founded_year；作品 = 已发布视频数；
+                 板块 = segments；荣誉 = honors） -->
+            <div class="c-stats">
+              <div><b>9</b><i>年</i><span>自 2017 年深耕影像</span></div>
+              <div><b>10</b><i>部</i><span>在架影像作品</span></div>
+              <div><b>5</b><i>类</i><span>业务板块</span></div>
+              <div><b>5</b><i>项</i><span>影视荣誉</span></div>
+            </div>
+
+            <!-- 01 长文（long_intro） -->
+            <div class="c-sec">
+              <div class="c-sec-head">
+                <h2>我们的九年</h2>
+                <span>来自后台 long_intro · 空行分段，与板块正文同一套轻格式</span>
+              </div>
+              <div class="prose">
+                <p class="lead">
+                  从两个人、一台机身、一间借来的工作室开始，到今天拥有自己的影棚，和一支覆盖摄影、剪辑、调色的完整团队。
+                </p>
+                <p>
+                  我们拍人像、婚礼、商业与活动影像，也拍短片。题材不同，方法是一样的：先花时间听懂对方想留住什么，再决定光从哪里来。这份「听懂」通常发生在开拍前的那通电话里，而不是拍摄现场。
+                </p>
+                <p>
+                  我们不追热门滤镜，也不做一眼能认出是同一套预设的片子。每一次拍摄结束后，原始文件都会归档一份——因为你可能会在三年后，想要一张当年没修过的原图。
+                </p>
+              </div>
+            </div>
+
+            <!-- 02 业务版图：五卡直连各板块遮罩（关闭本层 → 打开对应板块层） -->
+            <div class="c-sec">
+              <div class="c-sec-head">
+                <h2>我们拍什么</h2>
+                <span>数据取自 segments（名称 / 预览图 / item_count）· 点击直达对应板块遮罩</span>
+              </div>
+              <div class="board">
+                <a href="#g-video">
+                  <img src="http://124.223.29.189/uploads/cover/portrait-natural-light.png" alt="" />
+                  <span class="veil"></span>
+                  <span class="txt">
+                    <span class="nm">人像写真</span><br />
+                    <span class="ct"><b>3</b> 部视频</span>
+                  </span>
+                </a>
+                <a href="#g-gallery">
+                  <img src="http://124.223.29.189/uploads/cover/wedding-documentary.png" alt="" />
+                  <span class="veil"></span>
+                  <span class="txt">
+                    <span class="nm">婚礼纪实</span><br />
+                    <span class="ct"><b>8</b> 张图片</span>
+                  </span>
+                </a>
+                <a href="#g-video">
+                  <img src="http://124.223.29.189/uploads/cover/commercial-product.png" alt="" />
+                  <span class="veil"></span>
+                  <span class="txt">
+                    <span class="nm">商业摄影</span><br />
+                    <span class="ct"><b>2</b> 部视频</span>
+                  </span>
+                </a>
+                <a href="#g-article">
+                  <img src="http://124.223.29.189/uploads/cover/event-concert-stage.png" alt="" />
+                  <span class="veil"></span>
+                  <span class="txt">
+                    <span class="nm">活动跟拍</span><br />
+                    <span class="ct">图文介绍</span>
+                  </span>
+                </a>
+                <a href="#g-video">
+                  <img src="http://124.223.29.189/uploads/cover/behind-the-scenes-film-set.png" alt="" />
+                  <span class="veil"></span>
+                  <span class="txt">
+                    <span class="nm">视频短片</span><br />
+                    <span class="ct"><b>2</b> 部视频</span>
+                  </span>
+                </a>
+              </div>
+            </div>
+
+            <!-- CTA：点击关闭遮罩并滚动至首页「联系我们」区块 -->
+            <div class="c-cta">
+              <div>
+                <div class="kicker">BOOKING · 预约拍摄</div>
+                <h3>聊聊你想留住的那一面</h3>
+                <p>留下电话，我们会在 24 小时内由主摄影本人回复，不经客服转手。</p>
+              </div>
+              <div class="act">
+                <div class="tel">
+                  <b>0539-8888888</b>
+                  <i>周一至周日 9:00 - 18:00</i>
+                </div>
+                <a class="btn gold" href="#g-video">预约拍摄</a>
+              </div>
+            </div>
+          </div>
+
+          <p class="ov-hint" style="margin-top: 44px">Esc 关闭 · 公司页无相邻板块导航（非板块序列）</p>
+        </div>
+      </div>
+
+      <!-- ==================================================================== -->
+      <!-- 屏 5 · 移动端 390                                                      -->
+      <!-- ==================================================================== -->
+      <div class="group" id="g-mobile">
+        <div class="tag">
+          <b>屏 5 · 移动端 390</b>
+          <span>图片集 + 公司详情 · 三种内容体共用同一套窄屏节奏</span>
+        </div>
+        <div class="m-wrap">
+          <!-- 手机 A · 图片集 -->
+          <div class="m">
+            <div class="bar">
+              <span class="k">WEDDING · 婚礼纪实</span>
+              <span class="x">✕</span>
+            </div>
+            <div class="m-head">
+              <h4>婚礼纪实 <span class="ov-chip" style="font-size: 10px; vertical-align: 4px">图片集</span></h4>
+              <p class="meta">8 张图片 · 点击查看大图</p>
+            </div>
+            <div class="m-body">
+              <p class="m-intro">
+                仪式的转折总在下午四点后，所以我们只接全天跟拍。从晨间的准备到最后的送客，把这一天完整交还给你们。
+              </p>
+              <div class="m-img">
+                <img src="http://124.223.29.189/uploads/cover/wedding-documentary.png" alt="" />
+                <span class="cap"><span>仪式 · 交换誓言</span><i>2024</i></span>
+              </div>
+              <div class="m-img">
+                <img src="http://124.223.29.189/uploads/cover/wedding-detail-hands.png" alt="" />
+                <span class="cap"><span>细节 · 交叠的手</span><i>2024</i></span>
+              </div>
+              <div class="m-adj">
+                <a href="#g-video"><img src="http://124.223.29.189/uploads/cover/portrait-natural-light.png" alt="" /><span>人像写真</span></a>
+                <a href="#g-article"><img src="http://124.223.29.189/uploads/cover/event-concert-stage.png" alt="" /><span>活动跟拍</span></a>
+              </div>
+            </div>
+          </div>
+
+          <!-- 手机 B · 公司详情 -->
+          <div class="m">
+            <div class="bar">
+              <span class="k">ABOUT · 关于我们</span>
+              <span class="x">✕</span>
+            </div>
+            <div class="m-head">
+              <h4>交点影视</h4>
+              <p class="meta" style="font-family: var(--font-latin); letter-spacing: 3px">JIAO DIAN FILM AND TELEVISION</p>
+            </div>
+            <div class="m-body">
+              <div class="m-stats">
+                <div><b>9</b><i>年</i><span>自 2017 年深耕影像</span></div>
+                <div><b>10</b><i>部</i><span>在架影像作品</span></div>
+                <div><b>5</b><i>类</i><span>业务板块</span></div>
+                <div><b>5</b><i>项</i><span>影视荣誉</span></div>
+              </div>
+              <p class="m-intro">
+                从两个人、一台机身、一间借来的工作室开始，到今天拥有自己的影棚，和一支覆盖摄影、剪辑、调色的完整团队。
+              </p>
+              <p class="m-intro">
+                我们拍人像、婚礼、商业与活动影像，也拍短片。题材不同，方法是一样的：先花时间听懂对方想留住什么，再决定光从哪里来。
+              </p>
+              <div class="m-board">
+                <a href="#g-video">
+                  <img src="http://124.223.29.189/uploads/cover/portrait-natural-light.png" alt="" />
+                  <span><span class="nm">人像写真</span><br /><span class="ct">3 部视频</span></span>
+                  <span class="ar">→</span>
+                </a>
+                <a href="#g-gallery">
+                  <img src="http://124.223.29.189/uploads/cover/wedding-documentary.png" alt="" />
+                  <span><span class="nm">婚礼纪实</span><br /><span class="ct">8 张图片</span></span>
+                  <span class="ar">→</span>
+                </a>
+                <a href="#g-video">
+                  <img src="http://124.223.29.189/uploads/cover/commercial-product.png" alt="" />
+                  <span><span class="nm">商业摄影</span><br /><span class="ct">2 部视频</span></span>
+                  <span class="ar">→</span>
+                </a>
+                <a href="#g-article">
+                  <img src="http://124.223.29.189/uploads/cover/event-concert-stage.png" alt="" />
+                  <span><span class="nm">活动跟拍</span><br /><span class="ct">图文介绍</span></span>
+                  <span class="ar">→</span>
+                </a>
+                <a href="#g-video">
+                  <img src="http://124.223.29.189/uploads/cover/behind-the-scenes-film-set.png" alt="" />
+                  <span><span class="nm">视频短片</span><br /><span class="ct">2 部视频</span></span>
+                  <span class="ar">→</span>
+                </a>
+              </div>
+              <div class="m-cta"><a class="btn gold" href="#g-company">预约拍摄</a></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="m-note">
+          <b>移动端取舍</b>
+          遮罩顶栏压成一行（kicker + 关闭圆钮），标题与类型 chip 收进次行；图集从三列错落退化为单列
+          4:3 大图，说明文字常显（无悬停态）；要点行「标签｜内容」在窄屏拆为上下两行，避免定宽挤压正文；
+          相邻板块改为两张半宽卡；公司统计条折成 2×2，业务版图改为缩略图行。灯箱全屏，双指缩放交给系统 WebView。
+        </div>
+      </div>
+    </div>
+
+    <!-- 灯箱（真实实现为 GalleryBody 内部组件，Esc 优先关灯箱再关遮罩） -->
+    <div class="lb" id="lb">
+      <button class="lb-close" type="button" aria-label="关闭灯箱">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6l-12 12" /></svg>
+      </button>
+      <img id="lb-img" src="" alt="" />
+      <div class="lb-bar">
+        <button class="lb-arrow" type="button" aria-label="上一张" data-d="-1">
+          <svg viewBox="0 0 24 24"><path d="M14.5 5.5l-6.5 6.5 6.5 6.5" /></svg>
+        </button>
+        <span class="lb-count" id="lb-count">01 / 08</span>
+        <button class="lb-arrow" type="button" aria-label="下一张" data-d="1">
+          <svg viewBox="0 0 24 24"><path d="M9.5 5.5l6.5 6.5-6.5 6.5" /></svg>
+        </button>
+      </div>
+      <p class="lb-cap" id="lb-cap"></p>
+    </div>
+
+    <script>
+      /* 入场动效：进入视口补 fadeUp，兜底 1.5s 全显 */
+      const cards = [...document.querySelectorAll('.card, .g-item')]
+      if (typeof IntersectionObserver === 'function') {
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) => {
+              if (e.isIntersecting) {
+                e.target.classList.add('in')
+                io.unobserve(e.target)
+              }
+            })
+          },
+          { threshold: 0.12 }
+        )
+        cards.forEach((el) => io.observe(el))
+        setTimeout(() => cards.forEach((el) => el.classList.add('in')), 1500)
+      } else {
+        cards.forEach((el) => el.classList.add('in'))
+      }
+
+      /* 灯箱演示（仅屏 2 图片集可点） */
+      const items = [...document.querySelectorAll('#g-gallery .g-item')]
+      const lb = document.getElementById('lb')
+      const lbImg = document.getElementById('lb-img')
+      const lbCount = document.getElementById('lb-count')
+      const lbCap = document.getElementById('lb-cap')
+      let lbIndex = 0
+      const pad2 = (n) => String(n + 1).padStart(2, '0')
+
+      function openLb(i) {
+        lbIndex = ((i % items.length) + items.length) % items.length
+        const item = items[lbIndex]
+        lbImg.src = item.querySelector('img').src
+        lbCap.textContent = item.querySelector('.cap span').textContent
+        lbCount.textContent = `${pad2(lbIndex)} / ${pad2(items.length - 1)}`
+        lb.classList.add('open')
+      }
+      function closeLb() {
+        lb.classList.remove('open')
+      }
+      function stepLb(d) {
+        openLb(lbIndex + d)
+      }
+
+      items.forEach((item, i) => item.addEventListener('click', (e) => {
+        e.preventDefault()
+        openLb(i)
+      }))
+      lb.querySelector('.lb-close').addEventListener('click', closeLb)
+      lb.querySelectorAll('.lb-arrow').forEach((btn) =>
+        btn.addEventListener('click', () => stepLb(Number(btn.dataset.d)))
+      )
+      lb.addEventListener('click', (e) => {
+        if (e.target === lb) closeLb()
+      })
+      document.addEventListener('keydown', (e) => {
+        if (!lb.classList.contains('open')) return
+        if (e.key === 'Escape') closeLb()
+        else if (e.key === 'ArrowLeft') stepLb(-1)
+        else if (e.key === 'ArrowRight') stepLb(1)
+      })
+    </script>
+  </body>
+</html>

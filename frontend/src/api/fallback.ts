@@ -4,7 +4,15 @@
  * 图片路径与种子素材一致（backend/uploads/cover/*）。
  */
 
-import type { Honor, SegmentVideos, SiteConfig, SiteSettings, VideoItem } from '@/types/site'
+import type {
+  CompanyDetail,
+  Honor,
+  SegmentContent,
+  SegmentContentType,
+  SiteConfig,
+  SiteSettings,
+  VideoItem
+} from '@/types/site'
 
 const SETTINGS: SiteSettings = {
   icp_no: '苏ICP备2026000000号-1',
@@ -91,8 +99,7 @@ export const FALLBACK_SITE: SiteConfig = {
     founded_year: 2017,
     intro_text:
       '交点影视成立于 2017 年，是一家专注于人像、婚礼与商业影像的文化传媒机构。我们相信每一次相遇都值得被认真记录。九年来，团队以自然光与电影感为语言，为个人与品牌留下经得起时间回望的画面。'
-  },
-  segments: [
+  },  segments: [
     {
       id: 1,
       name: '人像写真',
@@ -135,54 +142,39 @@ export const FALLBACK_SITE: SiteConfig = {
     }
   ],
   honors: HONORS,
-  site_settings: SETTINGS
+  site_settings: SETTINGS,
+  video_count: 10
 }
 
-/** 兜底板块作品（按板块 id 索引）。 */
-export const FALLBACK_SEGMENT_VIDEOS: Record<number, SegmentVideos> = {
-  1: {
-    segment_id: 1,
-    name: '人像写真',
-    content_type: 'video',
-    videos: [
-      makeVideo(1, '自然光人像 · 窗边', 'BV6F7g8H9i0J', 'portrait', 2025),
-      makeVideo(2, '逆光人像 · 黄金时刻', 'BV6T7u8V9w0X', 'portrait', 2025),
-      makeVideo(3, '旅拍 · 雾中山峦', 'BV1O2p3Q4r5S', 'portrait', 2022)
-    ]
-  },
-  2: {
-    segment_id: 2,
-    name: '婚礼纪实',
-    content_type: 'video',
-    videos: [
-      makeVideo(4, '婚礼纪实 · 誓言', 'BV1K2l3M4n5O', 'wedding', 2024),
-      makeVideo(5, '婚礼细节 · 交换戒指', 'BV6P7q8R9s0T', 'wedding', 2024)
-    ]
-  },
-  3: {
-    segment_id: 3,
-    name: '商业摄影',
-    content_type: 'video',
-    videos: [
-      makeVideo(6, '商业产品 · 器物之光', 'BV1U2v3W4x5Y', 'commercial', 2024),
-      makeVideo(7, '静物摄影 · 陶与光', 'BV6Z7a8B9c0D', 'commercial', 2023)
-    ]
-  },
-  4: {
-    segment_id: 4,
-    name: '活动跟拍',
-    content_type: 'video',
-    videos: [makeVideo(8, '活动跟拍 · 舞台现场', 'BV1E2f3G4h5I', 'event', 2023)]
-  },
-  5: {
-    segment_id: 5,
-    name: '视频短片',
-    content_type: 'video',
-    videos: [
-      makeVideo(9, '城市夜景 · 流动的光', 'BV1A2b3C4d5E', 'video', 2025),
-      makeVideo(10, '城市影像 · 电影感横移', 'BV6J7k8L9m0N', 'video', 2025)
-    ]
-  }
+/** 板块简介兜底文案（与种子一致）。 */
+const SEGMENT_BODIES: Record<number, string> = {
+  1: '人像是我们最日常的题材，也是最难的一次。镜头前的人多半不习惯被注视，所以开拍的前二十分钟我们通常不谈构图——先让手有地方放，让呼吸慢下来，等你忘了相机在的时候，第一张能看的照片就出现了。',
+  2: '仪式的转折总在下午四点后，所以我们只接全天跟拍。从晨间的准备到最后的送客，我们以纪实的位置待在故事旁边，不打断、不摆布，把这一天完整交还给你们。',
+  3: '品牌影像是器物之光。我们先理解产品被制造的理由，再决定光从哪里来——棚拍控光呈现材质细节，场景实拍交代使用情境，让画面替产品说出第一句话。',
+  4: '现场纪实没有彩排。我们提前与主办方对流程与机位，双机位覆盖舞台与观众席，捕捉那些注定只发生一次的瞬间，并在 48 小时内交付精选快剪。',
+  5: '短片是交点的母语。从脚本、拍摄到调色与声音设计，我们以电影感的画面叙事承接品牌片、活动快剪与个人短片，让十五秒也能有起承转合。'
+}
+
+/** 兜底板块视频（按板块 id 索引）。 */
+export const FALLBACK_SEGMENT_VIDEOS: Record<number, VideoItem[]> = {
+  1: [
+    makeVideo(1, '自然光人像 · 窗边', 'BV6F7g8H9i0J', 'portrait', 2025),
+    makeVideo(2, '逆光人像 · 黄金时刻', 'BV6T7u8V9w0X', 'portrait', 2025),
+    makeVideo(3, '旅拍 · 雾中山峦', 'BV1O2p3Q4r5S', 'portrait', 2022)
+  ],
+  2: [
+    makeVideo(4, '婚礼纪实 · 誓言', 'BV1K2l3M4n5O', 'wedding', 2024),
+    makeVideo(5, '婚礼细节 · 交换戒指', 'BV6P7q8R9s0T', 'wedding', 2024)
+  ],
+  3: [
+    makeVideo(6, '商业产品 · 器物之光', 'BV1U2v3W4x5Y', 'commercial', 2024),
+    makeVideo(7, '静物摄影 · 陶与光', 'BV6Z7a8B9c0D', 'commercial', 2023)
+  ],
+  4: [makeVideo(8, '活动跟拍 · 舞台现场', 'BV1E2f3G4h5I', 'event', 2023)],
+  5: [
+    makeVideo(9, '城市夜景 · 流动的光', 'BV1A2b3C4d5E', 'video', 2025),
+    makeVideo(10, '城市影像 · 电影感横移', 'BV6J7k8L9m0N', 'video', 2025)
+  ]
 }
 
 /** 构造兜底视频项（封面按分类复用种子素材）。 */
@@ -212,14 +204,45 @@ function makeVideo(
   }
 }
 
-/** 按板块取兜底作品；未知板块返回空列表。 */
-export function fallbackSegmentVideos(segmentId: number, name = '', contentType: 'video' | 'gallery' | 'article' = 'video'): SegmentVideos {
-  return (
-    FALLBACK_SEGMENT_VIDEOS[segmentId] ?? {
-      segment_id: segmentId,
-      name,
-      content_type: contentType,
-      videos: []
-    }
-  )
+/** 公司详情长文兜底（与种子一致）。 */
+export const FALLBACK_COMPANY_DETAIL: CompanyDetail = {
+  long_intro:
+    '交点影视成立于 2017 年，从两个人、一台机身、一间借来的工作室开始，到今天拥有自己的影棚，和一支覆盖摄影、剪辑、调色的完整团队。\n\n我们拍人像、婚礼、商业与活动影像，也拍短片。题材不同，方法是一样的：先花时间听懂对方想留住什么，再决定光从哪里来。这份「听懂」通常发生在开拍前的那通电话里，而不是拍摄现场。\n\n我们不追热门滤镜，也不做一眼能认出是同一套预设的片子。每一次拍摄结束后，原始文件都会归档一份——因为你可能会在三年后，想要一张当年没修过的原图。'
+}
+
+/** 图集兜底图片（按板块复用种子素材）。 */
+function makeImages(segmentId: number, count: number): SegmentContent['images'] {
+  const coverPool = [
+    '/uploads/cover/wedding-documentary.png',
+    '/uploads/cover/wedding-detail-hands.png',
+    '/uploads/cover/backlit-portrait-golden-hour.png',
+    '/uploads/cover/portrait-natural-light.png',
+    '/uploads/cover/cinematic-wide.png',
+    '/uploads/cover/still-life-ceramic.png',
+    '/uploads/cover/travel-foggy-mountain.png',
+    '/uploads/cover/night-cityscape.png'
+  ]
+  return Array.from({ length: count }, (_, index) => ({
+    id: segmentId * 100 + index,
+    url: coverPool[(segmentId + index) % coverPool.length],
+    width: null,
+    height: null
+  }))
+}
+
+/** 按板块取兜底详情内容；未知板块返回空列表。 */
+export function fallbackSegmentContent(
+  segmentId: number,
+  name = '',
+  contentType: SegmentContentType = 'video'
+): SegmentContent {
+  const videos = FALLBACK_SEGMENT_VIDEOS[segmentId] ?? []
+  return {
+    segment_id: segmentId,
+    name,
+    content_type: contentType,
+    body: SEGMENT_BODIES[segmentId] ?? null,
+    videos: contentType === 'video' ? videos : [],
+    images: contentType === 'gallery' ? makeImages(segmentId, 6) : []
+  }
 }

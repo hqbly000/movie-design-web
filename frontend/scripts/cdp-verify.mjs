@@ -158,14 +158,14 @@ const HOME_JS = `(async () => {
   const beforeY = window.scrollY;
   col.click();
   await sleep(1600);
-  const dlg = document.querySelector('[role="dialog"][aria-label*="视频作品"]');
+  const dlg = document.querySelector('[role="dialog"][aria-label*="板块详情"]');
   out.overlayOpen = !!dlg;
   if (dlg) {
     const dt = dlg.innerText;
     out.overlayKicker = (dt.split('\\n')[0] || '').trim();
     out.overlayHeading = dlg.querySelector('h2')?.innerText.trim() || '';
     out.overlaySubline = (dt.match(/共\\s*\\d+\\s*支短片[^\\n]*/) || [''])[0].trim();
-    out.overlayHasBilibiliBadge = dt.includes('BILIBILI 嵌入播放');
+    out.overlayHasBilibiliBadge = dt.includes('BILIBILI');
     out.overlayHas4K = /4K|HDR/.test(dt);
     out.overlayThumbs = dlg.querySelectorAll('[aria-label^="播放第"]').length;
     out.overlayArrows = !!dlg.querySelector('[aria-label="下一支"]');
@@ -181,7 +181,7 @@ const HOME_JS = `(async () => {
   }
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   await sleep(900);
-  out.overlayClosed = !document.querySelector('[role="dialog"][aria-label*="视频作品"]');
+  out.overlayClosed = !document.querySelector('[role="dialog"][aria-label*="板块详情"]');
   out.scrollBefore = beforeY;
   out.scrollAfter = window.scrollY;
   out.scrollPreserved = Math.abs(window.scrollY - beforeY) < 8;
@@ -247,7 +247,7 @@ function shareJs() {
   out.listTitle = (T().match(/本合集包含[^\\n]*/) || [''])[0].trim();
   out.generated = (T().match(/生成于 \\d{4}\\.\\d{2}\\.\\d{2}/) || [''])[0];
   out.titles = [...document.querySelectorAll('li')].map((li) => (li.innerText || '').split('\\n')[0].trim());
-  out.hasBilibiliBadge = T().includes('BILIBILI 嵌入播放');
+  out.hasBilibiliBadge = T().includes('BILIBILI');
   out.hasDuration =
     T().includes('时长') ||
     !!document.querySelector('[aria-label="音量"], [aria-label="全屏"], [aria-label="暂停"]');
@@ -332,9 +332,9 @@ async function main() {
   check('R9 板块可点击进入作品页', h.segColFound === true)
   check('R9/R10 全屏视频作品页打开', h.overlayOpen === true)
   check('R9 作品页顶栏 kicker「板块·英文名」', /PORTRAIT/.test(h.overlayKicker || ''), h.overlayKicker)
-  check('R9 作品页标题「视频作品」', h.overlayHeading === '视频作品', h.overlayHeading)
-  check('R9 副行「共 N 支短片 · 支持 B 站嵌入播放」', new RegExp(`共\\s*${portraitCount}\\s*支短片`).test(h.overlaySubline || ''), `${h.overlaySubline} (api=${portraitCount})`)
-  check('R10 右上仅「BILIBILI 嵌入播放」标识', h.overlayHasBilibiliBadge === true)
+  check('R9 作品页标题为板块名「人像写真」', h.overlayHeading === '人像写真', h.overlayHeading)
+  check('R9 副行「共 N 支短片」', new RegExp(`共\\s*${portraitCount}\\s*支短片`).test(h.overlaySubline || ''), `${h.overlaySubline} (api=${portraitCount})`)
+  check('R10 右上 BILIBILI 来源标注', h.overlayHasBilibiliBadge === true)
   check('R10 无 4K / HDR 画质标识', h.overlayHas4K === false)
   check('R10 画面副行为「年份 · 类型」且不含时长', /^\d{4} · .+/.test(h.overlaySubInfo || '') && !/:/.test(h.overlaySubInfo || '') && h.overlayVideoSubNoDuration === true, h.overlaySubInfo)
   check('R9 底栏缩略图条 + 前后箭头 + 序号', h.overlayThumbs === portraitCount && h.overlayArrows === true && h.overlaySeq === `01/${String(portraitCount).padStart(2, '0')}`, `thumbs=${h.overlayThumbs} seq=${h.overlaySeq}`)
@@ -411,7 +411,7 @@ async function main() {
   check('R15 清单条数与 API 一致', s.rows === apiData.videos.length, `rows=${s.rows} api=${apiData.videos.length}`)
   check('R15 清单顺序与 API 勾选顺序一致', apiData.videos.every((v) => s.titles.includes(v.title)) && s.titles[0] === apiData.videos[0].title, JSON.stringify(s.titles))
   check('R15 生成于 YYYY.MM.DD', /生成于 \d{4}\.\d{2}\.\d{2}/.test(s.generated || ''), s.generated)
-  check('R10 主播放器右上 BILIBILI 嵌入播放标识', s.hasBilibiliBadge === true)
+  check('R10 主播放器右上 BILIBILI 来源标注', s.hasBilibiliBadge === true)
   check('R9 分享页主播放器显示播放键', s.playBtn === true)
   check('R17 当前项金色描边高亮', s.currentRowExists === true && /196,\s*154,\s*74/.test(s.currentRowBorder || ''), s.currentRowBorder)
   check('R17 当前项极淡暖底', /rgba\(196,\s*154,\s*74/.test(s.currentRowBg || ''), s.currentRowBg)

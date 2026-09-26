@@ -6,18 +6,20 @@
  * 米白平涂是全站唯一的亮色断层，且橙色数字与冷灰文字都不在暖金 token 集内。
  * 现改为 #0A0A0A 底 + 左上/右下两束金色漏光，与荣誉展厅的射灯同一套语言。
  * 桌面左文案右年份；移动端顺序：kicker → 标题 → 公司全称 → 正文 → 年份组合 → 按钮。
- * 橙色主按钮与跳转 #segments 按需求保持原样。
+ * 「探索详情」按钮打开公司详情遮罩（CompanyDetailOverlay）。
  */
 import SectionKicker from '@/components/common/SectionKicker.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import YearEmblem from '@/components/home/YearEmblem.vue'
-import { scrollToId } from '@/utils/scroll'
+import { useUiStore } from '@/stores/ui'
 import type { CompanyProfile } from '@/types/site'
 
 defineProps<{
   /** 公司介绍数据 */
   profile: CompanyProfile | null
 }>()
+
+const ui = useUiStore()
 </script>
 
 <template>
@@ -61,9 +63,9 @@ defineProps<{
           <YearEmblem :founded-year="profile?.founded_year ?? 2017" />
         </div>
 
-        <!-- 主按钮（金描边，全站唯一） -->
+        <!-- 主按钮（金描边，全站唯一）：打开公司详情遮罩 -->
         <div v-reveal="320" class="pt-2 lg:col-start-1 lg:row-start-2">
-          <AppButton variant="gold-outline" @click="scrollToId('segments')">
+          <AppButton variant="gold-outline" @click="ui.openCompany()">
             探索详情
           </AppButton>
         </div>

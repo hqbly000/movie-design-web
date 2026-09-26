@@ -1,6 +1,6 @@
 /**
  * 全局 UI 状态 Store（architecture.md §5.1）。
- * 移动菜单 / 全屏作品页开关；派生 body 滚动锁状态。
+ * 移动菜单 / 全屏二级页（板块详情 / 公司详情）开关；派生 body 滚动锁状态。
  */
 
 import { computed, ref } from 'vue'
@@ -15,9 +15,13 @@ export const useUiStore = defineStore('ui', () => {
   const activeSegmentId = ref<number | null>(null)
   /** 作品页进入过渡用的预览图（点击板块时记录，实现放大过渡）。 */
   const transitionImage = ref<string>('')
+  /** 公司详情遮罩是否打开。 */
+  const companyOpen = ref(false)
 
   /** 任一全屏层打开时需锁定 body 滚动。 */
-  const isScrollLocked = computed(() => mobileMenuOpen.value || worksOpen.value)
+  const isScrollLocked = computed(
+    () => mobileMenuOpen.value || worksOpen.value || companyOpen.value
+  )
 
   function openMobileMenu(): void {
     mobileMenuOpen.value = true
@@ -46,17 +50,29 @@ export const useUiStore = defineStore('ui', () => {
     worksOpen.value = false
   }
 
+  /** 打开公司详情遮罩。 */
+  function openCompany(): void {
+    companyOpen.value = true
+  }
+
+  function closeCompany(): void {
+    companyOpen.value = false
+  }
+
   return {
     mobileMenuOpen,
     worksOpen,
     activeSegmentId,
     transitionImage,
+    companyOpen,
     isScrollLocked,
     openMobileMenu,
     closeMobileMenu,
     toggleMobileMenu,
     openWorks,
-    closeWorks
+    closeWorks,
+    openCompany,
+    closeCompany
   }
 })
 

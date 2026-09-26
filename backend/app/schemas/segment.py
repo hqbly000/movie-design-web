@@ -20,6 +20,7 @@ class SegmentOut(BaseModel):
     preview_image_id: int | None = None
     preview_image_url: str | None = None
     content_type: str
+    body: str | None = None
     sort: int
     item_ids: list[int] = []
     item_count: int = 0
@@ -31,6 +32,8 @@ class SegmentUpdateIn(BaseModel):
     name: str = Field(min_length=1, max_length=6)
     preview_image_url: str | None = Field(default=None, max_length=255)
     content_type: ContentTypeLiteral = "video"
+    # article 正文 / 其他类型的板块简介（空行分段，前端按轻格式渲染）
+    body: str | None = Field(default=None, max_length=8000)
     item_ids: list[int] = Field(default_factory=list)
     item_type: TargetTypeLiteral | None = None
 

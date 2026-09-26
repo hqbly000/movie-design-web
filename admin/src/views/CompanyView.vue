@@ -24,10 +24,11 @@ const form = reactive({
   sectionTitle: '公司介绍',
   companyName: '',
   foundedYear: '2017',
-  introText: ''
+  introText: '',
+  longIntro: ''
 })
 
-usePageHeader('公司介绍', '维护官网「关于我们」区块的标题、公司全称与正文')
+usePageHeader('公司介绍', '维护官网「关于我们」区块的标题、公司全称、正文与详情页长文')
 
 const yearOptions = computed(() => {
   const now = new Date().getFullYear()
@@ -47,6 +48,7 @@ async function load(): Promise<void> {
     form.companyName = res.company_name
     form.foundedYear = String(res.founded_year)
     form.introText = res.intro_text ?? ''
+    form.longIntro = res.long_intro ?? ''
   } catch (e) {
     console.error('[公司介绍] 加载失败', e)
     errorText.value = friendlyErrorMessage(e)
@@ -72,7 +74,8 @@ async function save(): Promise<void> {
       section_title: form.sectionTitle.trim() || '公司介绍',
       company_name: form.companyName.trim(),
       founded_year: Number(form.foundedYear),
-      intro_text: form.introText.trim() || null
+      intro_text: form.introText.trim() || null,
+      long_intro: form.longIntro.trim() || null
     })
     toast.success('已保存，前台下一次访问即生效')
   } catch (e) {
@@ -135,6 +138,19 @@ onMounted(load)
           label="介绍正文"
           :rows="5"
           placeholder="请输入公司介绍正文"
+          hint="显示在官网「公司介绍」区块，同时作为详情页引言"
+          :disabled="!auth.canEdit"
+        />
+      </div>
+
+      <div class="mt-4">
+        <AppTextarea
+          v-model="form.longIntro"
+          label="详情页长文（选填）"
+          :rows="9"
+          :maxlength="16000"
+          placeholder="空行分段；行首「- 」为列表条目；「标签｜内容」为要点行"
+          hint="显示在官网「探索详情」公司详情页。首段自动作为引言放大"
           :disabled="!auth.canEdit"
         />
       </div>

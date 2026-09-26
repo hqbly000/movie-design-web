@@ -4,25 +4,30 @@
  */
 
 import { request } from './http'
-import type { LeadPayload, SegmentVideos, SiteConfig } from '@/types/site'
+import type { CompanyDetail, LeadPayload, SegmentContent, SiteConfig } from '@/types/site'
 
 /**
  * 首页聚合配置（hero / company / segments / honors / site_settings）。
- * 后端有 60s 内存缓存。
+ * 后端有 60s 内存缓存；不含 body / long_intro 等大文本。
  */
 export function getSiteConfig(): Promise<SiteConfig> {
   return request<SiteConfig>({ url: '/api/public/site', method: 'GET' })
 }
 
 /**
- * 某板块作品列表（仅已发布，按 segment_items.sort）。
+ * 某板块详情内容（按 content_type 返回视频 / 图片 / 图文）。
  * @param segmentId 板块 id
  */
-export function getSegmentVideos(segmentId: number): Promise<SegmentVideos> {
-  return request<SegmentVideos>({
-    url: `/api/public/segments/${segmentId}/videos`,
+export function getSegmentContent(segmentId: number): Promise<SegmentContent> {
+  return request<SegmentContent>({
+    url: `/api/public/segments/${segmentId}/content`,
     method: 'GET'
   })
+}
+
+/** 公司详情长文（long_intro，按需取）。 */
+export function getCompanyDetail(): Promise<CompanyDetail> {
+  return request<CompanyDetail>({ url: '/api/public/company/detail', method: 'GET' })
 }
 
 /**

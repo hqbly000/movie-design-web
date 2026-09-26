@@ -311,16 +311,6 @@ function onEsc(e: KeyboardEvent): void {
 onMounted(() => window.addEventListener('keydown', onEsc))
 onBeforeUnmount(() => window.removeEventListener('keydown', onEsc))
 
-/**
- * 状态胶囊文案。必须把 reduced-motion 算进来 ——
- * 之前只看 hovering/detailOpen，无障碍降级下会显示「自动旋转中」而下方提示是「已关闭」，自相矛盾。
- */
-const pillText = computed(() => {
-  if (reducedMotion.value === 'reduce') return '已按系统偏好停用动效'
-  if (hovering.value || detailOpen.value) return '已暂停'
-  return '自动旋转中'
-})
-
 function setCardRef(el: unknown, index: number): void {
   cardEls.value[index] = (el as HTMLElement | null) ?? null
 }
@@ -338,23 +328,11 @@ const cardStyle = (index: number): Record<string, string> => ({
   <section id="honors" class="relative w-full overflow-hidden bg-[#0A0A0A]">
     <div class="ly-container ly-section">
       <!-- 标题行 -->
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div v-reveal>
-          <SectionKicker text="HONOR · 荣誉资质" />
-          <h2 class="mt-4 font-serif text-[34px] leading-tight text-txt-primary lg:text-[44px]">
-            荣誉展示
-          </h2>
-        </div>
-        <!-- 旋转状态胶囊 -->
-        <div v-reveal="80" class="hidden items-center gap-2 sm:flex">
-          <span
-            class="inline-flex items-center gap-2 rounded-full border border-[rgba(196,154,74,0.35)] bg-[rgba(196,154,74,0.08)] px-4 py-2 font-sans text-[11px] text-accent-gold"
-            style="letter-spacing: 2px"
-          >
-            <span class="inline-block h-1.5 w-1.5 rounded-full bg-accent-gold-light" />
-            {{ pillText }}
-          </span>
-        </div>
+      <div v-reveal class="flex flex-col gap-4">
+        <SectionKicker text="HONOR · 荣誉资质" />
+        <h2 class="mt-4 font-serif text-[34px] leading-tight text-txt-primary lg:text-[44px]">
+          荣誉展示
+        </h2>
       </div>
 
       <!-- 空状态 -->

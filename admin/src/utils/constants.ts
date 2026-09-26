@@ -90,7 +90,7 @@ export const CONTENT_TYPE_OPTIONS: { key: SegmentContentType; label: string }[] 
   { key: 'article', label: '文章' }
 ]
 export const CONTENT_TYPE_HINT =
-  '选择「有视频」时客户点击板块进入视频作品页；「图集」进入图片浏览；「文章」进入图文长页（可后续启用，当前不启用）'
+  '选择「有视频」时客户点击板块进入视频作品页；「图集」进入图片浏览（图库选择）；「文章」进入图文介绍页（正文用空行分段轻格式）'
 
 /** content_type → segment_items.target_type 映射 */
 export const CONTENT_TYPE_TO_ITEM: Record<SegmentContentType, SegmentItemType> = {

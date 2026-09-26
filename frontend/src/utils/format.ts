@@ -88,6 +88,18 @@ export function segmentEnglish(name: string): string {
   return SEGMENT_EN[name] ?? 'SEGMENT'
 }
 
+/** 板块内容类型 → 中文标签（详情遮罩类型 chip）。 */
+export const SEGMENT_TYPE_LABELS: Record<string, string> = {
+  video: '视频集',
+  gallery: '图片集',
+  article: '图文介绍'
+}
+
+/** 取板块内容类型标签；未知类型回退为「视频集」。 */
+export function segmentTypeLabel(type: string): string {
+  return SEGMENT_TYPE_LABELS[type] ?? '视频集'
+}
+
 /** 板块名 → 图标名（AppIcon 的 name）。 */
 export function segmentIcon(name: string): string {
   switch (name) {
