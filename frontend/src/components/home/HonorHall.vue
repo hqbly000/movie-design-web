@@ -1,109 +1,155 @@
 <script setup lang="ts">
 /**
- * HonorHall —— 荣誉展示 · 舞台射灯圆柱。
+ * HonorHall —— 荣誉展示 · 射灯舞台横向展签轮播（参考 honor-demo v2）。
  *
- * 结构：纯 CSS 3D —— perspective 舞台 + preserve-3d 转盘，
- *       n 张卡各 rotateY(i×step) translateZ(R) 围成圆柱（n = 荣誉条数，≤6）。
- * 舞台感来源（对齐 honor-stage-demo.html 的「新方案」）：
- *   1. 体积光锥 —— 边缘清晰的 cone(blur5) + 外扩雾 haze(blur26) + 亮芯 core(blur9)，
- *      不再对整个光束层糊 18px（那会把锥体边界擦掉）；
- *   2. 浮尘 canvas —— 丁达尔介质，粒子在锥内缓慢上浮，亮度按「离锥轴距离 + 离光源高度」衰减；
- *   3. 地面 —— 透视地格 + 地平线亮边 + 落点亮池，让光有地方落；
- *   4. 景深 —— 按夹角做 scale / opacity / blur 三通道衰减，侧后方沉入暗处；
- *   5. 节奏 —— 步进 + 停顿（走一张 1.5s easeInOutCubic，到位停 1.6s），取代匀速转圈；
- *   6. 空间边界 —— 后墙幕布 + 全场暗角。
- * 交互：hover 暂停；点击当前正对镜头的卡放大查看详情（Esc / 点遮罩关闭）。
- * 约束：无左右箭头（R6）；荣誉最多 6 条；prefers-reduced-motion 时不自转、无浮尘、点击步进。
+ * 结构：横向 scroll-snap 轮播，两侧伪元素占位保证任何一张卡（含首尾）都能滚到正中；
+ *       非当前卡压暗 + 模糊 + 缩小，当前卡点亮。麦穗枝（官网抠图素材）分列当前卡两侧。
+ * 舞台感沿用原圆柱方案的家底：体积光锥（雾/锥/亮芯）+ 浮尘 canvas + 透视地格 +
+ *       地平线亮边 + 落点亮池 + 后墙幕布 + 全场暗角。
+ * 展签卡：HonorPanel（左上绶带 = 奖级，右上旋转印章 = 年份，右下幽灵字 = 题名首字）。
+ * 交互：自动播放 5s（悬停 / 触摸 / 详情打开时暂停），左右按钮 / 圆点 / 计数 /
+ *       方向键切换；点击当前卡放大查看详情（Esc / 点遮罩关闭）。
+ * 约束：麦穗仅 ≥1024 显示（侧边空间充足）；prefers-reduced-motion 时不自动播放。
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useMediaQuery, usePreferredReducedMotion } from '@vueuse/core'
+import { useMediaQuery, useIntersectionObserver, usePreferredReducedMotion } from '@vueuse/core'
 import HonorPanel from '@/components/home/HonorPanel.vue'
 import SectionKicker from '@/components/common/SectionKicker.vue'
+import AppIcon from '@/components/common/AppIcon.vue'
 import { useBodyScrollLock } from '@/composables/useBodyScrollLock'
+import { useSiteStore } from '@/stores/site'
 import type { Honor } from '@/types/site'
 
 const props = withDefaults(
   defineProps<{
-    /** 荣誉条目（调用方已截断至 ≤6） */
+    /** 荣誉条目 */
     honors: Honor[]
   }>(),
   { honors: () => [] }
 )
 
-/* ---------- 视口档位 → 半径 / 卡片尺寸 / 舞台高度 ---------- */
-const isWide = useMediaQuery('(min-width: 1280px)')
-const isTabletUp = useMediaQuery('(min-width: 768px)')
+const site = useSiteStore()
 const reducedMotion = usePreferredReducedMotion()
 
+/* ---------- 视口档位 → 卡片尺寸 ---------- */
+const isTabletUp = useMediaQuery('(min-width: 768px)')
+const isWide = useMediaQuery('(min-width: 1280px)')
+
 const geometry = computed(() => {
-  if (isWide.value) return { radius: 340, cardW: 300, cardH: 190, stageH: 580, perspective: 1400 }
-  if (isTabletUp.value) return { radius: 268, cardW: 250, cardH: 162, stageH: 450, perspective: 1150 }
-  return { radius: 164, cardW: 168, cardH: 110, stageH: 330, perspective: 780 }
+  if (isWide.value) return { cardW: 340, cardH: 216 }
+  if (isTabletUp.value) return { cardW: 288, cardH: 186 }
+  return { cardW: 192, cardH: 126 }
 })
 
-/** 相邻两卡夹角（荣誉不足 6 条时自动放大夹角，不写死 60°）。 */
-const stepAngle = computed(() => 360 / Math.max(props.honors.length, 1))
+const foundedYear = computed(() => site.companyProfile?.founded_year ?? 2017)
 
-/* ---------- 步进旋转（转 → 停 → 再转） ---------- */
-const MOVE_MS = 1500
-const DWELL_MS = 1600
-
-const hovering = ref(false)
-const entered = ref(false)
+/* ---------- 轮播对位（scroll-snap + 居中对齐） ---------- */
+const viewportEl = ref<HTMLElement | null>(null)
+const slideEls = ref<(HTMLElement | null)[]>([])
 const activeIndex = ref(0)
+const single = computed(() => props.honors.length < 2)
 
-/** 逐帧写入 DOM，不走响应式，避免 60fps 重渲染。 */
-let angle = 0
-let moving = false
-let moveFrom = 0
-let targetAngle = 0
-let moveStart = 0
-let holdUntil = 0
-let lastTs = 0
-let clockMs = 0
+function setSlideRef(el: unknown, index: number): void {
+  slideEls.value[index] = (el as HTMLElement | null) ?? null
+}
 
-const cardEls = ref<(HTMLElement | null)[]>([])
-const ringEl = ref<HTMLElement | null>(null)
+/** 把当前卡滚到视口正中（两侧占位保证首尾同样居中）。 */
+function align(smooth = false): void {
+  const vp = viewportEl.value
+  const s = slideEls.value[activeIndex.value]
+  if (!vp || !s) return
+  const x = s.offsetLeft - vp.offsetLeft - (vp.clientWidth - s.offsetWidth) / 2
+  const behavior = smooth && reducedMotion.value !== 'reduce' ? 'smooth' : 'auto'
+  vp.scrollTo({ left: Math.max(0, x), behavior: behavior as ScrollBehavior })
+}
+
+function goTo(i: number): void {
+  const n = props.honors.length
+  if (!n) return
+  activeIndex.value = ((i % n) + n) % n
+  align(true)
+  restartAutoplay()
+}
+
+function step(delta: number): void {
+  goTo(activeIndex.value + delta)
+}
+
+/** 滚动时按「离视口中心最近」反推当前卡（rAF 节流）。 */
+let scrollRaf = 0
+function onViewportScroll(): void {
+  cancelAnimationFrame(scrollRaf)
+  scrollRaf = requestAnimationFrame(() => {
+    const vp = viewportEl.value
+    if (!vp) return
+    const center = vp.scrollLeft + vp.clientWidth / 2
+    let best = 0
+    let bestDist = Number.POSITIVE_INFINITY
+    slideEls.value.forEach((s, i) => {
+      if (!s) return
+      const d = Math.abs(s.offsetLeft - vp.offsetLeft + s.offsetWidth / 2 - center)
+      if (d < bestDist) {
+        bestDist = d
+        best = i
+      }
+    })
+    if (best !== activeIndex.value) activeIndex.value = best
+  })
+}
+
+/* ---------- 自动播放：5s 步进；悬停 / 触摸 / 详情 / 减弱动态时暂停 ---------- */
+const AUTOPLAY_MS = 5000
+let autoplayTimer: number | undefined
+
+function pauseAutoplay(): void {
+  if (autoplayTimer !== undefined) {
+    clearInterval(autoplayTimer)
+    autoplayTimer = undefined
+  }
+}
+
+function playAutoplay(): void {
+  pauseAutoplay()
+  if (reducedMotion.value === 'reduce' || single.value || detailOpen.value) return
+  autoplayTimer = window.setInterval(() => step(1), AUTOPLAY_MS)
+}
+
+function restartAutoplay(): void {
+  playAutoplay()
+}
+
 const stageEl = ref<HTMLElement | null>(null)
+const hovering = ref(false)
 
-const easeInOutCubic = (t: number): number =>
-  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-
-/** 当前正对镜头的卡：由转盘角度反算（i×step + angle ≡ 0 mod 360）。 */
-function recomputeActive(): void {
-  const n = props.honors.length
-  if (n === 0) return
-  const normalized = ((-angle % 360) + 360) % 360
-  const idx = Math.round(normalized / stepAngle.value) % n
-  if (idx !== activeIndex.value) activeIndex.value = idx
+function onStagePointerEnter(): void {
+  hovering.value = true
+  pauseAutoplay()
+}
+function onStagePointerLeave(): void {
+  hovering.value = false
+  playAutoplay()
+}
+function onStageTouchStart(): void {
+  pauseAutoplay()
+}
+function onStageTouchEnd(): void {
+  window.setTimeout(playAutoplay, 3000)
+}
+function onVisibilityChange(): void {
+  if (document.hidden) pauseAutoplay()
+  else playAutoplay()
+}
+function onKeydown(e: KeyboardEvent): void {
+  if (e.key === 'ArrowLeft') {
+    step(-1)
+    e.preventDefault()
+  } else if (e.key === 'ArrowRight') {
+    step(1)
+    e.preventDefault()
+  }
 }
 
-/** 逐帧写 DOM：转盘角度 + 每卡的景深（scale / opacity / blur）。 */
-function applyFrame(): void {
-  if (ringEl.value) {
-    ringEl.value.style.transform = `rotateY(${angle.toFixed(2)}deg)`
-    ringEl.value.style.transformStyle = 'preserve-3d'
-  }
-  const n = props.honors.length
-  const r = geometry.value.radius
-  for (let i = 0; i < n; i += 1) {
-    const el = cardEls.value[i]
-    if (!el) continue
-    const raw = (((i * stepAngle.value + angle) % 360) + 360) % 360
-    const dist = Math.min(raw, 360 - raw) // 0 = 正对镜头
-    const t = Math.min(dist / 90, 1)
-    const behind = dist > 90
-    const scale = 1 - t * 0.26
-    el.style.transform =
-      `rotateY(${(i * stepAngle.value).toFixed(2)}deg) translateZ(${r}px) scale(${scale.toFixed(3)})`
-    el.style.opacity = behind ? '0' : (1 - t * 0.78).toFixed(3)
-    el.style.filter = t * 2.6 > 0.05 ? `blur(${(t * 2.6).toFixed(2)}px)` : 'none'
-  }
-  recomputeActive()
-}
-
-/* ---------- 浮尘（丁达尔介质） ---------- */
-/** 与 CSS 光锥共享的几何比例：顶点 y 占比、锥底 y 占比、锥底半宽占比。 */
+/* ---------- 浮尘（丁达尔介质）：与 CSS 光锥共享几何比例 ---------- */
 const CONE_APEX_Y = 0.008
 const CONE_BOTTOM_Y = 0.78
 const CONE_HALF_W = 0.23
@@ -191,6 +237,10 @@ function stepDust(dt: number): void {
   }
 }
 
+let rafId = 0
+let lastTs = 0
+let clockMs = 0
+
 function loop(ts: number): void {
   rafId = requestAnimationFrame(loop)
   if (!lastTs) lastTs = ts
@@ -198,95 +248,55 @@ function loop(ts: number): void {
   lastTs = ts
   clockMs += dt
 
-  const paused = hovering.value || detailOpen.value || !entered.value
-  const spinning = reducedMotion.value !== 'reduce'
-
-  if (paused || !spinning) {
-    // 暂停时把计时基准顺延，避免恢复瞬间立刻跳步
-    if (moving) moveStart += dt
-    holdUntil = ts + 400
-  } else if (moving) {
-    const p = Math.min((ts - moveStart) / MOVE_MS, 1)
-    angle = moveFrom + (targetAngle - moveFrom) * easeInOutCubic(p)
-    if (p >= 1) {
-      moving = false
-      angle = targetAngle
-      holdUntil = ts + DWELL_MS
-    }
-  } else if (ts >= holdUntil) {
-    moving = true
-    moveFrom = angle
-    targetAngle = angle - stepAngle.value
-    moveStart = ts
-  }
-
-  applyFrame()
   stepDust(dt)
   drawDust()
 }
 
-let rafId = 0
+/** 进入视口后才开始浮尘。 */
+const stageInObserver = useIntersectionObserver(stageEl, (entries) => {
+  if (entries[0]?.isIntersecting) {
+    entered.value = true
+    stageInObserver.stop()
+  }
+})
+const entered = ref(false)
 
-/** 数据异步到达 / 条数变化时，重建卡片元素引用。 */
+/* ---------- 数据 / 档位变化 → 重新对位 ---------- */
 watch(
   () => props.honors.length,
   async () => {
-    cardEls.value = []
+    slideEls.value = []
+    activeIndex.value = 0
     await nextTick()
-    recomputeActive()
-    applyFrame()
+    align(false)
   }
 )
 
-/** 档位切换会改半径与舞台尺寸，需要重算景深并同步 canvas。 */
 watch(geometry, async () => {
   await nextTick()
   resizeDust()
-  applyFrame()
+  align(false)
 })
 
+watch(reducedMotion, () => restartAutoplay())
+
 onMounted(() => {
-  recomputeActive()
   resizeDust()
-  applyFrame()
   rafId = requestAnimationFrame(loop)
   window.addEventListener('resize', resizeDust)
+  document.addEventListener('visibilitychange', onVisibilityChange)
+  nextTick(() => requestAnimationFrame(() => align(false)))
+  playAutoplay()
 })
 
 onBeforeUnmount(() => {
   cancelAnimationFrame(rafId)
+  cancelAnimationFrame(scrollRaf)
+  pauseAutoplay()
   window.removeEventListener('resize', resizeDust)
-  observer?.disconnect()
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+  window.removeEventListener('keydown', onEsc)
 })
-
-/* ---------- 进入视口后才开始转与浮尘 ---------- */
-let observer: IntersectionObserver | null = null
-onMounted(() => {
-  const el = stageEl.value
-  if (!el || typeof IntersectionObserver === 'undefined') {
-    entered.value = true
-    return
-  }
-  observer = new IntersectionObserver(
-    (entries) => {
-      if (entries[0]?.isIntersecting) {
-        entered.value = true
-        observer?.disconnect()
-      }
-    },
-    { threshold: 0.2 }
-  )
-  observer.observe(el)
-})
-
-/* ---------- reduced-motion 降级：不自转，点击舞台步进一张 ---------- */
-function onStageClick(): void {
-  if (reducedMotion.value !== 'reduce') return
-  angle -= stepAngle.value
-  moving = false
-  recomputeActive()
-  applyFrame()
-}
 
 /* ---------- 点击当前卡 → 放大详情 ---------- */
 const detailOpen = ref(false)
@@ -294,7 +304,7 @@ const detailHonor = ref<Honor | null>(null)
 useBodyScrollLock(detailOpen)
 
 function openDetail(honor: Honor, index: number): void {
-  if (index !== activeIndex.value) return // 只有正对镜头的卡可点
+  if (index !== activeIndex.value) return // 只有当前卡可点
   detailHonor.value = honor
   detailOpen.value = true
 }
@@ -309,30 +319,22 @@ function onEsc(e: KeyboardEvent): void {
 }
 
 onMounted(() => window.addEventListener('keydown', onEsc))
-onBeforeUnmount(() => window.removeEventListener('keydown', onEsc))
-
-function setCardRef(el: unknown, index: number): void {
-  cardEls.value[index] = (el as HTMLElement | null) ?? null
-}
-
-/** 静态盒模型定位；transform 由 applyFrame 逐帧写入。 */
-const cardStyle = (index: number): Record<string, string> => ({
-  left: `${-geometry.value.cardW / 2}px`,
-  top: `${-geometry.value.cardH / 2}px`,
-  width: `${geometry.value.cardW}px`,
-  height: `${geometry.value.cardH}px`
-})
 </script>
 
 <template>
   <section id="honors" class="relative w-full overflow-hidden bg-[#0A0A0A]">
     <div class="ly-container ly-section">
       <!-- 标题行 -->
-      <div v-reveal class="flex flex-col gap-4">
-        <SectionKicker text="HONOR · 荣誉资质" />
-        <h2 class="mt-4 font-serif text-[34px] leading-tight text-txt-primary lg:text-[44px]">
-          荣誉展示
-        </h2>
+      <div v-reveal class="flex items-end justify-between gap-6">
+        <div>
+          <SectionKicker text="HONOR · 荣誉资质" />
+          <h2 class="mt-4 font-serif text-[34px] leading-tight text-txt-primary lg:text-[44px]">
+            荣誉展示
+          </h2>
+        </div>
+        <p v-if="honors.length" class="honor-meta">
+          SINCE {{ foundedYear }} · 已收录 <b>{{ honors.length }}</b> 项荣誉记录
+        </p>
       </div>
 
       <!-- 空状态 -->
@@ -344,15 +346,15 @@ const cardStyle = (index: number): Record<string, string> => ({
       <div
         v-else
         ref="stageEl"
-        class="honor-stage relative mx-auto mt-10 w-full touch-pan-y select-none"
-        :style="{
-          height: `${geometry.stageH}px`,
-          perspective: `${geometry.perspective}px`,
-          perspectiveOrigin: 'center 34%'
-        }"
-        @mouseenter="hovering = true"
-        @mouseleave="hovering = false"
-        @click="onStageClick"
+        class="honor-stage relative mx-auto mt-10 w-full select-none"
+        tabindex="0"
+        role="region"
+        aria-label="荣誉轮播，可用左右方向键切换"
+        @mouseenter="onStagePointerEnter"
+        @mouseleave="onStagePointerLeave"
+        @touchstart="onStageTouchStart"
+        @touchend="onStageTouchEnd"
+        @keydown="onKeydown"
       >
         <!-- 后墙幕布：给空间一个边界（竖向褶皱 + 顶部受光） -->
         <div class="backwall" aria-hidden="true" />
@@ -364,7 +366,7 @@ const cardStyle = (index: number): Record<string, string> => ({
           <span class="grid" />
         </div>
 
-        <!-- 体积光锥：外扩雾 + 清晰锥体 + 亮芯（分工，不再整层糊掉） -->
+        <!-- 体积光锥：外扩雾 + 清晰锥体 + 亮芯 -->
         <div class="beam" aria-hidden="true">
           <span class="haze" />
           <span class="cone" />
@@ -375,29 +377,67 @@ const cardStyle = (index: number): Record<string, string> => ({
         <!-- 顶部灯具亮带 -->
         <span class="lampbar" aria-hidden="true" />
 
-        <!-- 圆柱转盘 -->
-        <div class="absolute inset-0 z-[4]" style="transform-style: preserve-3d">
-          <div ref="ringEl" class="absolute left-1/2 top-[40%] h-0 w-0">
-            <div
-              v-for="(honor, index) in honors"
-              :key="honor.id"
-              :ref="(el) => setCardRef(el, index)"
-              class="absolute"
-              :class="index === activeIndex ? 'is-active' : ''"
-              :style="cardStyle(index)"
-              style="transform-style: preserve-3d"
+        <!-- 横向轮播 -->
+        <div
+          ref="viewportEl"
+          class="viewport"
+          :style="{ '--slide-w': `${geometry.cardW}px`, '--slide-h': `${geometry.cardH}px` }"
+          @scroll.passive="onViewportScroll"
+        >
+          <div
+            v-for="(honor, index) in honors"
+            :key="honor.id"
+            :ref="(el) => setSlideRef(el, index)"
+            class="slide"
+            :class="{ 'is-active': index === activeIndex }"
+          >
+            <img
+              class="laurel laurel--l"
+              src="/images/laurel-branch.png"
+              alt=""
+              aria-hidden="true"
+              draggable="false"
+            />
+            <img
+              class="laurel laurel--r"
+              src="/images/laurel-branch.png"
+              alt=""
+              aria-hidden="true"
+              draggable="false"
+            />
+            <button
+              type="button"
+              class="slide-btn"
+              :aria-label="`查看荣誉详情：${honor.title}`"
+              @click="openDetail(honor, index)"
             >
-              <button
-                type="button"
-                class="block h-full w-full text-left"
-                :class="index === activeIndex ? 'cursor-pointer' : 'cursor-default'"
-                :aria-label="`查看荣誉详情：${honor.title}`"
-                @click.stop="openDetail(honor, index)"
-              >
-                <HonorPanel :honor="honor" />
-              </button>
-            </div>
+              <HonorPanel :honor="honor" />
+            </button>
           </div>
+        </div>
+
+        <!-- 控制区 -->
+        <div v-show="!single" class="controls">
+          <button type="button" class="ctr" aria-label="上一项" @click="step(-1)">
+            <AppIcon name="chevron-right" :size="16" class="rotate-180" />
+          </button>
+          <div class="dots" role="tablist" aria-label="荣誉导航">
+            <button
+              v-for="(honor, i) in honors"
+              :key="honor.id"
+              type="button"
+              :class="{ on: i === activeIndex }"
+              :aria-label="`第 ${i + 1} 项`"
+              @click="goTo(i)"
+            />
+          </div>
+          <button type="button" class="ctr" aria-label="下一项" @click="step(1)">
+            <AppIcon name="chevron-right" :size="16" />
+          </button>
+          <span class="counter">
+            <b>{{ String(activeIndex + 1).padStart(2, '0') }}</b> /
+            {{ String(honors.length).padStart(2, '0') }}
+          </span>
         </div>
 
         <!-- 暗角：把注意力压到中央光区 -->
@@ -436,9 +476,27 @@ const cardStyle = (index: number): Record<string, string> => ({
 </template>
 
 <style scoped>
-/* ===== 后墙幕布 =====
-   幕布只画在舞台盒内，盒外是区块纯色 #0A0A0A，四边会留下亮度台阶（实测约 4 级）。
-   用双向遮罩把幕布融进区块底色，舞台边界不再显形。 */
+/* ===== 舞台：高度由内容（顶部受光区 + 卡 + 倒影 + 控制区）撑出 ===== */
+.honor-stage {
+  padding: 104px 0 34px;
+  outline: none;
+}
+@media (min-width: 768px) {
+  .honor-stage {
+    padding: 120px 0 40px;
+  }
+}
+@media (min-width: 1280px) {
+  .honor-stage {
+    padding: 136px 0 44px;
+  }
+}
+.honor-stage:focus-visible {
+  outline: 1px solid rgba(196, 154, 74, 0.4);
+  outline-offset: 4px;
+}
+
+/* ===== 后墙幕布（双向遮罩融进区块底色） ===== */
 .backwall {
   position: absolute;
   inset: 0;
@@ -446,11 +504,7 @@ const cardStyle = (index: number): Record<string, string> => ({
   pointer-events: none;
   background:
     radial-gradient(120% 80% at 50% 0%, rgba(196, 154, 74, 0.1), transparent 60%),
-    repeating-linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.022) 0 2px,
-      transparent 2px 46px
-    ),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.022) 0 2px, transparent 2px 46px),
     linear-gradient(180deg, #0b0a08 0%, #0a0a0a 55%, #070706 100%);
   -webkit-mask-image:
     linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%),
@@ -462,9 +516,7 @@ const cardStyle = (index: number): Record<string, string> => ({
   mask-composite: intersect;
 }
 
-/* ===== 地面 =====
-   地平线固定在 78%（= 脚本 CONE_BOTTOM_Y，光锥底边正好落在地面上，两者必须同步改）。
-   地面只保留 12% 厚度，下移到贴近舞台底部，与上方卡片区拉开留白。 */
+/* ===== 地面（地平线 78% = 脚本 CONE_BOTTOM_Y，两者必须同步改） ===== */
 .floor {
   position: absolute;
   left: -10%;
@@ -483,9 +535,6 @@ const cardStyle = (index: number): Record<string, string> => ({
     radial-gradient(70% 110% at 50% 0%, rgba(255, 255, 255, 0.03), transparent 62%);
 }
 
-/* 透视地格：rotateX 让横线向地平线收拢。
-   双向遮罩（上下淡出 + 左右淡出）削掉矩形硬边，地格才会「铺开」而不是一块亮板。
-   地面压薄后倾角同步放缓（66°→56°），否则投影高度只剩十几像素、地格会整条消失。 */
 .floor .grid {
   position: absolute;
   inset: 0;
@@ -514,7 +563,6 @@ const cardStyle = (index: number): Record<string, string> => ({
   background: linear-gradient(90deg, transparent, rgba(232, 199, 122, 0.34), transparent);
 }
 
-/* 光落在地上的亮池（随地面一起收窄，避免亮池溢出到地面带之外） */
 .floor .pool {
   position: absolute;
   top: 0;
@@ -531,7 +579,7 @@ const cardStyle = (index: number): Record<string, string> => ({
   filter: blur(12px);
 }
 
-/* ===== 体积光锥（几何比例必须与脚本里的 CONE_* 常量一致） ===== */
+/* ===== 体积光锥 ===== */
 .beam {
   position: absolute;
   inset: 0;
@@ -548,7 +596,6 @@ const cardStyle = (index: number): Record<string, string> => ({
   transform: translateX(-50%);
 }
 
-/* 外扩雾 */
 .beam .haze {
   width: 74%;
   height: 86%;
@@ -562,7 +609,6 @@ const cardStyle = (index: number): Record<string, string> => ({
   filter: blur(26px);
 }
 
-/* 主锥：blur 只给 5px，保住锥体边缘。高度 = 地平线 78%，底面落在新地平线上 */
 .beam .cone {
   width: 46%;
   height: 78%;
@@ -578,7 +624,6 @@ const cardStyle = (index: number): Record<string, string> => ({
   filter: blur(5px);
 }
 
-/* 亮芯 */
 .beam .core {
   width: 9%;
   height: 76%;
@@ -609,14 +654,219 @@ const cardStyle = (index: number): Record<string, string> => ({
   height: 12px;
   z-index: 6;
   pointer-events: none;
-  background: radial-gradient(
-    ellipse at center top,
-    rgba(240, 217, 160, 0.75),
-    transparent 70%
-  );
+  background: radial-gradient(ellipse at center top, rgba(240, 217, 160, 0.75), transparent 70%);
 }
 
-/* 暗角：把注意力压到中央光区（四边同样做遮罩过渡，避免与区块底色接缝） */
+/* ===== 横向轮播：两侧占位让首尾卡也能居中 ===== */
+.viewport {
+  --slide-w: 300px;
+  --slide-h: 190px;
+  position: relative;
+  z-index: 4;
+  display: flex;
+  gap: 26px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  /* 顶部给绶带出框（上端达卡顶上方 ~25px）留足空间，底部留出倒影空间 */
+  padding: 34px 0 64px;
+}
+.viewport::-webkit-scrollbar {
+  display: none;
+}
+.viewport::before,
+.viewport::after {
+  content: '';
+  flex: 0 0 calc((100% - var(--slide-w)) / 2);
+}
+
+.slide {
+  position: relative;
+  flex: 0 0 var(--slide-w);
+  height: var(--slide-h);
+  scroll-snap-align: center;
+  opacity: 0.16;
+  filter: blur(2px) saturate(0.5);
+  transform: scale(0.93);
+  transition:
+    opacity 0.6s ease,
+    filter 0.6s ease,
+    transform 0.6s ease;
+  pointer-events: none;
+}
+.slide.is-active {
+  opacity: 1;
+  filter: none;
+  transform: none;
+  pointer-events: auto;
+}
+
+.slide-btn {
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-align: left;
+}
+
+/* ===== 麦穗枝（当前卡两侧，≥1024 显示） ===== */
+.laurel {
+  position: absolute;
+  top: 50%;
+  left: -88px;
+  width: 78px;
+  z-index: 4;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition:
+    opacity 0.5s ease,
+    rotate 0.7s ease;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 0 16px rgba(232, 199, 122, 0.22));
+}
+.laurel--r {
+  left: auto;
+  right: -88px;
+  transform: translateY(-50%) scaleX(-1);
+}
+.slide.is-active .laurel {
+  opacity: 1;
+  animation: laurel-sway 4.5s 1.3s ease-in-out infinite alternate;
+}
+@keyframes laurel-sway {
+  from {
+    rotate: -1.6deg;
+  }
+  to {
+    rotate: 1.6deg;
+  }
+}
+@media (max-width: 1023px) {
+  .laurel {
+    display: none;
+  }
+}
+
+/* ===== 控制区 ===== */
+.controls {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 6px;
+}
+.ctr {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(196, 154, 74, 0.35);
+  background: transparent;
+  color: var(--ivory);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease,
+    color 0.35s ease;
+}
+.ctr:hover {
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+  color: #171106;
+}
+.dots {
+  display: flex;
+  gap: 10px;
+}
+.dots button {
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  border: none;
+  cursor: pointer;
+  background: rgba(196, 154, 74, 0.3);
+  padding: 0;
+  transition:
+    width 0.35s ease,
+    background-color 0.35s ease;
+}
+.dots button.on {
+  width: 22px;
+  background: var(--accent-gold);
+}
+.counter {
+  position: absolute;
+  right: 0;
+  font-family: var(--font-serif);
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.4);
+}
+.counter b {
+  color: var(--accent-gold-light);
+  font-weight: 400;
+}
+@media (max-width: 767px) {
+  .controls {
+    gap: 16px;
+  }
+  .ctr {
+    width: 38px;
+    height: 38px;
+  }
+  .counter {
+    display: none;
+  }
+}
+
+/* ===== 标题行 meta ===== */
+.honor-meta {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.4);
+  padding-bottom: 8px;
+  white-space: nowrap;
+}
+.honor-meta b {
+  color: var(--accent-gold-light);
+  font-weight: 400;
+}
+@media (max-width: 767px) {
+  .honor-meta {
+    display: none;
+  }
+}
+
+/* ===== 当前卡金边提亮 + 受光面 ===== */
+.is-active :deep(.card-body) {
+  border-color: rgba(240, 224, 176, 0.9);
+  box-shadow:
+    0 0 110px rgba(255, 236, 190, 0.34),
+    0 26px 60px rgba(0, 0, 0, 0.6),
+    inset 0 0 54px rgba(196, 154, 74, 0.12);
+}
+
+.is-active :deep(.lit) {
+  opacity: 1;
+  animation: honor-lamp 6s ease-in-out infinite;
+}
+
+@keyframes honor-lamp {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.94;
+  }
+}
+
+/* ===== 暗角 ===== */
 .vignette {
   position: absolute;
   inset: 0;
@@ -636,32 +886,6 @@ const cardStyle = (index: number): Record<string, string> => ({
     linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%),
     linear-gradient(180deg, transparent 0%, #000 12%, #000 76%, transparent 100%);
   mask-composite: intersect;
-}
-
-/* ===== 当前正对镜头的卡：金边提亮 + 自上而下的受光面 ===== */
-.is-active :deep(.card-body) {
-  border-color: rgba(240, 224, 176, 0.9);
-  box-shadow:
-    0 0 110px rgba(255, 236, 190, 0.34),
-    0 26px 60px rgba(0, 0, 0, 0.6),
-    inset 0 0 54px rgba(196, 154, 74, 0.12);
-}
-
-.is-active :deep(.lit) {
-  opacity: 1;
-  /* 呼吸挂在 .is-active 上而不是 .lit 本身：动画会接管 opacity，
-     写在 .lit 上会把非活跃卡的 opacity: 0 也覆盖成亮 */
-  animation: honor-lamp 6s ease-in-out infinite;
-}
-
-@keyframes honor-lamp {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.94;
-  }
 }
 
 .holo-fade-enter-active,
