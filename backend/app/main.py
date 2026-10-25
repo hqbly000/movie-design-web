@@ -50,12 +50,15 @@ async def lifespan(_: FastAPI):
     """应用启动时建表并做种子检查；退出时无需清理。"""
     Base.metadata.create_all(bind=engine)
     logger.info("数据库表结构已就绪")
-    try:
-        from app.seed import seed_if_empty
+    if not settings.SEED_ON_STARTUP:
+        logger.info("已关闭启动种子（SEED_ON_STARTUP=false），跳过样例数据检查")
+    else:
+        try:
+            from app.seed import seed_if_empty
 
-        seed_if_empty()
-    except Exception as exc:  # noqa: BLE001 - 种子失败不应阻断服务启动
-        logger.warning("种子数据检查失败（可稍后手动执行 python -m app.seed）：%s", exc)
+            seed_if_empty()
+        except Exception as exc:  # noqa: BLE001 - 种子失败不应阻断服务启动
+            logger.warning("种子数据检查失败（可稍后手动执行 python -m app.seed）：%s", exc)
     yield
 
 
