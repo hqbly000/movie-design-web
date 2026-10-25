@@ -81,15 +81,15 @@ export const FALLBACK_SITE: SiteConfig = {
     {
       id: 2,
       image_url: '/uploads/cover/portrait-natural-light.png',
-      slogan: '每一次相遇都值得记录',
-      sub_slogan: '自然光人像 · 捕捉真实情绪',
+      slogan: '以光影，铭记时光',
+      sub_slogan: '人像写真 · 婚礼纪实 · 商业摄影',
       sort: 1
     },
     {
       id: 3,
       image_url: '/uploads/cover/night-cityscape.png',
-      slogan: '城市之上，光在流动',
-      sub_slogan: '城市影像 · 夜景纪实',
+      slogan: '以光影，铭记时光',
+      sub_slogan: '人像写真 · 婚礼纪实 · 商业摄影',
       sort: 2
     }
   ],

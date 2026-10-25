@@ -17,6 +17,7 @@ echo [1/2] 按窗口标题结束...
 taskkill /F /T /FI "WINDOWTITLE eq LightIsle-API :8000*" >nul 2>&1 && (echo   [OK] backend 窗口已结束) || (echo   [i] backend 窗口未在运行)
 taskkill /F /T /FI "WINDOWTITLE eq LightIsle-Frontend :5173*" >nul 2>&1 && (echo   [OK] frontend 窗口已结束) || (echo   [i] frontend 窗口未在运行)
 taskkill /F /T /FI "WINDOWTITLE eq LightIsle-Admin :5174*" >nul 2>&1 && (echo   [OK] admin 窗口已结束) || (echo   [i] admin 窗口未在运行)
+taskkill /F /T /FI "WINDOWTITLE eq Dev-DB-Tunnel :13306*" >nul 2>&1 && (echo   [OK] 数据库隧道窗口已结束) || (echo   [i] 数据库隧道未在运行)
 
 echo.
 echo [2/2] 检查端口残留监听...

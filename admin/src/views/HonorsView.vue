@@ -36,6 +36,8 @@ usePageHeader(
 )
 
 const atLimit = computed(() => honors.value.length >= MAX_HONORS)
+/** 当前列表已在用的奖项类型（作为弹框候选的一部分，换设备也能看到） */
+const usedLevels = computed(() => honors.value.map((h) => h.level))
 const columns: TableColumn[] = [
   { key: 'title', label: '标题', width: '220px' },
   { key: 'description', label: '详情描述' },
@@ -111,7 +113,7 @@ onMounted(load)
 
     <p v-if="!auth.canEdit" class="ad-hint !mt-0">当前角色为只读，无法编辑荣誉</p>
 
-    <PageHint text="展厅为环形陈列，最多展示 6 条；同一时刻只高亮当前一条（按年份倒序自动旋转）" />
+    <PageHint text="展厅为环形陈列，最多展示 6 条；同一时刻只高亮当前一条（按年份倒序自动旋转）；奖项类型可选预设，也可直接输入新类型" />
 
     <p v-if="atLimit" class="ad-field-error !mt-0">展厅仅展示 6 条，请先删除或调整</p>
 
@@ -181,6 +183,6 @@ onMounted(load)
       </template>
     </DataTable>
 
-    <HonorFormDialog v-model="dialogOpen" :honor="editing" @saved="load" />
+    <HonorFormDialog v-model="dialogOpen" :honor="editing" :levels="usedLevels" @saved="load" />
   </div>
 </template>

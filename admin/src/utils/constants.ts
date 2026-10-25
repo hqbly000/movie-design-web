@@ -48,8 +48,10 @@ export const CATEGORIES: CategoryOption[] = [
 /** 未分类筛选项对应的特殊值（architecture.md §3.2.4） */
 export const CATEGORY_NONE = '__none__'
 
-/* ---------- 荣誉等级（§5.7） ---------- */
-export const HONOR_LEVELS = ['一等奖', '二等奖', '三等奖', '入选作品', '提名', '其他']
+/* ---------- 奖项类型（§5.7）：预设选项，后台可直接输入新增 ---------- */
+export const HONOR_LEVELS = ['特等奖', '一等奖', '二等奖', '三等奖', '入选作品', '提名', '其他']
+/** 奖项类型长度上限（与后端 `honors.level` VARCHAR(16) 一致） */
+export const HONOR_LEVEL_MAX = 16
 
 /* ---------- 分发限时（§5.5 / R18） ---------- */
 export interface DurationOption {

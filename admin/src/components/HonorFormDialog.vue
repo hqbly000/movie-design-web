@@ -1,27 +1,35 @@
 <script setup lang="ts">
-/** 荣誉条目 新增/编辑弹框（§5.7，R7）；达到 6 条上限时后端返回 3001 */
-import { reactive, ref, watch } from 'vue'
+/**
+ * 荣誉条目 新增/编辑弹框（§5.7，R7）；达到 6 条上限时后端返回 3001。
+ *
+ * 奖项类型不再是固定枚举：预设「特等奖/一等奖/…」，也可以直接输入新类型
+ * （输入即新增，本机记住；保存后当前荣誉列表里也会带上该类型）。
+ */
+import { computed, reactive, ref, watch } from 'vue'
 import { ApiError } from '@/api/request'
 import { createHonor, updateHonor } from '@/api/honors'
 import { ErrorCode } from '@/types/api'
-import { HONOR_LEVELS, LIMITS } from '@/utils/constants'
+import { HONOR_LEVELS, HONOR_LEVEL_MAX, LIMITS } from '@/utils/constants'
+import { levelOptions, rememberLevel } from '@/utils/honorLevels'
 import { useToastStore } from '@/stores/toast'
 import type { Honor, HonorIn } from '@/types/models'
 import AppModal from './AppModal.vue'
 import AppButton from './AppButton.vue'
 import AppInput from './AppInput.vue'
-import AppSelect from './AppSelect.vue'
-import AppTextarea from './AppTextarea.vue'
+import AppComboInput from './AppComboInput.vue'
 
-const props = defineProps<{ modelValue: boolean; honor: Honor | null }>()
+const props = withDefaults(defineProps<{ modelValue: boolean; honor: Honor | null; levels?: string[] }>(), {
+  levels: () => []
+})
 const emit = defineEmits<{ (e: 'update:modelValue', value: boolean): void; (e: 'saved'): void }>()
 
 const toast = useToastStore()
-const form = reactive({ title: '', description: '', issuer: '', level: '一等奖' })
+const form = reactive({ title: '', description: '', issuer: '', level: HONOR_LEVELS[0] })
 const saving = ref(false)
-const errors = reactive({ title: '', issuer: '', form: '' })
+const errors = reactive({ title: '', issuer: '', level: '', form: '' })
 
-const levelOptions = HONOR_LEVELS.map((l) => ({ value: l, label: l }))
+/** 候选 = 预设 + 本机新增 + 当前列表已在用 */
+const options = computed(() => levelOptions(props.levels))
 
 watch(
   () => props.modelValue,
@@ -30,9 +38,10 @@ watch(
     form.title = props.honor?.title ?? ''
     form.description = props.honor?.description ?? ''
     form.issuer = props.honor?.issuer ?? ''
-    form.level = props.honor?.level ?? '一等奖'
+    form.level = props.honor?.level ?? HONOR_LEVELS[0]
     errors.title = ''
     errors.issuer = ''
+    errors.level = ''
     errors.form = ''
   }
 )
@@ -41,22 +50,28 @@ function validate(): boolean {
   errors.title = form.title.trim() ? '' : '请输入标题'
   if (!errors.title && form.title.length > LIMITS.honorTitle) errors.title = `标题不超过 ${LIMITS.honorTitle} 字`
   errors.issuer = form.issuer.trim() ? '' : '请输入颁奖机构（含年份）'
-  return !errors.title && !errors.issuer
+  errors.level = form.level.trim() ? '' : '请选择或输入奖项类型'
+  if (!errors.level && form.level.trim().length > HONOR_LEVEL_MAX) {
+    errors.level = `奖项类型不超过 ${HONOR_LEVEL_MAX} 字`
+  }
+  return !errors.title && !errors.issuer && !errors.level
 }
 
 async function save(): Promise<void> {
   if (!validate()) return
   saving.value = true
   errors.form = ''
+  const level = form.level.trim()
   const payload: HonorIn = {
     title: form.title.trim(),
     description: form.description.trim() || null,
     issuer: form.issuer.trim(),
-    level: form.level
+    level
   }
   try {
     if (props.honor) await updateHonor(props.honor.id, payload)
     else await createHonor(payload)
+    rememberLevel(level)
     toast.success(props.honor ? '已保存' : '荣誉已新增')
     emit('saved')
     emit('update:modelValue', false)
@@ -102,7 +117,17 @@ async function save(): Promise<void> {
         :maxlength="48"
         :error="errors.issuer"
       />
-      <AppSelect v-model="form.level" label="等级" required placeholder="" :options="levelOptions" />
+      <AppComboInput
+        v-model="form.level"
+        label="奖项类型"
+        required
+        placeholder="选择或直接输入，如「特等奖」"
+        :options="options"
+        :maxlength="HONOR_LEVEL_MAX"
+        :error="errors.level"
+        hint="可直接输入新类型，回车或点击「新增」即生效"
+        create-hint="新增奖项类型"
+      />
       <p v-if="errors.form" class="ad-field-error !mt-0">{{ errors.form }}</p>
     </div>
 

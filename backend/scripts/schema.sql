@@ -84,8 +84,8 @@ CREATE TABLE `hero_slides` (
   `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `image_id`    BIGINT UNSIGNED NULL COMMENT '关联 assets.id',
   `image_url`   VARCHAR(255) NOT NULL COMMENT '快照 URL（冗余，便于直出）',
-  `slogan`      VARCHAR(32)  NOT NULL COMMENT '宣传语 ≤12 字',
-  `sub_slogan`  VARCHAR(64)  NULL COMMENT '副标语 ≤30 字',
+  `slogan`      VARCHAR(32)  NOT NULL COMMENT '标题 ≤12 字（三行写同一份，前台只渲染第一条）',
+  `sub_slogan`  VARCHAR(64)  NULL COMMENT '副标题 ≤30 字（三行同值）',
   `sort`        TINYINT      NOT NULL DEFAULT 0 COMMENT '0/1/2 → 前台轮播顺序',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_hero_sort` (`sort`),
@@ -144,7 +144,7 @@ CREATE TABLE `honors` (
   `title`       VARCHAR(64)  NOT NULL COMMENT '标题 ≤24 字',
   `description` VARCHAR(160) NULL COMMENT '详情描述 ≤60 字',
   `issuer`      VARCHAR(96)  NOT NULL COMMENT '颁奖机构（含年份）',
-  `level`       VARCHAR(16)  NOT NULL COMMENT '一等奖/二等奖/三等奖/入选作品/提名/其他',
+  `level`       VARCHAR(16)  NOT NULL COMMENT '奖项类型：预设 特等奖/一等奖/二等奖/三等奖/入选作品/提名/其他，可自定义',
   `sort`        TINYINT      NOT NULL DEFAULT 0 COMMENT '陈列顺序（按年份倒序维护）',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='荣誉条目（最多 6 条，业务约束）';

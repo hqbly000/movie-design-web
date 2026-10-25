@@ -309,7 +309,7 @@ async function main() {
 
   check('首页 SPA 渲染成功（标题正确）', /焦点影视/.test(h.title), h.title)
   check('R2/R3 首屏轮播图数量 = hero_slides 条数（API）', h.heroImgs === siteData.data.hero_slides.length, `imgs=${h.heroImgs} api=${siteData.data.hero_slides.length}`)
-  check('R3 三组标语均在 DOM（各图各带标语）', new Set(h.slogans.filter(Boolean)).size >= 3, JSON.stringify(h.slogans))
+  check('R3 首屏只有 1 个标题（三张图共用文案）', h.slogans.filter(Boolean).length === 1, JSON.stringify(h.slogans))
   check('R4 首屏无任何 CTA 按钮', h.heroHasCTA === false)
   check('SCROLL 提示渲染', h.heroScrollHint === true)
   check('R1/R5-R12 七大区块锚点齐全', ['hero', 'about', 'honors', 'segments', 'contact'].every((s) => h.sections.includes(s)), JSON.stringify(h.sections))

@@ -635,8 +635,9 @@ def group_seed_integrity() -> None:
     _, site, _ = call("GET", "/api/public/site")
     data = site["data"]
     slogans = [s["slogan"] for s in data["hero_slides"]]
-    expect_slogans = ["以光影，铭记时光", "每一次相遇都值得记录", "城市之上，光在流动"]
-    rec(g, "hero_slides 标语未被测试污染", expect_slogans, slogans, slogans == expect_slogans)
+    # 首屏为「3 图 + 1 标题」：三行共用同一份文案
+    expect_slogans = ["以光影，铭记时光"] * 3
+    rec(g, "hero_slides 首屏标题未被测试污染", expect_slogans, slogans, slogans == expect_slogans)
     _, cp, _ = call("GET", "/api/admin/company-profile", token=admin)
     name = cp["data"]["company_name"]
     rec(g, "company_name 未被测试污染", "交点影视", name, name == "交点影视")

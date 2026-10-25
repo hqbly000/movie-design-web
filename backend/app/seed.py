@@ -36,6 +36,10 @@ logger = logging.getLogger("lightisle.seed")
 # ---------------- 常量 ----------------
 COVER_PREFIX = "/uploads/cover/"
 
+# 首屏三张图共用的一套文案（hero_slides 每行都写同一份，前台只渲染第一条）
+HERO_SLOGAN = "以光影，铭记时光"
+HERO_SUB_SLOGAN = "人像写真 · 婚礼纪实 · 商业摄影"
+
 # 11 张 AI 种子素材（已存在于 uploads/cover/）
 COVER_FILES: list[str] = [
     "portrait-natural-light.png",
@@ -156,25 +160,13 @@ def _seed_assets(db: Session, groups: dict[str, AssetGroup]) -> dict[str, Asset]
 
 
 def _seed_hero_slides(db: Session, assets: dict[str, Asset]) -> None:
-    """种子恰好 3 条首屏轮播。"""
-    slides = [
-        (
-            "cinematic-wide.png",
-            "以光影，铭记时光",
-            "人像写真 · 婚礼纪实 · 商业摄影",
-        ),
-        (
-            "portrait-natural-light.png",
-            "每一次相遇都值得记录",
-            "自然光人像 · 捕捉真实情绪",
-        ),
-        (
-            "night-cityscape.png",
-            "城市之上，光在流动",
-            "城市影像 · 夜景纪实",
-        ),
+    """种子恰好 3 条首屏轮播；三张图共用同一套文案（标题 / 副标题）。"""
+    filenames = [
+        "cinematic-wide.png",
+        "portrait-natural-light.png",
+        "night-cityscape.png",
     ]
-    for sort, (filename, slogan, sub_slogan) in enumerate(slides):
+    for sort, filename in enumerate(filenames):
         exists = db.execute(select(HeroSlide).where(HeroSlide.sort == sort)).scalar_one_or_none()
         if exists is not None:
             continue
@@ -184,8 +176,8 @@ def _seed_hero_slides(db: Session, assets: dict[str, Asset]) -> None:
             HeroSlide(
                 image_id=asset.id if asset else None,
                 image_url=url,
-                slogan=slogan,
-                sub_slogan=sub_slogan,
+                slogan=HERO_SLOGAN,
+                sub_slogan=HERO_SUB_SLOGAN,
                 sort=sort,
             )
         )

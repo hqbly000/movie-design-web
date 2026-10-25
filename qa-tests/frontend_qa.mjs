@@ -97,19 +97,21 @@ const HOME_DYN = `(async () => {
   out.headerScrolled = header ? getComputedStyle(header).backgroundColor + ' | bf=' + getComputedStyle(header).backdropFilter : null;
   window.scrollTo(0, 0);
   await sleep(600);
-  // ---- 轮播：三图三标语，切换后文案变化 ----
-  const slogans = () => [...document.querySelectorAll('#hero h1')].map(e => e.innerText.trim()).filter(Boolean);
+  // ---- 轮播：3 张图 + 1 个标题，切换后标题不变、当前图变化 ----
+  const titles = () => [...document.querySelectorAll('#hero h1')].map(e => e.innerText.trim()).filter(Boolean);
   const imgCount = document.querySelectorAll('#hero img').length;
-  const before = slogans();
-  const activeSlogan = () => document.querySelector('#hero [aria-hidden="false"] h1')?.innerText.trim();
-  const beforeActive = activeSlogan();
+  const before = titles();
+  const activeDot = () => [...document.querySelectorAll('#hero [role="tab"]')].findIndex(b => b.getAttribute('aria-selected') === 'true');
+  const beforeActive = activeDot();
   await sleep(7000);
-  const afterActive = activeSlogan();
+  const afterActive = activeDot();
+  const after = titles();
   out.imgCount = imgCount;
-  out.slogans = before;
+  out.titles = before;
   out.beforeActive = beforeActive;
   out.afterActive = afterActive;
-  out.sloganChanged = beforeActive !== afterActive;
+  out.slideChanged = beforeActive !== afterActive;
+  out.titleStable = before.join('|') === after.join('|');
   // ---- Ken Burns：激活图 transform 是否在放大 ----
   const activeImg = [...document.querySelectorAll('#hero img')].find(i => i.getBoundingClientRect().width > 0);
   out.kbAnimation = activeImg ? getComputedStyle(activeImg).animationName : null;
@@ -180,8 +182,8 @@ async function main() {
   check('R1 Header 顶部透明底', /rgba\(0,\s*0,\s*0,\s*0\)|transparent/.test(h.headerAtTop || ''), h.headerAtTop)
   check('R1 滚动后 Header 变毛玻璃（backdrop-filter blur）', /blur/.test(h.headerScrolled || ''), h.headerScrolled)
   check('R3 首屏图数量 = 3', h.imgCount === 3, String(h.imgCount))
-  check('R3 三张图各带标语（互不相同）', new Set(h.slogans).size === 3, JSON.stringify(h.slogans))
-  check('R3 自动轮播：切换后当前标语变化（6s）', h.sloganChanged === true, `${h.beforeActive} -> ${h.afterActive}`)
+  check('R3 首屏只有一个标题（三张图共用）', h.titles.length === 1, JSON.stringify(h.titles))
+  check('R3 自动轮播：切换后图片变化、标题保持唯一（6s）', h.slideChanged === true && h.titleStable === true, `${h.beforeActive} -> ${h.afterActive} | titleStable=${h.titleStable}`)
   check('R2 Ken Burns 动画生效（animation=kenburns 或 scale)1）', /kenburns/.test(h.kbAnimation || '') || /matrix\(1\.0?[1-9]/.test(h.kbTransform || ''), `${h.kbAnimation} | ${h.kbTransform}`)
   check('R13 全站按钮无渐变填充/外发光/内高光/装饰箭头', h.btnIssues.length === 0, `checked=${h.btnTotal} issues=${JSON.stringify(h.btnIssues)}`)
   check('§0.2 页面无「作品图集」', h.hasWorksGallery === false)

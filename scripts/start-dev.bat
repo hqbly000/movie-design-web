@@ -42,6 +42,10 @@ if errorlevel 1 (pause & exit /b 1)
 call :ensure_deps admin
 if errorlevel 1 (pause & exit /b 1)
 
+rem ---- 0.5 数据库隧道（开发库在老服务器 124.223.29.189 上）----
+call :ensure_tunnel
+if errorlevel 1 (pause & exit /b 1)
+
 rem ---- 1. 端口预检（残留的 dev server 会占住端口）----
 call :free_port 8000
 call :free_port 5173
@@ -87,6 +91,25 @@ pause
 exit /b 0
 
 rem ============ 子过程 ============
+
+:ensure_tunnel
+netstat -ano | findstr /C:":13306 " | findstr /C:"LISTENING" >nul 2>&1
+if not errorlevel 1 (
+  echo [OK] 数据库隧道已在运行 ^(127.0.0.1:13306 -^> 124.223.29.189:3306^)
+  exit /b 0
+)
+echo [..] 启动数据库隧道 127.0.0.1:13306 -^> 124.223.29.189:3306 ...
+start "Dev-DB-Tunnel :13306" cmd /k ""%ROOT%\scripts\dev-db-tunnel.bat""
+timeout /t 4 /nobreak >nul
+netstat -ano | findstr /C:":13306 " | findstr /C:"LISTENING" >nul 2>&1
+if errorlevel 1 (
+  echo [X] 隧道没起来，后端将连不上数据库
+  echo     单独排查：scripts\dev-db-tunnel.bat
+  echo     常见原因：密钥路径不对 ^(默认 D:\Dev\VM\workbuddy.pem^)、老服务器 SSH 不通
+  exit /b 1
+)
+echo [OK] 数据库隧道就绪
+exit /b 0
 
 :ensure_deps
 if exist "%ROOT%\%~1\node_modules" (
