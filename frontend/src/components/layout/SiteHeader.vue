@@ -7,6 +7,7 @@
 import { onMounted, ref } from 'vue'
 import { useEventListener } from '@vueuse/core'
 import AppIcon from '@/components/common/AppIcon.vue'
+import SmartImage from '@/components/common/SmartImage.vue'
 import MobileMenu from '@/components/layout/MobileMenu.vue'
 import { useUiStore } from '@/stores/ui'
 import { NAV_ITEMS, scrollToId } from '@/utils/scroll'
@@ -65,7 +66,7 @@ onMounted(syncScrollState)
         aria-label="交点影视 首页"
         @click="goHome"
       >
-        <img
+        <SmartImage
           src="/images/logo-on-dark.png"
           alt="交点影视 JIAO DIAN FILM AND TELEVISION"
           class="h-8 w-auto lg:h-10"

@@ -6,6 +6,7 @@
  * 移动端版权与备案分两行。
  */
 import { computed } from 'vue'
+import SmartImage from '@/components/common/SmartImage.vue'
 import { useSiteStore } from '@/stores/site'
 import { FOOTER_NAV_ITEMS, scrollToId } from '@/utils/scroll'
 
@@ -38,7 +39,7 @@ const filing = computed(() => {
           aria-label="回到顶部"
           @click="scrollToId('hero')"
         >
-          <img
+          <SmartImage
             src="/images/logo-on-dark.png"
             alt="交点影视"
             class="h-7 w-auto"

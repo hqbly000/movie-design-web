@@ -195,6 +195,8 @@ favicon、种子数据、接口标题全部换为「交点影视 JIAO DIAN FILM 
 ### 常用验证命令
 
 ```bash
+# 图片优化：为 uploads / public/images 生成同名 .webp（原图保留，幂等）
+python scripts/optimize-images.py            # 加 --dry-run 只看计划
 # 后端接口全量冒烟（需先启动 backend）
 bash scripts/smoke-test.sh http://127.0.0.1:8000
 

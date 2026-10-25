@@ -15,6 +15,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useMediaQuery, useIntersectionObserver, usePreferredReducedMotion } from '@vueuse/core'
 import HonorPanel from '@/components/home/HonorPanel.vue'
 import SectionKicker from '@/components/common/SectionKicker.vue'
+import SmartImage from '@/components/common/SmartImage.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 import { useBodyScrollLock } from '@/composables/useBodyScrollLock'
 import { useSiteStore } from '@/stores/site'
@@ -391,14 +392,14 @@ onMounted(() => window.addEventListener('keydown', onEsc))
             class="slide"
             :class="{ 'is-active': index === activeIndex }"
           >
-            <img
+            <SmartImage
               class="laurel laurel--l"
               src="/images/laurel-branch.png"
               alt=""
               aria-hidden="true"
               draggable="false"
             />
-            <img
+            <SmartImage
               class="laurel laurel--r"
               src="/images/laurel-branch.png"
               alt=""

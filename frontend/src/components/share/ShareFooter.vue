@@ -4,6 +4,7 @@
  * logo + 标语「以光影，铭记时光」+ 联系方式 + 版权与备案（两行）。
  */
 import { computed } from 'vue'
+import SmartImage from '@/components/common/SmartImage.vue'
 import { useSiteStore } from '@/stores/site'
 
 const site = useSiteStore()
@@ -30,7 +31,7 @@ const contactLine = computed(() =>
 <template>
   <footer class="mt-14 border-t border-border-hairline bg-[#0A0A0A]">
     <div class="mx-auto w-full max-w-[520px] px-6 py-8">
-      <img
+      <SmartImage
         src="/images/logo-on-dark.png"
         alt="交点影视"
         class="h-6 w-auto"

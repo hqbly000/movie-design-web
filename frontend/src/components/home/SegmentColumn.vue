@@ -9,6 +9,7 @@ import { useMediaQuery } from '@vueuse/core'
 import AppButton from '@/components/common/AppButton.vue'
 import AppIcon from '@/components/common/AppIcon.vue'
 import ImagePlaceholder from '@/components/common/ImagePlaceholder.vue'
+import SmartImage from '@/components/common/SmartImage.vue'
 import { ref } from 'vue'
 import { assetUrl } from '@/utils/asset'
 import { segmentIcon } from '@/utils/format'
@@ -88,11 +89,13 @@ const ctaLabel = computed(() => {
     @focusin="emit('hover', true)"
     @focusout="emit('hover', false)"
   >
-    <img
+    <SmartImage
       v-if="preview"
       :src="preview"
       :alt="segment.name"
       class="absolute inset-0 h-full w-full object-cover transition-transform duration-500"
+      loading="lazy"
+      decoding="async"
       draggable="false"
       @load="imageLoaded = true"
       @error="imageLoaded = true"
@@ -140,11 +143,13 @@ const ctaLabel = computed(() => {
     :aria-label="`查看「${segment.name}」${contentTypeHint || '作品'}`"
     @click="emit('open')"
   >
-    <img
+    <SmartImage
       v-if="preview"
       :src="preview"
       :alt="segment.name"
       class="absolute inset-0 h-full w-full object-cover"
+      loading="lazy"
+      decoding="async"
       draggable="false"
       @load="imageLoaded = true"
       @error="imageLoaded = true"

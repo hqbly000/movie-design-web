@@ -5,6 +5,7 @@
  */
 import { useEventListener } from '@vueuse/core'
 import AppIcon from '@/components/common/AppIcon.vue'
+import SmartImage from '@/components/common/SmartImage.vue'
 import { useUiStore } from '@/stores/ui'
 import { NAV_ITEMS, scrollToId } from '@/utils/scroll'
 
@@ -43,7 +44,7 @@ useEventListener(window, 'keydown', (ev: KeyboardEvent) => {
         aria-label="导航菜单"
       >
         <div class="ly-container flex h-[68px] items-center justify-between">
-          <img
+          <SmartImage
             src="/images/logo-on-dark.png"
             alt="交点影视"
             class="h-7 w-auto"

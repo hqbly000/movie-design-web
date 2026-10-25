@@ -10,7 +10,7 @@
  * 恢复会把「悬停暂停」退化成「永久暂停」（现象 = PC 端不自动轮播、移动端正常）。
  * 因此接入 `idleResume`：指针在首屏内移动才暂停，静止 2.6s 自动续播。
  */
-import { computed, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import HeroSlideView from '@/components/home/HeroSlide.vue'
 import SectionKicker from '@/components/common/SectionKicker.vue'
 import { useAutoRotate } from '@/composables/useAutoRotate'
@@ -28,6 +28,49 @@ const { activeIndex, setActive, play, resume, onHoverStart, onHoverEnd, onPointe
     pauseOnHover: true,
     idleResume: 2600
   })
+
+/**
+ * 按需加载：首屏只挂当前这张图，`load`/空闲后再补下一张，最后补完剩下的。
+ * 这样首访的图片流量 = 1 张 webp（≈120KB），而不是 3 张 PNG（≈5.7MB）。
+ */
+const loadedIndexes = ref<number[]>([])
+
+function markLoaded(index: number): void {
+  if (!loadedIndexes.value.includes(index)) loadedIndexes.value.push(index)
+}
+
+let stageTimers: number[] = []
+function scheduleStagedLoad(): void {
+  stageTimers.forEach((t) => window.clearTimeout(t))
+  const total = props.slides.length
+  if (!total) return
+  const next = (activeIndex.value + 1) % total
+  stageTimers = [
+    // 当前图立即加载
+    window.setTimeout(() => markLoaded(activeIndex.value), 0),
+    // 首屏稳定后再备下一张（保证切换不闪空白）
+    window.setTimeout(() => markLoaded(next), 900),
+    // 再往后补剩下所有（此时首屏早已渲染完）
+    window.setTimeout(() => {
+      for (let i = 0; i < total; i += 1) markLoaded(i)
+    }, 3500)
+  ]
+}
+
+watch(
+  () => props.slides.length,
+  () => scheduleStagedLoad(),
+  { immediate: true }
+)
+
+watch(activeIndex, (index) => markLoaded(index))
+
+onMounted(() => scheduleStagedLoad())
+
+onBeforeUnmount(() => {
+  stageTimers.forEach((t) => window.clearTimeout(t))
+  stageTimers = []
+})
 
 /** 共用标题（历史数据三张各一套时，以第一条为准）。 */
 const title = computed(() => props.slides[0]?.slogan?.trim() ?? '')
@@ -59,6 +102,8 @@ defineExpose({ activeIndex })
       :key="slide.id"
       :slide="slide"
       :active="index === activeIndex"
+      :load="loadedIndexes.includes(index)"
+      :priority="index === 0"
     />
 
     <!-- 文案区：整屏唯一一套标题，随图片切换重放淡入 -->

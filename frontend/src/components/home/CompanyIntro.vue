@@ -13,6 +13,7 @@
 import { computed, ref } from 'vue'
 import { useIntersectionObserver } from '@vueuse/core'
 import SectionKicker from '@/components/common/SectionKicker.vue'
+import SmartImage from '@/components/common/SmartImage.vue'
 import SpecularButton from '@/components/common/SpecularButton.vue'
 import { displayYears } from '@/utils/format'
 import { assetUrl } from '@/utils/asset'
@@ -109,7 +110,7 @@ useIntersectionObserver(
           class="about-visual lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center"
         >
           <figure class="photo photo--main">
-            <img
+            <SmartImage
               :src="mainPhoto"
               alt="人像作品"
               loading="lazy"
@@ -118,7 +119,7 @@ useIntersectionObserver(
             />
           </figure>
           <figure class="photo photo--sub">
-            <img
+            <SmartImage
               :src="subPhoto"
               alt="婚礼现场"
               loading="lazy"

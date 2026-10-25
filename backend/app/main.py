@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import logging
+import mimetypes
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -33,6 +34,11 @@ from app.utils.errors import register_exception_handlers
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("lightisle")
+
+# 有些环境的系统 mime 表缺 webp/avif，StaticFiles 会退化成 application/octet-stream。
+# 带上 `X-Content-Type-Options: nosniff` 时这会变成隐患，这里显式注册（必须在挂载前）。
+mimetypes.add_type("image/webp", ".webp")
+mimetypes.add_type("image/avif", ".avif")
 
 # 静态资源目录必须在挂载前存在
 settings.upload_path.mkdir(parents=True, exist_ok=True)
